@@ -15,18 +15,18 @@ import javax.sound.sampled.SourceDataLine;
 
 import org.apache.commons.io.IOUtils;
 
-import com.programyourhome.immerse.audiostreaming.model.Scenario;
-import com.programyourhome.immerse.audiostreaming.model.soundcard.MixerInfo;
-import com.programyourhome.immerse.audiostreaming.model.soundcard.SoundCard;
-import com.programyourhome.immerse.audiostreaming.model.soundcard.SoundCardStream;
-import com.programyourhome.immerse.audiostreaming.model.soundcard.SoundCardToSpeakerConfiguration;
+import com.programyourhome.immerse.domain.Room;
+import com.programyourhome.immerse.domain.Scenario;
+import com.programyourhome.immerse.domain.Scene;
+import com.programyourhome.immerse.domain.audio.soundcard.MixerInfo;
+import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
+import com.programyourhome.immerse.domain.audio.soundcard.SoundCardStream;
+import com.programyourhome.immerse.domain.audio.soundcard.SoundCardToSpeakerConfiguration;
+import com.programyourhome.immerse.domain.location.Vector3D;
+import com.programyourhome.immerse.domain.speakers.SpeakerVolumes;
+import com.programyourhome.immerse.domain.speakers.settings.SpeakerMatrixSettings;
+import com.programyourhome.immerse.domain.speakers.settings.SurroundMode;
 import com.programyourhome.immerse.speakermatrix.SpeakerMatrix;
-import com.programyourhome.immerse.speakermatrix.model.Room;
-import com.programyourhome.immerse.speakermatrix.model.Scene;
-import com.programyourhome.immerse.speakermatrix.model.SpeakerMatrixSettings;
-import com.programyourhome.immerse.speakermatrix.model.SpeakerVolumes;
-import com.programyourhome.immerse.speakermatrix.model.SurroundMode;
-import com.programyourhome.immerse.speakermatrix.model.Vector3D;
 
 public class ScenarioPlayer {
 

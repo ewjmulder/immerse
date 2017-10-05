@@ -5,13 +5,13 @@ import java.util.Map;
 import org.la4j.Vector;
 import org.springframework.stereotype.Component;
 
-import com.programyourhome.immerse.speakermatrix.model.Room;
-import com.programyourhome.immerse.speakermatrix.model.Scene;
-import com.programyourhome.immerse.speakermatrix.model.Speaker;
-import com.programyourhome.immerse.speakermatrix.model.SpeakerMatrixSettings;
-import com.programyourhome.immerse.speakermatrix.model.SpeakerVolumes;
-import com.programyourhome.immerse.speakermatrix.model.SurroundMode;
-import com.programyourhome.immerse.speakermatrix.model.Vector3D;
+import com.programyourhome.immerse.domain.Room;
+import com.programyourhome.immerse.domain.Scene;
+import com.programyourhome.immerse.domain.location.Vector3D;
+import com.programyourhome.immerse.domain.speakers.Speaker;
+import com.programyourhome.immerse.domain.speakers.SpeakerVolumes;
+import com.programyourhome.immerse.domain.speakers.settings.SpeakerMatrixSettings;
+import com.programyourhome.immerse.domain.speakers.settings.SurroundMode;
 
 import one.util.streamex.DoubleStreamEx;
 import one.util.streamex.EntryStream;

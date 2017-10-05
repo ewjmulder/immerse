@@ -1,7 +1,7 @@
 package com.programyourhome.immerse.speakermatrix;
 
-import com.programyourhome.immerse.speakermatrix.model.Scene;
-import com.programyourhome.immerse.speakermatrix.model.SpeakerVolumes;
+import com.programyourhome.immerse.domain.Scene;
+import com.programyourhome.immerse.domain.speakers.SpeakerVolumes;
 
 public interface SpeakerMatrix {
 

@@ -74,6 +74,11 @@
 
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>domain</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>audio-streaming</artifactId>
             <version>${project.version}</version>
         </dependency>

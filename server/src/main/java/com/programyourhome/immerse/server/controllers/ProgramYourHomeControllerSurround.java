@@ -14,20 +14,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.programyourhome.immerse.audiostreaming.AudioStreaming;
-import com.programyourhome.immerse.audiostreaming.model.AudioStreamingSettings;
-import com.programyourhome.immerse.audiostreaming.model.Scenario;
-import com.programyourhome.immerse.audiostreaming.model.audioresource.AudioResource;
-import com.programyourhome.immerse.audiostreaming.model.dynamiclocation.HorizontalCircleDynamicLocation;
-import com.programyourhome.immerse.audiostreaming.model.dynamiclocation.StaticDynamicLocation;
-import com.programyourhome.immerse.audiostreaming.model.soundcard.MixerInfo;
-import com.programyourhome.immerse.audiostreaming.model.soundcard.PhysicalDeviceInfo;
-import com.programyourhome.immerse.audiostreaming.model.soundcard.SoundCard;
-import com.programyourhome.immerse.audiostreaming.model.soundcard.SoundCardSpeakers;
-import com.programyourhome.immerse.audiostreaming.model.soundcard.SoundCardToSpeakerConfiguration;
-import com.programyourhome.immerse.audiostreaming.model.stopcriterium.NoStopCriterium;
-import com.programyourhome.immerse.speakermatrix.model.Room;
-import com.programyourhome.immerse.speakermatrix.model.Speaker;
-import com.programyourhome.immerse.speakermatrix.model.Vector3D;
+import com.programyourhome.immerse.domain.Room;
+import com.programyourhome.immerse.domain.Scenario;
+import com.programyourhome.immerse.domain.audio.resource.AudioResource;
+import com.programyourhome.immerse.domain.audio.settings.AudioStreamingSettings;
+import com.programyourhome.immerse.domain.audio.soundcard.MixerInfo;
+import com.programyourhome.immerse.domain.audio.soundcard.PhysicalDeviceInfo;
+import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
+import com.programyourhome.immerse.domain.audio.soundcard.SoundCardSpeakers;
+import com.programyourhome.immerse.domain.audio.soundcard.SoundCardToSpeakerConfiguration;
+import com.programyourhome.immerse.domain.audio.stopcriterium.NoStopCriterium;
+import com.programyourhome.immerse.domain.location.Vector3D;
+import com.programyourhome.immerse.domain.location.dynamic.HorizontalCircleDynamicLocation;
+import com.programyourhome.immerse.domain.location.dynamic.StaticDynamicLocation;
+import com.programyourhome.immerse.domain.speakers.Speaker;
 
 @RestController
 @RequestMapping("surround")

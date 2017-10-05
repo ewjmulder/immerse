@@ -7,6 +7,7 @@
     <packaging>pom</packaging>
 
     <modules>
+	<module>domain</module>
         <module>speaker-matrix</module>
         <module>audio-streaming</module>
         <module>server</module>

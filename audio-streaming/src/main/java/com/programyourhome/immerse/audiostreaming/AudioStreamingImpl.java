@@ -20,11 +20,11 @@ import org.usb4java.DeviceList;
 import org.usb4java.LibUsb;
 import org.usb4java.LibUsbException;
 
-import com.programyourhome.immerse.audiostreaming.model.Scenario;
-import com.programyourhome.immerse.audiostreaming.model.soundcard.SoundCard;
-import com.programyourhome.immerse.audiostreaming.model.soundcard.SoundCardToSpeakerConfiguration;
+import com.programyourhome.immerse.domain.Room;
+import com.programyourhome.immerse.domain.Scenario;
+import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
+import com.programyourhome.immerse.domain.audio.soundcard.SoundCardToSpeakerConfiguration;
 import com.programyourhome.immerse.speakermatrix.SpeakerMatrix;
-import com.programyourhome.immerse.speakermatrix.model.Room;
 
 @Component
 public class AudioStreamingImpl implements AudioStreaming {
