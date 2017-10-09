@@ -24,7 +24,6 @@ import com.programyourhome.immerse.domain.audio.soundcard.SoundCardStream;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCardToSpeakerConfiguration;
 import com.programyourhome.immerse.domain.location.Vector3D;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumes;
-import com.programyourhome.immerse.speakermatrix.SpeakerMatrix;
 
 public class ScenarioPlayer {
 
@@ -35,7 +34,6 @@ public class ScenarioPlayer {
     private static final int SLEEP_MILLIS = 5;
     // private static final int SLEEP_MILLIS = 377;
 
-    private SpeakerMatrix speakerMatrix;
     private Set<SoundCard> soundCards;
     private Room room;
     private Scenario scenario;
@@ -46,9 +44,8 @@ public class ScenarioPlayer {
     private AudioFormat outputFormat;
     private Set<SoundCardStream> soundCardStreams;
 
-    public ScenarioPlayer(SpeakerMatrix speakerMatrix, Set<SoundCard> soundCards, Room room, Scenario scenario,
+    public ScenarioPlayer(Set<SoundCard> soundCards, Room room, Scenario scenario,
             SoundCardToSpeakerConfiguration soundCardToSpeakerConfiguration) {
-        this.speakerMatrix = speakerMatrix;
         this.soundCards = soundCards;
         this.room = room;
         this.scenario = scenario;
@@ -153,7 +150,7 @@ public class ScenarioPlayer {
         Vector3D listener = this.scenario.getListenerLocation().getLocation(millisSinceStart);
         Vector3D source = this.scenario.getSourceLocation().getLocation(millisSinceStart);
         Scene scene = new Scene(this.room, listener, source, this.scenario.getSettings());
-        SpeakerVolumes speakerVolumes = this.speakerMatrix.calculateSurroundSound(scene);
+        SpeakerVolumes speakerVolumes = scene.getSettings().getSpeakerVolumesAlgorithm().calculateSpeakerVolumes(scene);
         System.out.println(speakerVolumes);
         // TODO: multi threading? (use wait/notify?)
         this.soundCardStreams.forEach(soundCardStream -> soundCardStream.update(this.inputBuffer, BUFFER_MILLIS, speakerVolumes));
