@@ -85,7 +85,6 @@ public class SoundCardStream {
         byte[] inputSample = new byte[2];
         System.arraycopy(inputBuffer, startByteInInputBuffer, inputSample, 0, 2);
         // Convert the 2 sample bytes to the amplitude value they represent.
-        // TODO: take encoding into account! (PCM/etc)
         short inpuAmplitude = ByteBuffer.wrap(inputSample).order(this.inputFormat.isBigEndian() ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN).getShort();
 
         short leftAmplitude = (short) (inpuAmplitude * volumePercentageSpeakerLeft);

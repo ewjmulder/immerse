@@ -1,16 +1,16 @@
 package com.programyourhome.immerse.domain;
 
+import com.programyourhome.immerse.domain.exception.ValidationException;
 import com.programyourhome.immerse.domain.location.Vector3D;
-import com.programyourhome.immerse.domain.speakers.settings.SpeakerMatrixSettings;
 
 public class Scene {
 
     private Room room;
     private Vector3D listener;
     private Vector3D source;
-    private SpeakerMatrixSettings settings;
+    private ImmerseSettings settings;
 
-    public Scene(Room room, Vector3D listener, Vector3D source, SpeakerMatrixSettings settings) {
+    public Scene(Room room, Vector3D listener, Vector3D source, ImmerseSettings settings) {
         this.room = room;
         this.listener = listener;
         this.source = source;
@@ -29,8 +29,16 @@ public class Scene {
         return this.source;
     }
 
-    public SpeakerMatrixSettings getSettings() {
+    public ImmerseSettings getSettings() {
         return this.settings;
+    }
+
+    public void validate() {
+        if (this.getRoom().getSpeakers().isEmpty()) {
+            throw new ValidationException("No speakers configured!");
+        }
+        // TODO: more validation, like:
+        // room not null, validate speaker data
     }
 
 }

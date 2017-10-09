@@ -1,7 +1,6 @@
 package com.programyourhome.immerse.domain;
 
 import com.programyourhome.immerse.domain.audio.resource.AudioResource;
-import com.programyourhome.immerse.domain.audio.settings.AudioStreamingSettings;
 import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
 
 public class Scenario {
@@ -10,10 +9,10 @@ public class Scenario {
     private AudioResource audioResource;
     private DynamicLocation listenerLocation;
     private DynamicLocation sourceLocation;
-    private AudioStreamingSettings settings;
+    private ImmerseSettings settings;
 
     public Scenario(String name, AudioResource audioResource, DynamicLocation listenerLocation,
-            DynamicLocation sourceLocation, AudioStreamingSettings settings) {
+            DynamicLocation sourceLocation, ImmerseSettings settings) {
         this.name = name;
         this.audioResource = audioResource;
         this.listenerLocation = listenerLocation;
@@ -37,7 +36,7 @@ public class Scenario {
         return this.sourceLocation;
     }
 
-    public AudioStreamingSettings getSettings() {
+    public ImmerseSettings getSettings() {
         return this.settings;
     }
 

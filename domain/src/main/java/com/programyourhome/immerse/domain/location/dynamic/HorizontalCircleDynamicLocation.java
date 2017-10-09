@@ -27,16 +27,24 @@ public class HorizontalCircleDynamicLocation implements DynamicLocation {
 
     @Override
     public Vector3D getLocation(long millisSinceStart) {
+
         double angleMoved = (millisSinceStart / this.millisPerDegreeAngle);
         if (!this.clockwise) {
             angleMoved *= -1;
         }
         double currentAngleInDegrees = this.startAngleInDegrees + angleMoved;
-        double x = this.centerX + Math.cos(Math.toRadians(currentAngleInDegrees)) * this.radius;
-        double y = this.centerY + Math.sin(Math.toRadians(currentAngleInDegrees)) * this.radius;
+        double x = Math.cos(Math.toRadians(currentAngleInDegrees)) * this.radius;
+        double y = Math.sin(Math.toRadians(currentAngleInDegrees)) * this.radius;
         // Mirror y to let and increase in angle mean clockwise rotation.
         y *= -1;
-        return new Vector3D(x, y, this.z);
+
+        // System.out.println("millisSinceStart: " + millisSinceStart);
+        // System.out.println("currentAngleInDegrees: " + currentAngleInDegrees);
+        // System.out.println("radius: " + this.radius);
+        // System.out.println("x: " + x);
+        // System.out.println("y: " + y);
+
+        return new Vector3D(this.centerX + x, this.centerY + y, this.z);
     }
 
     // TODO: This screams for a good unit test!!!

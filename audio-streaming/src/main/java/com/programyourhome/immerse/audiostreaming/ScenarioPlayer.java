@@ -24,8 +24,6 @@ import com.programyourhome.immerse.domain.audio.soundcard.SoundCardStream;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCardToSpeakerConfiguration;
 import com.programyourhome.immerse.domain.location.Vector3D;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumes;
-import com.programyourhome.immerse.domain.speakers.settings.SpeakerMatrixSettings;
-import com.programyourhome.immerse.domain.speakers.settings.SurroundMode;
 import com.programyourhome.immerse.speakermatrix.SpeakerMatrix;
 
 public class ScenarioPlayer {
@@ -35,6 +33,7 @@ public class ScenarioPlayer {
 
     // TODO: make configurable, for instance for refresh rate setting
     private static final int SLEEP_MILLIS = 5;
+    // private static final int SLEEP_MILLIS = 377;
 
     private SpeakerMatrix speakerMatrix;
     private Set<SoundCard> soundCards;
@@ -92,23 +91,27 @@ public class ScenarioPlayer {
     }
 
     private void initializeStreams() throws IOException, LineUnavailableException {
-        // TODO: input format validation, like should it be mono?
         AudioFormat inputFormat = this.audioStream.getFormat();
         // Explicitly set to stereo to control each speaker individually.
-        // TODO: use extra abstraction layer, like PyhAudioFormat in PYH project
         this.outputFormat = new AudioFormat(Encoding.PCM_SIGNED, inputFormat.getSampleRate(), inputFormat.getSampleSizeInBits(),
                 2 /* Stereo = 2 channels */, 2 * (inputFormat.getSampleSizeInBits() / 8), inputFormat.getFrameRate(), true /* Big-endian */);
 
         for (SoundCard soundCard : this.soundCards) {
             SourceDataLine outputLine;
-            // try {
             Mixer.Info systemMixerInfo = this.matchMixerInfo(soundCard.getMixerInfo());
-            outputLine = AudioSystem.getSourceDataLine(this.outputFormat, systemMixerInfo);
-            // } catch (IllegalArgumentException e) {
-            // // In case an exception is thrown for this mixer, it's probably the default, so use that one.
-            // // TODO: check on plughw[x,0] otherwise other problem... (OS specific?)
-            // outputLine = AudioSystem.getSourceDataLine(this.outputFormat, null);
-            // }
+            if (systemMixerInfo == null) {
+                throw new IllegalArgumentException("No mixer found in system for info: " + soundCard.getMixerInfo());
+            }
+            try {
+                outputLine = AudioSystem.getSourceDataLine(this.outputFormat, systemMixerInfo);
+                System.out.println("NOT an exception for systemMixerInfo: " + systemMixerInfo);
+            } catch (IllegalArgumentException e) {
+                System.out.println("Exception for systemMixerInfo: " + systemMixerInfo);
+                // TODO: some way to check this assumption?
+                // In case an exception is thrown for this mixer, it's probably used as the default,
+                // so use that one by setting the mixer info to 'null' (Java Sound API limitation?).
+                outputLine = AudioSystem.getSourceDataLine(this.outputFormat, null);
+            }
             outputLine.open();
             SoundCardStream soundCardStream = new SoundCardStream(inputFormat, outputLine,
                     this.soundCardToSpeakerConfiguration.getSoundCardSpeakers(soundCard.getId()));
@@ -149,9 +152,9 @@ public class ScenarioPlayer {
         long millisSinceStart = System.currentTimeMillis() - this.startMillis;
         Vector3D listener = this.scenario.getListenerLocation().getLocation(millisSinceStart);
         Vector3D source = this.scenario.getSourceLocation().getLocation(millisSinceStart);
-        SpeakerMatrixSettings settings = new SpeakerMatrixSettings(SurroundMode.ANGLE_ONLY);
-        Scene scene = new Scene(this.room, listener, source, settings);
+        Scene scene = new Scene(this.room, listener, source, this.scenario.getSettings());
         SpeakerVolumes speakerVolumes = this.speakerMatrix.calculateSurroundSound(scene);
+        System.out.println(speakerVolumes);
         // TODO: multi threading? (use wait/notify?)
         this.soundCardStreams.forEach(soundCardStream -> soundCardStream.update(this.inputBuffer, BUFFER_MILLIS, speakerVolumes));
     }
