@@ -1,0 +1,10 @@
+dependencies {
+    compile project(":domain")
+
+    compile "org.springframework.boot:spring-boot-starter-web:${depVersions.spring_boot}"
+    compile "javax.inject:javax.inject:1"
+    compile "org.apache.commons:commons-lang3:3.3.2"
+    compile "commons-io:commons-io:2.5"
+    compile "com.googlecode.soundlibs:jlayer:1.0.1-1"
+    compile "org.usb4java:usb4java:1.2.0"
+}
