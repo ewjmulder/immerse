@@ -11,8 +11,8 @@ class Vector3DSpec extends Specification {
         def vectorLa4j = vector3D.toLa4j()
 
         then:
-        vectorLa4j.get(0) == 4
-        vectorLa4j.get(1) == 5
-        vectorLa4j.get(2) == 6
+        4 == vectorLa4j.get(0)
+        5 == vectorLa4j.get(1)
+        6 == vectorLa4j.get(2)
     }
 }

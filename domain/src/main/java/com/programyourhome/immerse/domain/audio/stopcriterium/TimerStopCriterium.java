@@ -16,6 +16,9 @@ public class TimerStopCriterium implements StopCriterium {
 
     @Override
     public boolean shouldStop() {
+        System.out.println("current: " + System.currentTimeMillis());
+        System.out.println("this.startMillis: " + this.startMillis);
+        System.out.println("System.currentTimeMillis() - this.startMillis: " + (System.currentTimeMillis() - this.startMillis));
         return System.currentTimeMillis() - this.startMillis >= this.durationInMillis;
     }
 
