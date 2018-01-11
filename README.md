@@ -21,6 +21,6 @@ There are 5 volume 'dials' the effect the final volume:
 
 Conclusions:
 - #1 and #2 and #3 must always be set to the max possible without distortion
-- #5 must already be or be remixed to be as high as possible without distorting
+- #5 must already be or be remixed to be as high as possible without distorting - this is called 'normalizing' and can be done with the audacity GUI or sox CLI
 - #4 is the only 'dial' we should use and it should only be used to dial 'down' (lower than 1).
      Default value can be something like 0.5 and value can be increased or decreased per sound source as applicable in specific situation.
