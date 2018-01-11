@@ -1,20 +1,28 @@
 package com.programyourhome.immerse.domain;
 
 import com.programyourhome.immerse.domain.audio.stopcriterium.StopCriterium;
-import com.programyourhome.immerse.domain.speakers.algorithms.SpeakerVolumesAlgorithm;
+import com.programyourhome.immerse.domain.speakers.algorithms.ratiotovolume.SpeakerRatioToVolumeAlgorithm;
+import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.SpeakerVolumeRatiosAlgorithm;
 
 public class ImmerseSettings {
 
-    private SpeakerVolumesAlgorithm speakerVolumesAlgorithm;
-    private StopCriterium stopCriterium;
+    private final SpeakerVolumeRatiosAlgorithm speakerVolumeRatiosAlgorithm;
+    private final SpeakerRatioToVolumeAlgorithm speakerRatioToVolumeAlgorithm;
+    private final StopCriterium stopCriterium;
 
-    public ImmerseSettings(SpeakerVolumesAlgorithm speakerVolumesAlgorithm, StopCriterium stopCriterium) {
-        this.speakerVolumesAlgorithm = speakerVolumesAlgorithm;
+    public ImmerseSettings(SpeakerVolumeRatiosAlgorithm speakerVolumeRatiosAlgorithm,
+            SpeakerRatioToVolumeAlgorithm speakerRatioToVolumeAlgorithm, StopCriterium stopCriterium) {
+        this.speakerVolumeRatiosAlgorithm = speakerVolumeRatiosAlgorithm;
+        this.speakerRatioToVolumeAlgorithm = speakerRatioToVolumeAlgorithm;
         this.stopCriterium = stopCriterium;
     }
 
-    public SpeakerVolumesAlgorithm getSpeakerVolumesAlgorithm() {
-        return this.speakerVolumesAlgorithm;
+    public SpeakerVolumeRatiosAlgorithm getSpeakerVolumeRatiosAlgorithm() {
+        return this.speakerVolumeRatiosAlgorithm;
+    }
+
+    public SpeakerRatioToVolumeAlgorithm getSpeakerRatioToVolumeAlgorithm() {
+        return this.speakerRatioToVolumeAlgorithm;
     }
 
     public StopCriterium getStopCriterium() {

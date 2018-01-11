@@ -10,11 +10,11 @@ import com.programyourhome.immerse.domain.speakers.SpeakerVolumes;
 
 public class SoundCardStream {
 
-    private SourceDataLine outputLine;
-    private AudioFormat inputFormat;
-    private AudioFormat outputFormat;
+    private final SourceDataLine outputLine;
+    private final AudioFormat inputFormat;
+    private final AudioFormat outputFormat;
     private long nextFrameToWrite;
-    private SoundCardSpeakers soundCardSpeakers;
+    private final SoundCardSpeakers soundCardSpeakers;
 
     public SoundCardStream(AudioFormat inputFormat, SourceDataLine outputLine, SoundCardSpeakers soundCardSpeakers) {
         this.inputFormat = inputFormat;
@@ -50,7 +50,7 @@ public class SoundCardStream {
         this.outputLine.close();
     }
 
-    public void update(byte[] inputBuffer, int bufferMillis, SpeakerVolumes speakerVolumes) {
+    public void update(byte[] inputBuffer, int bufferMillis, SpeakerVolumes speakerVomules) {
         int framesPerMilli = (int) (this.inputFormat.getSampleRate() / 1000);
 
         long amountOfFramesToBuffer = bufferMillis * framesPerMilli;
@@ -69,10 +69,10 @@ public class SoundCardStream {
                 int startByteInInputBuffer = (int) (this.inputFormat.getFrameSize() * frame);
                 int startByteInOutputBuffer = (int) (this.outputFormat.getFrameSize() * (frame - this.nextFrameToWrite));
 
-                double volumePercentageSpeakerLeft = speakerVolumes.getVolume(this.soundCardSpeakers.getSpeakerIdLeft());
-                double volumePercentageSpeakerRight = speakerVolumes.getVolume(this.soundCardSpeakers.getSpeakerIdRight());
+                double volumeFractionSpeakerLeft = speakerVomules.getVolume(this.soundCardSpeakers.getSpeakerIdLeft());
+                double volumeFractionSpeakerRight = speakerVomules.getVolume(this.soundCardSpeakers.getSpeakerIdRight());
                 // TODO: prevent arrayindexoutofbounds at end of stream
-                byte[] frameBytes = this.calculateFrameBytes(inputBuffer, startByteInInputBuffer, volumePercentageSpeakerLeft, volumePercentageSpeakerRight);
+                byte[] frameBytes = this.calculateFrameBytes(inputBuffer, startByteInInputBuffer, volumeFractionSpeakerLeft, volumeFractionSpeakerRight);
                 System.arraycopy(frameBytes, 0, outputBuffer, startByteInOutputBuffer, frameBytes.length);
             }
             this.outputLine.write(outputBuffer, 0, outputBuffer.length);
@@ -81,28 +81,28 @@ public class SoundCardStream {
     }
 
     private byte[] calculateFrameBytes(byte[] inputBuffer, int startByteInInputBuffer,
-            double volumePercentageSpeakerLeft, double volumePercentageSpeakerRight) {
+            double volumeFractionSpeakerLeft, double volumeFractionSpeakerRight) {
         byte[] inputSample = new byte[2];
         System.arraycopy(inputBuffer, startByteInInputBuffer, inputSample, 0, 2);
         // Convert the 2 sample bytes to the amplitude value they represent.
         short inpuAmplitude = ByteBuffer.wrap(inputSample).order(this.inputFormat.isBigEndian() ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN).getShort();
 
-        short leftAmplitude = (short) (inpuAmplitude * volumePercentageSpeakerLeft);
-        short rightAmplitude = (short) (inpuAmplitude * volumePercentageSpeakerRight);
+        short leftAmplitude = (short) (inpuAmplitude * volumeFractionSpeakerLeft);
+        short rightAmplitude = (short) (inpuAmplitude * volumeFractionSpeakerRight);
 
         // Convert the left and right calculated amplitude values back to bytes.
         final byte[] outputFrameBytes = new byte[4];
         // TODO: assume/force output format is always PCM signed / big endian?
         if (this.outputFormat.isBigEndian()) {
-            outputFrameBytes[0] = (byte) ((leftAmplitude >> 8) & 0xFF);
+            outputFrameBytes[0] = (byte) (leftAmplitude >> 8 & 0xFF);
             outputFrameBytes[1] = (byte) (leftAmplitude & 0xFF);
-            outputFrameBytes[2] = (byte) ((rightAmplitude >> 8) & 0xFF);
+            outputFrameBytes[2] = (byte) (rightAmplitude >> 8 & 0xFF);
             outputFrameBytes[3] = (byte) (rightAmplitude & 0xFF);
         } else {
             outputFrameBytes[0] = (byte) (leftAmplitude & 0xFF);
-            outputFrameBytes[1] = (byte) ((leftAmplitude >> 8) & 0xff);
+            outputFrameBytes[1] = (byte) (leftAmplitude >> 8 & 0xff);
             outputFrameBytes[2] = (byte) (rightAmplitude & 0xFF);
-            outputFrameBytes[3] = (byte) ((rightAmplitude >> 8) & 0xff);
+            outputFrameBytes[3] = (byte) (rightAmplitude >> 8 & 0xff);
         }
         return outputFrameBytes;
     }

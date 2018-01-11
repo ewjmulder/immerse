@@ -34,15 +34,15 @@ public class ScenarioPlayer {
     private static final int SLEEP_MILLIS = 5;
     // private static final int SLEEP_MILLIS = 377;
 
-    private Set<SoundCard> soundCards;
-    private Room room;
-    private Scenario scenario;
-    private SoundCardToSpeakerConfiguration soundCardToSpeakerConfiguration;
+    private final Set<SoundCard> soundCards;
+    private final Room room;
+    private final Scenario scenario;
+    private final SoundCardToSpeakerConfiguration soundCardToSpeakerConfiguration;
     private long startMillis;
     private AudioInputStream audioStream;
     private byte[] inputBuffer;
     private AudioFormat outputFormat;
-    private Set<SoundCardStream> soundCardStreams;
+    private final Set<SoundCardStream> soundCardStreams;
 
     public ScenarioPlayer(Set<SoundCard> soundCards, Room room, Scenario scenario,
             SoundCardToSpeakerConfiguration soundCardToSpeakerConfiguration) {
@@ -150,10 +150,8 @@ public class ScenarioPlayer {
         Vector3D listener = this.scenario.getListenerLocation().getLocation(millisSinceStart);
         Vector3D source = this.scenario.getSourceLocation().getLocation(millisSinceStart);
         Scene scene = new Scene(this.room, listener, source, this.scenario.getSettings());
-        SpeakerVolumes speakerVolumes = scene.getSettings().getSpeakerVolumesAlgorithm().calculateSpeakerVolumes(scene);
-        System.out.println(speakerVolumes);
         // TODO: multi threading? (use wait/notify?)
-        this.soundCardStreams.forEach(soundCardStream -> soundCardStream.update(this.inputBuffer, BUFFER_MILLIS, speakerVolumes));
+        this.soundCardStreams.forEach(soundCardStream -> soundCardStream.update(this.inputBuffer, BUFFER_MILLIS, new SpeakerVolumes(scene)));
     }
 
     private void stopStreams() throws IOException {

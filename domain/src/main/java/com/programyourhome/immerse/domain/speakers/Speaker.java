@@ -32,6 +32,7 @@ public class Speaker {
         return this.description;
     }
 
+    //TODO: integrate multiplier!
     public double getMultiplier() {
         return this.multiplier;
     }

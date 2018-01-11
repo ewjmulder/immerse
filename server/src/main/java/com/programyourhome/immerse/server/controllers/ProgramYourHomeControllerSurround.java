@@ -30,9 +30,10 @@ import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
 import com.programyourhome.immerse.domain.location.dynamic.HorizontalCircleDynamicLocation;
 import com.programyourhome.immerse.domain.location.dynamic.StaticDynamicLocation;
 import com.programyourhome.immerse.domain.speakers.Speaker;
-import com.programyourhome.immerse.domain.speakers.algorithms.FractionalSpeakerVolumesAlgorithm;
-import com.programyourhome.immerse.domain.speakers.algorithms.OnlyClosestSpeakerVolumesAlgorithm;
-import com.programyourhome.immerse.domain.speakers.algorithms.SpeakerVolumesAlgorithm;
+import com.programyourhome.immerse.domain.speakers.algorithms.ratiotovolume.MaxSumRatioToVolumeAlgorithm;
+import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.FieldOfHearingFractionalSpeakerVolumeRatiosAlgorithm;
+import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.OnlyClosestSpeakerVolumeRatiosAlgorithm;
+import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.SpeakerVolumeRatiosAlgorithm;
 
 @RestController
 @RequestMapping("surround")
@@ -62,7 +63,8 @@ public class ProgramYourHomeControllerSurround {
         Scenario scenario = new Scenario("Test", audioResource,
                 new StaticDynamicLocation(new Vector3D(5, 5, 5)),
                 new StaticDynamicLocation(new Vector3D(5, 6, 12)),
-                new ImmerseSettings(new FractionalSpeakerVolumesAlgorithm(), new NoStopCriterium()));
+                new ImmerseSettings(new FieldOfHearingFractionalSpeakerVolumeRatiosAlgorithm(45),
+                        new MaxSumRatioToVolumeAlgorithm(1), new NoStopCriterium()));
         this.audioStreaming.playScenario(room, scenario, soundCards, soundCardToSpeakerConfiguration);
     }
 
@@ -114,14 +116,14 @@ public class ProgramYourHomeControllerSurround {
         // Only this speaker.
         volumeMap.put(speakerId, 1.0);
 
-        SpeakerVolumesAlgorithm algo = new OnlyClosestSpeakerVolumesAlgorithm();
+        SpeakerVolumeRatiosAlgorithm algo = new OnlyClosestSpeakerVolumeRatiosAlgorithm();
         // SpeakerVolumesAlgorithm algo = new StaticSpeakerVolumesAlgorithm(new SpeakerVolumes(volumeMap));
 
         AudioResource audioResource = AudioResource.fromFile(new File("/tmp/game-music-mono-44k.wav"));
         Scenario scenario = new Scenario("Test", audioResource, new StaticDynamicLocation(
                 new Vector3D(5, 5, 5)),
                 sourceLocation,
-                new ImmerseSettings(algo, new NoStopCriterium()));
+                new ImmerseSettings(algo, new MaxSumRatioToVolumeAlgorithm(1), new NoStopCriterium()));
         this.audioStreaming.playScenario(room, scenario, soundCards, soundCardToSpeakerConfiguration);
     }
 
@@ -157,7 +159,8 @@ public class ProgramYourHomeControllerSurround {
         Scenario scenario = new Scenario("Test", audioResource, new StaticDynamicLocation(
                 new Vector3D(5, 5, 5)),
                 new HorizontalCircleDynamicLocation(5, 5, 10, 0, 5, true, 14),
-                new ImmerseSettings(new FractionalSpeakerVolumesAlgorithm(), new NoStopCriterium()));
+                new ImmerseSettings(new FieldOfHearingFractionalSpeakerVolumeRatiosAlgorithm(45),
+                        new MaxSumRatioToVolumeAlgorithm(1), new NoStopCriterium()));
         this.audioStreaming.playScenario(room, scenario, soundCards, soundCardToSpeakerConfiguration);
     }
 

@@ -1,31 +1,20 @@
 package com.programyourhome.immerse.domain.speakers;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.programyourhome.immerse.domain.Scene;
+import com.programyourhome.immerse.domain.speakers.algorithms.ratiotovolume.SpeakerRatioToVolumeAlgorithm;
 
 public class SpeakerVolumes {
 
-    private Map<Integer, Double> volumeMap;
+    private SpeakerRatioToVolumeAlgorithm speakerRatioToVolumeAlgorithm;
 
-    public SpeakerVolumes() {
-        this(new HashMap<>());
+    public SpeakerVolumes(Scene scene) {
+        SpeakerVolumeRatios speakerVolumeRatios = scene.getSettings().getSpeakerVolumeRatiosAlgorithm().calculateVolumeRatios(scene);
+        SpeakerRatioToVolumeAlgorithm speakerRatioToVolumeAlgorithm = scene.getSettings().getSpeakerRatioToVolumeAlgorithm();
+        speakerRatioToVolumeAlgorithm.setSpeakerVolumeRatios(speakerVolumeRatios);
     }
 
-    public SpeakerVolumes(Map<Integer, Double> volumeMap) {
-        this.volumeMap = volumeMap;
-    }
-
-    public void setVolume(int speakerId, double volume) {
-        this.volumeMap.put(speakerId, volume);
-    }
-
-    public Double getVolume(int speakerId) {
-        return this.volumeMap.get(speakerId);
-    }
-
-    @Override
-    public String toString() {
-        return this.volumeMap.toString();
+    public double getVolume(int speakerId) {
+        return this.speakerRatioToVolumeAlgorithm.calculateVolume(speakerId);
     }
 
 }

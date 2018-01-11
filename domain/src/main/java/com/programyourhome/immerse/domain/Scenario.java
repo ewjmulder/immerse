@@ -3,13 +3,17 @@ package com.programyourhome.immerse.domain;
 import com.programyourhome.immerse.domain.audio.resource.AudioResource;
 import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
 
+//TODO: refactor the domain ideas:
+//- Include room instance in a scenario: it makes no sense to have location specifiers without knowing the room dimensions
+//- Rename 'scene' to something that is more 'static', like 'snapshot' or 'state'
+
 public class Scenario {
 
-    private String name;
-    private AudioResource audioResource;
-    private DynamicLocation listenerLocation;
-    private DynamicLocation sourceLocation;
-    private ImmerseSettings settings;
+    private final String name;
+    private final AudioResource audioResource;
+    private final DynamicLocation listenerLocation;
+    private final DynamicLocation sourceLocation;
+    private final ImmerseSettings settings;
 
     public Scenario(String name, AudioResource audioResource, DynamicLocation listenerLocation,
             DynamicLocation sourceLocation, ImmerseSettings settings) {
