@@ -9,7 +9,7 @@ public class MixerInfo extends Mixer.Info {
         super(name, vendor, description, version);
     }
 
-    public Builder builder() {
+    public static Builder builder() {
         return new Builder();
     }
 

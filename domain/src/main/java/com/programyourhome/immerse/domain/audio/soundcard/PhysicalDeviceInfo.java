@@ -26,7 +26,7 @@ public class PhysicalDeviceInfo {
         return this.serialNumber;
     }
 
-    public Builder builder() {
+    public static Builder builder() {
         return new Builder();
     }
 

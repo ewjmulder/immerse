@@ -53,7 +53,7 @@ public class SoundCard {
         return this.id + " - " + this.name + " - " + this.physicalPort;
     }
 
-    public Builder builder() {
+    public static Builder builder() {
         return new Builder();
     }
 

@@ -18,7 +18,7 @@ public class SoundCardDetector {
     private static final Pattern MIXER_INFO_NAME_PATTERN = Pattern.compile(".*\\[plughw:([0-9]+),0\\]");
 
     private static final String[] PHYSICAL_PORT_COMMAND = { "find", "/dev/snd/by-path", "-type", "l", "-printf", "%f --> %l\\n" };
-    private static final Pattern PHYSICAL_PORT_PATTERN = Pattern.compile(".*\\[plughw:([0-9]+),0\\]");
+    private static final Pattern PHYSICAL_PORT_PATTERN = Pattern.compile("(.*) --> ../controlC([0-9]+)");
 
     private Map<String, Mixer.Info> physicalPortToSoundCardMapping;
 

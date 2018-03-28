@@ -36,8 +36,15 @@ public class SoundCardStream {
         double framesPerMilli = this.outputFormat.getNumberOfFramesPerSecond() / 1000.0;
 
         double amountOfFramesToBuffer = bufferMillis * framesPerMilli;
-        double amountOfFramesAhead = this.framesWritten - this.outputLine.getFramePosition();
+        long lineFramePosition = this.outputLine.getLongFramePosition();
+        // Sanity check: the line position can never be higher than the frames written.
+        // Unfortunately, this sometimes happens with certain hardware.
+        if (lineFramePosition > this.framesWritten) {
+            lineFramePosition = this.framesWritten;
+        }
+        double amountOfFramesAhead = this.framesWritten - lineFramePosition;
         long amountOfFramesNeeded = Math.round(amountOfFramesToBuffer - amountOfFramesAhead);
+
         return amountOfFramesNeeded;
     }
 

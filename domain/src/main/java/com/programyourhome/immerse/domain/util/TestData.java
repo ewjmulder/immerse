@@ -8,6 +8,9 @@ import com.programyourhome.immerse.domain.Scenario;
 import com.programyourhome.immerse.domain.Snapshot;
 import com.programyourhome.immerse.domain.audio.playback.Playback;
 import com.programyourhome.immerse.domain.audio.resource.AudioResource;
+import com.programyourhome.immerse.domain.audio.soundcard.MixerInfo;
+import com.programyourhome.immerse.domain.audio.soundcard.PhysicalDeviceInfo;
+import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
 import com.programyourhome.immerse.domain.location.Vector3D;
 import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
 import com.programyourhome.immerse.domain.speakers.Speaker;
@@ -20,8 +23,6 @@ import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.Volum
  */
 public class TestData {
 
-    private static int nextSpeakerId = 1;
-
     private TestData() {
     }
 
@@ -31,10 +32,6 @@ public class TestData {
 
     public static Vector3D listener(double x, double y, double z) {
         return new Vector3D(x, y, z);
-    }
-
-    public static Speaker speaker(double x, double y, double z) {
-        return speaker(nextSpeakerId++, x, y, z);
     }
 
     public static Speaker speaker(int id, double x, double y, double z) {
@@ -89,6 +86,29 @@ public class TestData {
                 .volumeRatiosAlgorithm(volumeRatiosAlgorithm)
                 .normalizeAlgorithm(normalizeAlgorithm)
                 .playback(playbackSupplier)
+                .build();
+    }
+
+    public static SoundCard soundCard(int id, String physicalPort, Speaker leftSpeaker, Speaker rightSpeaker) {
+        return SoundCard.builder()
+                .id(id)
+                .name("SoundCard " + id)
+                .description("Description of sound card " + id)
+                .physicalPort(physicalPort)
+                .mixerInfo(MixerInfo.builder()
+                        .name("MixerInfo")
+                        .vendor("Vendor")
+                        .description("Description of MixerInfo")
+                        .version("1.0")
+                        .build())
+                .physicalDeviceInfo(PhysicalDeviceInfo.builder()
+                        .name("PhysicalDeviceInfo")
+                        .vendor("Vendor")
+                        .product("Product")
+                        .serialNumber("12345")
+                        .build())
+                .leftSpeaker(leftSpeaker)
+                .rightSpeaker(rightSpeaker)
                 .build();
     }
 

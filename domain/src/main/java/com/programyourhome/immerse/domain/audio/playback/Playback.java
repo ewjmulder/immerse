@@ -29,6 +29,10 @@ public interface Playback {
         return () -> new LoopPlayback(times);
     }
 
+    public static Supplier<Playback> forever() {
+        return () -> new ForeverPlayback();
+    }
+
     public static Supplier<Playback> timer(long millis) {
         return () -> new TimerPlayback(millis);
     }

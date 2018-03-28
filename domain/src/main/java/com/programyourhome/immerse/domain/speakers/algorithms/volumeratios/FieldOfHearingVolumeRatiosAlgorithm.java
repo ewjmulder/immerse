@@ -29,10 +29,9 @@ public class FieldOfHearingVolumeRatiosAlgorithm implements VolumeRatiosAlgorith
     public SpeakerVolumeRatios calculateVolumeRatios(Snapshot snapshot) {
         return new SpeakerVolumeRatios(EntryStream.of(snapshot.getScenario().getRoom().getSpeakers())
                 .mapValues(speaker -> MathUtil.calculateAngleInDegrees(snapshot, speaker))
-                // Only include all speakers inside the 'field of hearing'.
-                .filterValues(angle -> angle <= this.maxAngle)
-                // A small angle should be a high volume fraction and vice versa.
-                .mapValues(MathUtil::reverseAngle)
+                // For speakers inside the 'field of hearing', a low angle should be a high volume ratio and vice versa.
+                // For speakers not inside the 'field of hearing', it's just 0.
+                .mapValues(angle -> angle <= this.maxAngle ? MathUtil.reverseAngle(angle) : 0.0)
                 .toMap());
     }
 
