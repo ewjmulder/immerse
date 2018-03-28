@@ -2,9 +2,15 @@
 Immerse yourself in the waves of dynamic surround sound!
 
 
+Open question about combining multiple sounds: should they always go through the 'combine-mix-and-match' flow?
+- I guess yes, cause beforehand you do not know which speakers will be used for which sounds.
+So to be sure all sounds can be mixed, they should go through the flow. Result might be that one sound is 100% on speaker 1
+and another 100% on speaker 2, resulting in a clean separation, but that can be a perfectly legal outcome of the flow, so
+net result is the same a no flow.
+
 
 Braindump about volume:
-There are 5 volume 'dials' the effect the final volume:
+There are 5 volume 'dials' that effect the final volume:
   1. The physical volume dial of the speaker
      This should be tweaked in such a way that it is set to a value where outputting sound with the max volume of the OS
      and a loud sound source (with peaks of max amplitude) still sounds good. That means every other dial (#2, #3 and #4) can be freely set

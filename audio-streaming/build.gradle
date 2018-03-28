@@ -7,4 +7,5 @@ dependencies {
     compile "commons-io:commons-io:2.5"
     compile "com.googlecode.soundlibs:jlayer:1.0.1-1"
     compile "org.usb4java:usb4java:1.2.0"
+    compile 'one.util:streamex:0.6.6'
 }

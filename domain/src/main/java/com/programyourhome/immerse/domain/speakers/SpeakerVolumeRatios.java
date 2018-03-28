@@ -5,7 +5,7 @@ import java.util.Map;
 
 public class SpeakerVolumeRatios {
 
-    private Map<Integer, Double> volumeRatioMap;
+    private final Map<Integer, Double> volumeRatioMap;
 
     public SpeakerVolumeRatios() {
         this(new HashMap<>());
@@ -22,10 +22,10 @@ public class SpeakerVolumeRatios {
     public double getVolumeRatio(int speakerId) {
         return this.volumeRatioMap.get(speakerId);
     }
-    
+
     public Map<Integer, Double> getVolumeRatioMap() {
-		return volumeRatioMap;
-	}
+        return this.volumeRatioMap;
+    }
 
     @Override
     public String toString() {

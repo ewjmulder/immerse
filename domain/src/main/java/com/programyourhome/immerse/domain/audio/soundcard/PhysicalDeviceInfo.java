@@ -7,11 +7,7 @@ public class PhysicalDeviceInfo {
     private String product;
     private String serialNumber;
 
-    public PhysicalDeviceInfo(String name, String vendor, String product, String serialNumber) {
-        this.name = name;
-        this.vendor = vendor;
-        this.product = product;
-        this.serialNumber = serialNumber;
+    public PhysicalDeviceInfo() {
     }
 
     public String getName() {
@@ -28,6 +24,42 @@ public class PhysicalDeviceInfo {
 
     public String getSerialNumber() {
         return this.serialNumber;
+    }
+
+    public Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private final PhysicalDeviceInfo info;
+
+        public Builder() {
+            this.info = new PhysicalDeviceInfo();
+        }
+
+        public Builder name(String name) {
+            this.info.name = name;
+            return this;
+        }
+
+        public Builder vendor(String vendor) {
+            this.info.vendor = vendor;
+            return this;
+        }
+
+        public Builder product(String product) {
+            this.info.product = product;
+            return this;
+        }
+
+        public Builder serialNumber(String serialNumber) {
+            this.info.serialNumber = serialNumber;
+            return this;
+        }
+
+        public PhysicalDeviceInfo build() {
+            return this.info;
+        }
     }
 
 }

@@ -4,20 +4,20 @@ import com.programyourhome.immerse.domain.location.Vector3D;
 
 public class HorizontalCircleDynamicLocation implements DynamicLocation {
 
-    private double centerX;
-    private double centerY;
-    private double z;
-    private double startAngleInDegrees;
-    private double radius;
-    private boolean clockwise;
-    private double millisPerDegreeAngle;
+    private final double centerX;
+    private final double centerY;
+    private final double z;
+    private final double startAngleInDegrees;
+    private final double radius;
+    private final boolean clockwise;
+    private final double millisPerDegreeAngle;
     // TODO: support for secondsPerFullCircle
+    // TODO: support for circling around any of the axis
 
-    public HorizontalCircleDynamicLocation(double centerX, double centerY, double z, double startAngleInDegrees, double radius, boolean clockwise,
-            double millisPerDegreeAngle) {
-        this.centerX = centerX;
-        this.centerY = centerY;
-        this.z = z;
+    public HorizontalCircleDynamicLocation(Vector3D center, double startAngleInDegrees, double radius, boolean clockwise, double millisPerDegreeAngle) {
+        this.centerX = center.getX();
+        this.centerY = center.getY();
+        this.z = center.getZ();
         // Minus 90 degrees to start at the 'top' of the circle (since the unit circle starts at the 'right').
         this.startAngleInDegrees = startAngleInDegrees - 90;
         this.radius = radius;
@@ -27,15 +27,14 @@ public class HorizontalCircleDynamicLocation implements DynamicLocation {
 
     @Override
     public Vector3D getLocation(long millisSinceStart) {
-
-        double angleMoved = (millisSinceStart / this.millisPerDegreeAngle);
+        double angleMoved = millisSinceStart / this.millisPerDegreeAngle;
         if (!this.clockwise) {
             angleMoved *= -1;
         }
         double currentAngleInDegrees = this.startAngleInDegrees + angleMoved;
         double x = Math.cos(Math.toRadians(currentAngleInDegrees)) * this.radius;
         double y = Math.sin(Math.toRadians(currentAngleInDegrees)) * this.radius;
-        // Mirror y to let and increase in angle mean clockwise rotation.
+        // Mirror y to let an increase in angle mean clockwise rotation.
         y *= -1;
 
         // System.out.println("millisSinceStart: " + millisSinceStart);
@@ -49,8 +48,8 @@ public class HorizontalCircleDynamicLocation implements DynamicLocation {
 
     // TODO: This screams for a good unit test!!!
     public static void main(String[] args) {
-        HorizontalCircleDynamicLocation h = new HorizontalCircleDynamicLocation(0, 0, 0, 90, 1, true, 1);
-        System.out.println(h.getLocation(0));
+        // HorizontalCircleDynamicLocation h = new HorizontalCircleDynamicLocation(0, 0, 0, 90, 1, true, 1);
+        // System.out.println(h.getLocation(0));
     }
 
 }

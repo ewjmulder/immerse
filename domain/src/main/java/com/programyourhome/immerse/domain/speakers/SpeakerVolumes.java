@@ -1,20 +1,21 @@
 package com.programyourhome.immerse.domain.speakers;
 
-import com.programyourhome.immerse.domain.Scene;
-import com.programyourhome.immerse.domain.speakers.algorithms.ratiotovolume.SpeakerRatioToVolumeAlgorithm;
+import com.programyourhome.immerse.domain.Snapshot;
+import com.programyourhome.immerse.domain.speakers.algorithms.normalize.NormalizeAlgorithm;
 
 public class SpeakerVolumes {
 
-    private SpeakerRatioToVolumeAlgorithm speakerRatioToVolumeAlgorithm;
+    private final NormalizeAlgorithm normalizeAlgorithm;
 
-    public SpeakerVolumes(Scene scene) {
-        SpeakerVolumeRatios speakerVolumeRatios = scene.getSettings().getSpeakerVolumeRatiosAlgorithm().calculateVolumeRatios(scene);
-        SpeakerRatioToVolumeAlgorithm speakerRatioToVolumeAlgorithm = scene.getSettings().getSpeakerRatioToVolumeAlgorithm();
-        speakerRatioToVolumeAlgorithm.setSpeakerVolumeRatios(speakerVolumeRatios);
+    public SpeakerVolumes(Snapshot snapshot) {
+        SpeakerVolumeRatios speakerVolumeRatios = snapshot.getScenario().getSettings().getVolumeRatiosAlgorithm().calculateVolumeRatios(snapshot);
+        this.normalizeAlgorithm = snapshot.getScenario().getSettings().getNormalizeAlgorithm();
+        this.normalizeAlgorithm.setSpeakerVolumeRatios(speakerVolumeRatios);
     }
 
-    public double getVolume(int speakerId) {
-        return this.speakerRatioToVolumeAlgorithm.calculateVolume(speakerId);
+    public double getVolumeFraction(int speakerId) {
+        // TODO: caching?
+        return this.normalizeAlgorithm.calculateVolumeFraction(speakerId);
     }
 
 }

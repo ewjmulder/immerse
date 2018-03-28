@@ -9,15 +9,9 @@ public class Speaker {
     private int id;
     private String name;
     private String description;
-    private double multiplier;
     private Vector3D vector3D;
 
-    public Speaker(int id, String name, String description, double multiplier, Vector3D vector3D) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.multiplier = multiplier;
-        this.vector3D = vector3D;
+    private Speaker() {
     }
 
     public int getId() {
@@ -32,11 +26,6 @@ public class Speaker {
         return this.description;
     }
 
-    //TODO: integrate multiplier!
-    public double getMultiplier() {
-        return this.multiplier;
-    }
-
     public Vector3D getVector3D() {
         return this.vector3D;
     }
@@ -48,6 +37,46 @@ public class Speaker {
     @Override
     public String toString() {
         return this.getId() + "-" + this.getName() + " @ " + this.vector3D;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private final Speaker speaker;
+
+        public Builder() {
+            this.speaker = new Speaker();
+        }
+
+        public Builder id(int id) {
+            this.speaker.id = id;
+            return this;
+        }
+
+        public Builder name(String name) {
+            this.speaker.name = name;
+            return this;
+        }
+
+        public Builder description(String description) {
+            this.speaker.description = description;
+            return this;
+        }
+
+        public Builder vector(Vector3D vector) {
+            this.speaker.vector3D = vector;
+            return this;
+        }
+
+        public Builder vector(double x, double y, double z) {
+            return this.vector(new Vector3D(x, y, z));
+        }
+
+        public Speaker build() {
+            return this.speaker;
+        }
     }
 
 }
