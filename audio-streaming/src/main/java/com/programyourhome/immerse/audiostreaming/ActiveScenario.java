@@ -39,9 +39,11 @@ public class ActiveScenario {
         return this.startMillis > -1;
     }
 
-    public void start() {
-        this.startMillis = System.currentTimeMillis();
-        this.playback.audioStarted();
+    public void startIfNotStarted() {
+        if (!this.isStarted()) {
+            this.startMillis = System.currentTimeMillis();
+            this.playback.audioStarted();
+        }
     }
 
 }

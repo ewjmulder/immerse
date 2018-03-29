@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -27,6 +28,9 @@ import com.programyourhome.immerse.domain.Snapshot;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
 import com.programyourhome.immerse.domain.location.Vector3D;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumes;
+
+import one.util.streamex.EntryStream;
+import one.util.streamex.StreamEx;
 
 // TODO: implement support for playing multiple audio streams at the same time
 // TODO: useful to split into NonInteractiveScenarioPlayer and InteractiveScenarioPlayer?
@@ -134,143 +138,33 @@ public class ImmerseAudioMixer {
             long start = System.nanoTime();
             // TODO: split out in synchronized method(s)
             synchronized (this) {
-                List<Long> allFramesNeededAmounts = this.soundCardStreams.stream()
-                        .mapToLong(stream -> stream.getAmountOfFramesNeeded(BUFFER_MILLIS))
-                        .boxed()
-                        .collect(Collectors.toList());
-                long minFramesNeeded = Collections.min(allFramesNeededAmounts);
-                long maxFramesNeeded = Collections.max(allFramesNeededAmounts);
-                // Since we have to keep in sync with all streams, we take the max frames needed as the amount neededfor all streams.
-                long amountOfFramesNeeded = maxFramesNeeded;
-                // TODO: test with several cards (does not even need real sound input or speakers)
-                // TODO: we can also try to use current micro position to see the difference between streams
-                // System.out.println("Frames needed diff: " + (maxFramesNeeded - minFramesNeeded));
-                // System.out.println("amountOfFramesNeeded: " + amountOfFramesNeeded);
+                int amountOfFramesNeeded = this.calculateAmountOfFramesNeeded();
+                ScenarioLoopContext context = new ScenarioLoopContext(amountOfFramesNeeded);
 
-                Map<SoundCardStream, byte[]> soundCardMergedOutputBuffers = new HashMap<>();
-
-                Runnable postAction = () -> {};
-                if (this.activeScenarios.size() == 0) {
-                    int arraySize = (int) (amountOfFramesNeeded * this.outputFormat.getNumberOfBytesPerFrame());
-                    byte[] silenceArray = new byte[arraySize];
-                    Arrays.fill(silenceArray, (byte) 0);
-                    for (SoundCardStream soundCardStream : this.soundCardStreams) {
-                        soundCardMergedOutputBuffers.put(soundCardStream, silenceArray);
-                    }
-                } else {
-                    Map<ActiveScenario, short[]> inputSamples = new HashMap<>();
-                    Set<ActiveScenario> scenariosToRemove = new HashSet<>();
-                    Set<ActiveScenario> scenariosToRestart = new HashSet<>();
-                    for (ActiveScenario activeScenario : this.activeScenarios) {
-                        try {
-                            short[] samples = new short[(int) amountOfFramesNeeded];
-                            boolean endOfStream = SampleReader.readSamples(activeScenario.getInputStream(), samples);
-                            if (endOfStream) {
-                                // End of stream reached, check playback for next action.
-                                if (activeScenario.getPlayback().endOfStream()) {
-                                    scenariosToRestart.add(activeScenario);
-                                } else {
-                                    // No more playback, remove scenario.
-                                    scenariosToRemove.add(activeScenario);
-                                }
-                            }
-                            inputSamples.put(activeScenario, samples);
-                        } catch (IOException e) {
-                            // TODO: log error
-                            scenariosToRemove.add(activeScenario);
-                        }
-                    }
-                    Map<SoundCardStream, List<short[]>> soundCardOutputBuffers = new HashMap<>();
-                    // TODO: use put or insert or some method like that
-                    for (SoundCardStream soundCardStream : this.soundCardStreams) {
-                        soundCardOutputBuffers.put(soundCardStream, new ArrayList<>());
-                    }
-                    for (ActiveScenario activeScenario : inputSamples.keySet()) {
-                        long millisSinceStart = 0;
-                        if (activeScenario.isStarted()) {
-                            millisSinceStart = System.currentTimeMillis() - activeScenario.getStartMillis();
-                        }
-                        Vector3D listener = activeScenario.getScenario().getListenerLocation().getLocation(millisSinceStart);
-                        Vector3D source = activeScenario.getScenario().getSourceLocation().getLocation(millisSinceStart);
-                        Snapshot snapshot = Snapshot.builder()
-                                .scenario(activeScenario.getScenario())
-                                .source(source)
-                                .listener(listener)
-                                .build();
-                        SpeakerVolumes speakerVolumes = new SpeakerVolumes(snapshot);
-
-                        short[] sampleBuffer = inputSamples.get(activeScenario);
-                        for (SoundCardStream soundCardStream : this.soundCardStreams) {
-                            double volumeFractionSpeakerLeft = speakerVolumes.getVolumeFraction(soundCardStream.getSoundCard().getLeftSpeaker().getId());
-                            double volumeFractionSpeakerRight = speakerVolumes.getVolumeFraction(soundCardStream.getSoundCard().getRightSpeaker().getId());
-                            int stereoSamplesSize = sampleBuffer.length * 2;
-                            short[] stereoSamples = new short[stereoSamplesSize];
-                            for (int sampleIndex = 0; sampleIndex < sampleBuffer.length; sampleIndex++) {
-                                short leftAmplitude = (short) (sampleBuffer[sampleIndex] * volumeFractionSpeakerLeft);
-                                short rightAmplitude = (short) (sampleBuffer[sampleIndex] * volumeFractionSpeakerRight);
-                                stereoSamples[sampleIndex * 2] = leftAmplitude;
-                                stereoSamples[sampleIndex * 2 + 1] = rightAmplitude;
-                            }
-                            soundCardOutputBuffers.get(soundCardStream).add(stereoSamples);
-                        }
-                    }
-
-                    for (SoundCardStream soundCardStream : soundCardOutputBuffers.keySet()) {
-                        List<short[]> outputSamples = soundCardOutputBuffers.get(soundCardStream);
-                        byte[] mergedOutputBuffer = new byte[(int) (amountOfFramesNeeded * this.outputFormat.getNumberOfBytesPerFrame())];
-                        for (int sampleIndex = 0; sampleIndex < outputSamples.get(0).length; sampleIndex++) {
-                            // Merging the buffers is just a matter of summing the amplitudes of the different sounds.
-                            int totalAmplitude = 0;
-                            for (short[] sampleBuffer : outputSamples) {
-                                totalAmplitude += sampleBuffer[sampleIndex];
-                            }
-                            // Keep amplitude within boundaries.
-                            if (this.outputFormat.getSampleSize() == SampleSize.ONE_BYTE) {
-                                totalAmplitude = this.sanitizeAsByte(totalAmplitude);
-                            } else {
-                                totalAmplitude = this.sanitizeAsShort(totalAmplitude);
-                            }
-                            // if (sampleIndex % 2 == 0)
-                            // System.out.println("totalAmplitude: " + totalAmplitude);
-                            SampleWriter.writeSample((short) totalAmplitude, mergedOutputBuffer, sampleIndex, this.outputFormat);
-                        }
-                        soundCardMergedOutputBuffers.put(soundCardStream, mergedOutputBuffer);
-
-                        postAction = () -> {
-                            for (ActiveScenario activeScenario : scenariosToRestart) {
-                                try {
-                                    this.activeScenarios.remove(activeScenario);
-                                    this.playScenario(activeScenario.getScenario());
-                                } catch (IOException e) {
-                                    // Log error
-                                    scenariosToRemove.add(activeScenario);
-                                }
-                            }
-                            this.activeScenarios.removeAll(scenariosToRemove);
-                        };
-                    }
-                }
+                Map<SoundCardStream, byte[]> dataToWrite = this.activeScenarios.isEmpty() ? this.fillEmptyStream(context) : this.fillAudioBuffer(context);
 
                 // Signal start just before adding the audio data to the buffer.
-                for (ActiveScenario activeScenario : this.activeScenarios) {
-                    if (!activeScenario.isStarted()) {
-                        activeScenario.start();
-                    }
-                }
+                this.activeScenarios.forEach(ActiveScenario::startIfNotStarted);
 
                 // Actually write to the sound card
-                for (SoundCardStream soundCardStream : soundCardMergedOutputBuffers.keySet()) {
-                    soundCardStream.writeToLine(soundCardMergedOutputBuffers.get(soundCardStream));
-                }
+                EntryStream.of(dataToWrite).forKeyValue((soundCardStream, data) -> soundCardStream.writeToLine(data));
+
                 // Start the streams after initial buffer fill, to be in sync as much as possible.
                 if (!this.streamsHaveStarted) {
-                    for (SoundCardStream soundCardStream : soundCardMergedOutputBuffers.keySet()) {
-                        soundCardStream.start();
-                    }
+                    this.soundCardStreams.forEach(SoundCardStream::start);
                     this.streamsHaveStarted = true;
                 }
 
-                postAction.run();
+                for (ActiveScenario activeScenario : context.getScenariosToRestart()) {
+                    try {
+                        this.activeScenarios.remove(activeScenario);
+                        this.playScenario(activeScenario.getScenario());
+                    } catch (IOException e) {
+                        // Log error
+                        context.getScenariosToRemove().add(activeScenario);
+                    }
+                }
+                this.activeScenarios.removeAll(context.getScenariosToRemove());
             }
 
             long end = System.nanoTime();
@@ -280,6 +174,199 @@ public class ImmerseAudioMixer {
             } catch (InterruptedException e) {}
         }
         this.soundCardStreams.forEach(SoundCardStream::stop);
+    }
+
+    private Map<SoundCardStream, byte[]> fillAudioBuffer(ScenarioLoopContext context) {
+        List<SpeakerData> speakerDatasInput = StreamEx.of(this.activeScenarios)
+                .mapToEntry(activeScenario -> this.readFromInputStreams(activeScenario, context))
+                .flatMapValues(this::optionalToStream)
+                .mapKeys(this::getSpeakerVolumes)
+                .mapKeyValue(SpeakerData::new)
+                .toList();
+
+        return StreamEx.of(this.soundCardStreams)
+                // TODO: can this be done nicer?
+                .mapToEntry(s -> speakerDatasInput)
+                .mapToValue((soundCardStream, speakerDatas) -> StreamEx.of(speakerDatas)
+                        .map(speakerData -> this.calculateSoundCardSamples(soundCardStream, speakerData.speakerVolumes, speakerData.samples))
+                        .toList())
+                .mapValues(this::mergeAmplitudes)
+                .mapToValue((soundCardStream, samples) -> this.writeAmplitudes(context, soundCardStream, samples))
+                .toMap();
+    }
+
+    // private void fillAudioBuffer(ScenarioLoopContext context) {
+    // // TODO: use streamex mapValues and make helper methods for just one sound card stream
+    // // Then we don't need any of the intermediate maps anymore!
+    // // TODO: if parallel streams, use thread safe collections in context! (but prob not worth parallel)
+    // Map<ActiveScenario, short[]> inputSamples = this.readFromInputStreams(context);
+    // Map<SoundCardStream, List<short[]>> streamAmplitudesLists = this.processVolumeFractions(inputSamples);
+    // Map<SoundCardStream, short[]> streamAmplitudes = this.mergeAmplitudes(context, streamAmplitudesLists);
+    // this.writeAmplitudes(context, streamAmplitudes);
+    // }
+
+    private byte[] writeAmplitudes(ScenarioLoopContext context, SoundCardStream soundCardStream, short[] streamAmplitudes) {
+        byte[] mergedOutputBuffer = new byte[context.getAmountOfFramesNeeded() * this.outputFormat.getNumberOfBytesPerFrame()];
+        SampleWriter.writeSamples(streamAmplitudes, mergedOutputBuffer, this.outputFormat);
+        return mergedOutputBuffer;
+    }
+
+    private short[] mergeAmplitudes(List<short[]> amplitudesLists) {
+        short[] amplitudes = new short[amplitudesLists.get(0).length];
+        for (int sampleIndex = 0; sampleIndex < amplitudes.length; sampleIndex++) {
+            // Merging the buffers is just a matter of summing the amplitudes of the different sounds.
+            int totalAmplitude = 0;
+            for (short[] sampleBuffer : amplitudesLists) {
+                totalAmplitude += sampleBuffer[sampleIndex];
+            }
+            short sanitizedAmplitude;
+            // Keep amplitude within boundaries.
+            if (this.outputFormat.getSampleSize() == SampleSize.ONE_BYTE) {
+                sanitizedAmplitude = this.sanitizeAsByte(totalAmplitude);
+            } else {
+                sanitizedAmplitude = this.sanitizeAsShort(totalAmplitude);
+            }
+            amplitudes[sampleIndex] = sanitizedAmplitude;
+            // if (sampleIndex % 2 == 0)
+            // System.out.println(sanitizedAmplitude);
+        }
+        return amplitudes;
+    }
+
+    private Map<SoundCardStream, List<short[]>> processVolumeFractions(Map<ActiveScenario, short[]> inputSamples) {
+        Map<SoundCardStream, List<short[]>> soundCardOutputBuffers = new HashMap<>();
+        for (ActiveScenario activeScenario : inputSamples.keySet()) {
+            long millisSinceStart = 0;
+            if (activeScenario.isStarted()) {
+                millisSinceStart = System.currentTimeMillis() - activeScenario.getStartMillis();
+            }
+            Vector3D listener = activeScenario.getScenario().getListenerLocation().getLocation(millisSinceStart);
+            Vector3D source = activeScenario.getScenario().getSourceLocation().getLocation(millisSinceStart);
+            Snapshot snapshot = Snapshot.builder()
+                    .scenario(activeScenario.getScenario())
+                    .source(source)
+                    .listener(listener)
+                    .build();
+            SpeakerVolumes speakerVolumes = new SpeakerVolumes(snapshot);
+
+            short[] sampleBuffer = inputSamples.get(activeScenario);
+            for (SoundCardStream soundCardStream : this.soundCardStreams) {
+                double volumeFractionSpeakerLeft = speakerVolumes.getVolumeFraction(soundCardStream.getSoundCard().getLeftSpeaker().getId());
+                double volumeFractionSpeakerRight = speakerVolumes.getVolumeFraction(soundCardStream.getSoundCard().getRightSpeaker().getId());
+                int stereoSamplesSize = sampleBuffer.length * 2;
+                short[] stereoSamples = new short[stereoSamplesSize];
+                for (int sampleIndex = 0; sampleIndex < sampleBuffer.length; sampleIndex++) {
+                    short leftAmplitude = (short) (sampleBuffer[sampleIndex] * volumeFractionSpeakerLeft);
+                    short rightAmplitude = (short) (sampleBuffer[sampleIndex] * volumeFractionSpeakerRight);
+                    stereoSamples[sampleIndex * 2] = leftAmplitude;
+                    stereoSamples[sampleIndex * 2 + 1] = rightAmplitude;
+                }
+                soundCardOutputBuffers.computeIfAbsent(soundCardStream, s -> new ArrayList<>()).add(stereoSamples);
+            }
+        }
+        return soundCardOutputBuffers;
+    }
+
+    public static void main(String[] args) {
+        List<?> l = StreamEx.of(1, 2, 3)
+                .mapToEntry(i -> i % 2 == 0 ? Optional.empty() : Optional.of(i))
+                .flatMapValues(op -> op.isPresent() ? StreamEx.of(op.get()) : StreamEx.empty())
+                .toList();
+        System.out.println(l);
+
+        List<?> l2 = StreamEx.of(1, 2, 3)
+                .map(i -> i % 2 == 0 ? Optional.empty() : Optional.of(i))
+                .flatMap(op -> op.isPresent() ? StreamEx.of(op.get()) : StreamEx.empty())
+                .toList();
+        System.out.println(l2);
+    }
+
+    // TODO: move to some kind of util
+    private <T> StreamEx<T> optionalToStream(Optional<T> optional) {
+        return optional.isPresent() ? StreamEx.of(optional.get()) : StreamEx.empty();
+    }
+
+    // TODO: nicer!!
+    private class SpeakerData {
+        SpeakerVolumes speakerVolumes;
+        short[] samples;
+
+        public SpeakerData(SpeakerVolumes speakerVolumes, short[] samples) {
+            this.speakerVolumes = speakerVolumes;
+            this.samples = samples;
+        }
+    }
+
+    private short[] calculateSoundCardSamples(SoundCardStream soundCardStream, SpeakerVolumes speakerVolumes, short[] sampleBuffer) {
+        double volumeFractionSpeakerLeft = speakerVolumes.getVolumeFraction(soundCardStream.getSoundCard().getLeftSpeaker().getId());
+        double volumeFractionSpeakerRight = speakerVolumes.getVolumeFraction(soundCardStream.getSoundCard().getRightSpeaker().getId());
+        int stereoSamplesSize = sampleBuffer.length * 2;
+        short[] stereoSamples = new short[stereoSamplesSize];
+        for (int sampleIndex = 0; sampleIndex < sampleBuffer.length; sampleIndex++) {
+            short leftAmplitude = (short) (sampleBuffer[sampleIndex] * volumeFractionSpeakerLeft);
+            short rightAmplitude = (short) (sampleBuffer[sampleIndex] * volumeFractionSpeakerRight);
+            stereoSamples[sampleIndex * 2] = leftAmplitude;
+            stereoSamples[sampleIndex * 2 + 1] = rightAmplitude;
+        }
+        return stereoSamples;
+    }
+
+    private SpeakerVolumes getSpeakerVolumes(ActiveScenario activeScenario) {
+        long millisSinceStart = 0;
+        if (activeScenario.isStarted()) {
+            millisSinceStart = System.currentTimeMillis() - activeScenario.getStartMillis();
+        }
+        Vector3D listener = activeScenario.getScenario().getListenerLocation().getLocation(millisSinceStart);
+        Vector3D source = activeScenario.getScenario().getSourceLocation().getLocation(millisSinceStart);
+        Snapshot snapshot = Snapshot.builder()
+                .scenario(activeScenario.getScenario())
+                .source(source)
+                .listener(listener)
+                .build();
+        return new SpeakerVolumes(snapshot);
+    }
+
+    private Optional<short[]> readFromInputStreams(ActiveScenario activeScenario, ScenarioLoopContext context) {
+        try {
+            short[] samples = new short[context.getAmountOfFramesNeeded()];
+            boolean endOfStream = SampleReader.readSamples(activeScenario.getInputStream(), samples);
+            if (endOfStream) {
+                // End of stream reached, check playback for next action.
+                if (activeScenario.getPlayback().endOfStream()) {
+                    context.addScenarioToRestart(activeScenario);
+                } else {
+                    // No more playback, remove scenario.
+                    context.addScenarioToRemove(activeScenario);
+                }
+            }
+            return Optional.of(samples);
+        } catch (IOException e) {
+            // TODO: log error
+            context.addScenarioToRemove(activeScenario);
+            return Optional.empty();
+        }
+    }
+
+    private Map<SoundCardStream, byte[]> fillEmptyStream(ScenarioLoopContext context) {
+        int arraySize = context.getAmountOfFramesNeeded() * this.outputFormat.getNumberOfBytesPerFrame();
+        byte[] silenceArray = new byte[arraySize];
+        Arrays.fill(silenceArray, (byte) 0);
+        return StreamEx.of(this.soundCardStreams)
+                .mapToEntry(s -> silenceArray)
+                .toMap();
+    }
+
+    private int calculateAmountOfFramesNeeded() {
+        List<Long> allFramesNeededAmounts = this.soundCardStreams.stream()
+                .mapToLong(stream -> stream.getAmountOfFramesNeeded(BUFFER_MILLIS))
+                .boxed()
+                .collect(Collectors.toList());
+        long minFramesNeeded = Collections.min(allFramesNeededAmounts);
+        long maxFramesNeeded = Collections.max(allFramesNeededAmounts);
+        // Since we have to keep in sync with all streams, we take the max frames needed as the amount needed for all streams.
+        long amountOfFramesNeeded = maxFramesNeeded;
+        // We want an int for easier use as array size and it will never be bigger than the limits of Integer.
+        return (int) amountOfFramesNeeded;
     }
 
     private byte sanitizeAsByte(int sample) {

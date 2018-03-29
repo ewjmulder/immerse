@@ -1,7 +1,5 @@
 package com.programyourhome.immerse.audiostreaming;
 
-import java.io.IOException;
-
 import com.programyourhome.immerse.audiostreaming.format.ImmerseAudioFormat;
 import com.programyourhome.immerse.audiostreaming.format.SampleSize;
 
@@ -10,7 +8,7 @@ public class SampleWriter {
     private SampleWriter() {
     }
 
-    public static void writeSamples(short[] samples, byte[] outputBuffer, ImmerseAudioFormat format) throws IOException {
+    public static void writeSamples(short[] samples, byte[] outputBuffer, ImmerseAudioFormat format) {
         int bytesToWrite = samples.length * format.getNumberOfBytesPerSample();
         if (outputBuffer.length != bytesToWrite) {
             throw new IllegalArgumentException(
