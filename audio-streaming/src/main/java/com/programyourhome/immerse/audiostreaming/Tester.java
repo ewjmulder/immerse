@@ -36,11 +36,11 @@ public class Tester {
         Speaker speaker1 = speaker(1, 0, -10, 10);
         Speaker speaker2 = speaker(2, 10, 10, 10);
 
-        Room room = room(speaker1, speaker2);
+        // Room room = room(speaker1, speaker2);
 
-        // Speaker speaker3 = speaker(3, -10, 0, 100);
-        // Speaker speaker4 = speaker(4, 0, 0, 100);
-        // Room room = room(speaker1, speaker2, speaker3, speaker4);
+        Speaker speaker3 = speaker(3, -10, 0, 100);
+        Speaker speaker4 = speaker(4, 0, 0, 100);
+        Room room = room(speaker1, speaker2, speaker3, speaker4);
 
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
                 room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0)));
@@ -51,32 +51,32 @@ public class Tester {
                 settings(fixed(fixedSpeakerVolumeRatios), fractional(), Playback.forever()));
 
         SoundCard soundCard1 = soundCard(1, "pci-0000:00:14.0-usb-0:6:1.0", speaker1, speaker2);
-        // SoundCard soundCard2 = soundCard(2, "pci-0000:00:14.0-usb-0:1:1.0", speaker3, speaker4);
+        SoundCard soundCard2 = soundCard(2, "pci-0000:00:14.0-usb-0:1:1.0", speaker3, speaker4);
 
         ImmerseAudioFormat outputFormat = ImmerseAudioFormat.builder()
-                .sampleRate(SampleRate.RATE_22K)
-                .sampleSize(SampleSize.ONE_BYTE)
+                .sampleRate(SampleRate.RATE_44K)
+                .sampleSize(SampleSize.TWO_BYTES)
                 .buildForOutput();
 
-        ImmerseAudioMixer mixer = new ImmerseAudioMixer(room, new HashSet<>(Arrays.asList(soundCard1)), outputFormat);
+        ImmerseAudioMixer mixer = new ImmerseAudioMixer(room, new HashSet<>(Arrays.asList(soundCard1, soundCard2)), outputFormat);
         mixer.initialize();
         mixer.start();
 
-        // for (int i = 0; i < 20; i++) {
-        // try {
-        // Thread.sleep(500);
-        // } catch (InterruptedException e) {}
-        //
-        // mixer.playScenario(scenario1);
-        // }
-
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < 4; i++) {
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {}
 
-            mixer.playScenario(scenario2);
+            mixer.playScenario(scenario1);
         }
+
+        // for (int i = 0; i < 1; i++) {
+        // try {
+        // Thread.sleep(500);
+        // } catch (InterruptedException e) {}
+        //
+        // mixer.playScenario(scenario2);
+        // }
 
     }
 
