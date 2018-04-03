@@ -14,6 +14,7 @@ import com.programyourhome.immerse.audiostreaming.format.ImmerseAudioFormat;
 import com.programyourhome.immerse.audiostreaming.format.SampleSize;
 import com.programyourhome.immerse.domain.Snapshot;
 import com.programyourhome.immerse.domain.location.Vector3D;
+import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumes;
 
 import one.util.streamex.StreamEx;
@@ -21,7 +22,7 @@ import one.util.streamex.StreamEx;
 // instance for one loop
 public class ImmerseAudioLoop {
 
-    // TODO: make dynamic based on hardware tests. Although 30 seems like a reasonable default.
+    // TODO: make dynamic based on hardware tests. Although 30 seems like a reasonable default. (20 is not enough and cause distortion!)
     private static final int BUFFER_MILLIS = 30;
 
     private final Set<ActiveScenario> activeScenarios;
@@ -101,8 +102,6 @@ public class ImmerseAudioLoop {
                 sanitizedAmplitude = this.sanitizeAsShort(totalAmplitude);
             }
             amplitudes[sampleIndex] = sanitizedAmplitude;
-            // if (sampleIndex % 2 == 0)
-            // System.out.println(sanitizedAmplitude);
         }
         return amplitudes;
     }
@@ -149,7 +148,8 @@ public class ImmerseAudioLoop {
                 .source(source)
                 .listener(listener)
                 .build();
-        return new SpeakerVolumes(snapshot);
+        SpeakerVolumeRatios speakerVolumeRatios = activeScenario.getScenario().getSettings().getVolumeRatiosAlgorithm().calculateVolumeRatios(snapshot);
+        return activeScenario.getScenario().getSettings().getNormalizeAlgorithm().calculateVolumes(speakerVolumeRatios);
     }
 
     private Optional<short[]> readFromInputStreams(ActiveScenario activeScenario) {

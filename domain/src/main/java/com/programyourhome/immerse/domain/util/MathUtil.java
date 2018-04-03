@@ -54,7 +54,22 @@ public class MathUtil {
         return dotProduct;
     }
 
-    public static double calculateFractionInRange(final double fraction, final double minValue, final double maxValue) {
+    public static double calculateFraction(double min, double max, double value) {
+        if (value < min || value > max) {
+            throw new IllegalArgumentException("Value " + value + " must be between " + min + " and " + max);
+        }
+        double diff = max - min;
+        double fraction;
+        if (diff == 0) {
+            // Special case: no diff, so default to 1.
+            fraction = 1;
+        } else {
+            fraction = (value - min) / diff;
+        }
+        return fraction;
+    }
+
+    public static double calculateValueInRange(final double minValue, final double maxValue, final double fraction) {
         return minValue + fraction * (maxValue - minValue);
     }
 

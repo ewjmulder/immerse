@@ -31,7 +31,7 @@ public class FieldOfHearingVolumeRatiosAlgorithm implements VolumeRatiosAlgorith
                 .mapValues(speaker -> MathUtil.calculateAngleInDegrees(snapshot, speaker))
                 // For speakers inside the 'field of hearing', a low angle should be a high volume ratio and vice versa.
                 // For speakers not inside the 'field of hearing', it's just 0.
-                .mapValues(angle -> angle <= this.maxAngle ? MathUtil.reverseAngle(angle) : 0.0)
+                .mapValues(angle -> angle <= this.maxAngle ? this.maxAngle - angle : 0.0)
                 .toMap());
     }
 

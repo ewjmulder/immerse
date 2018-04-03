@@ -1,21 +1,27 @@
 package com.programyourhome.immerse.domain.speakers;
 
-import com.programyourhome.immerse.domain.Snapshot;
-import com.programyourhome.immerse.domain.speakers.algorithms.normalize.NormalizeAlgorithm;
+import java.util.HashMap;
+import java.util.Map;
 
 public class SpeakerVolumes {
 
-    private final NormalizeAlgorithm normalizeAlgorithm;
+    private final Map<Integer, Double> volumeMap;
 
-    public SpeakerVolumes(Snapshot snapshot) {
-        SpeakerVolumeRatios speakerVolumeRatios = snapshot.getScenario().getSettings().getVolumeRatiosAlgorithm().calculateVolumeRatios(snapshot);
-        this.normalizeAlgorithm = snapshot.getScenario().getSettings().getNormalizeAlgorithm();
-        this.normalizeAlgorithm.setSpeakerVolumeRatios(speakerVolumeRatios);
+    public SpeakerVolumes(Map<Integer, Double> volumesMap) {
+        this.volumeMap = volumesMap;
     }
 
     public double getVolumeFraction(int speakerId) {
-        // TODO: caching?
-        return this.normalizeAlgorithm.calculateVolumeFraction(speakerId);
+        return this.volumeMap.get(speakerId);
+    }
+
+    public Map<Integer, Double> getVolumeMap() {
+        return new HashMap<>(this.volumeMap);
+    }
+
+    @Override
+    public String toString() {
+        return this.volumeMap.toString();
     }
 
 }

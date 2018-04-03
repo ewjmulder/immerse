@@ -1,11 +1,12 @@
 package com.programyourhome.immerse.audiostreaming;
 
+import static com.programyourhome.immerse.audiostreaming.AudioUtil.toSigned;
+
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.LineUnavailableException;
@@ -167,11 +168,10 @@ public class ImmerseAudioMixer {
                     + "while the provided scenario is for room: " + scenario.getRoom().getName());
         }
         AudioInputStream originalStream = scenario.getAudioResource().getAudioStream();
-        AudioFormat originalFormat = originalStream.getFormat();
-        if (!AudioSystem.isConversionSupported(this.inputFormat.toJavaAudioFormat(), originalFormat)) {
-            throw new IllegalArgumentException("Conversion of audio resource to desired input format is not supported");
-        }
-        AudioInputStream converted = AudioSystem.getAudioInputStream(this.inputFormat.toJavaAudioFormat(), originalStream);
+        // Workaround for a JDK bug: https://bugs.java.com/bugdatabase/view_bug.do?bug_id=8146338
+        // TODO: write more information about the bug: asymmetric unsigned byte --> signed float --> signed byte conversion
+        AudioInputStream signedStream = AudioUtil.convert(originalStream, toSigned(originalStream.getFormat()));
+        AudioInputStream converted = AudioUtil.convert(signedStream, this.inputFormat.toJavaAudioFormat());
         this.activeScenarios.add(new ActiveScenario(scenario, scenario.getSettings().getPlaybackSupplier().get(), converted));
     }
 

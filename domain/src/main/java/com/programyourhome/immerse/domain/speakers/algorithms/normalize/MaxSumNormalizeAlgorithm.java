@@ -1,19 +1,25 @@
 package com.programyourhome.immerse.domain.speakers.algorithms.normalize;
 
+import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
+import com.programyourhome.immerse.domain.speakers.SpeakerVolumes;
+
+import one.util.streamex.EntryStream;
+
 public class MaxSumNormalizeAlgorithm extends AbstractNormalizeAlgorithm {
 
-    private final double divisionFactor;
+    private final double maxSum;
 
     public MaxSumNormalizeAlgorithm(double maxSum) {
-        double ratioSum = this.streamRatios().sum();
-        this.divisionFactor = maxSum / ratioSum;
+        this.maxSum = maxSum;
     }
 
     @Override
-    public double calculateVolumeFraction(int speakerId) {
-        double volume = this.getVolumeRatio(speakerId) / this.divisionFactor;
-        // Cut off at max volume of 1, to not get distortions.
-        return Math.min(volume, 1);
+    public SpeakerVolumes calculateVolumes(SpeakerVolumeRatios speakerVolumeRatios) {
+        double divisionFactor = this.getRatioSum(speakerVolumeRatios) / this.maxSum;
+        return new SpeakerVolumes(EntryStream.of(speakerVolumeRatios.getVolumeRatioMap())
+                // Cut off at max volume of 1, to not get distortions.
+                .mapValues(volumeRatio -> Math.min(1, volumeRatio / divisionFactor))
+                .toMap());
     }
 
 }

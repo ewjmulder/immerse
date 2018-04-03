@@ -1,6 +1,6 @@
 package com.programyourhome.immerse.domain.location.dynamic;
 
-import static com.programyourhome.immerse.domain.util.MathUtil.calculateFractionInRange;
+import static com.programyourhome.immerse.domain.util.MathUtil.calculateValueInRange;
 
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -39,9 +39,9 @@ public class KeyFrameDynamicLocation implements DynamicLocation {
             double distance = millisKeyFromAfter - millisKeyFrameBefore;
             double fraction = (millisSinceStart - millisKeyFrameBefore) / distance;
 
-            double locationX = calculateFractionInRange(fraction, vectorKeyFrameBefore.getX(), vectorKeyFrameAfter.getX());
-            double locationY = calculateFractionInRange(fraction, vectorKeyFrameBefore.getY(), vectorKeyFrameAfter.getY());
-            double locationZ = calculateFractionInRange(fraction, vectorKeyFrameBefore.getZ(), vectorKeyFrameAfter.getZ());
+            double locationX = calculateValueInRange(vectorKeyFrameBefore.getX(), vectorKeyFrameAfter.getX(), fraction);
+            double locationY = calculateValueInRange(vectorKeyFrameBefore.getY(), vectorKeyFrameAfter.getY(), fraction);
+            double locationZ = calculateValueInRange(vectorKeyFrameBefore.getZ(), vectorKeyFrameAfter.getZ(), fraction);
             location = new Vector3D(locationX, locationY, locationZ);
         }
         return location;

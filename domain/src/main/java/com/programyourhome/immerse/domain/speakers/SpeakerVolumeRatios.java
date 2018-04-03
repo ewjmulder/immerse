@@ -7,16 +7,8 @@ public class SpeakerVolumeRatios {
 
     private final Map<Integer, Double> volumeRatioMap;
 
-    public SpeakerVolumeRatios() {
-        this(new HashMap<>());
-    }
-
     public SpeakerVolumeRatios(Map<Integer, Double> volumeRatioMap) {
         this.volumeRatioMap = volumeRatioMap;
-    }
-
-    public void setVolumeRatio(int speakerId, double value) {
-        this.volumeRatioMap.put(speakerId, value);
     }
 
     public double getVolumeRatio(int speakerId) {
@@ -24,7 +16,7 @@ public class SpeakerVolumeRatios {
     }
 
     public Map<Integer, Double> getVolumeRatioMap() {
-        return this.volumeRatioMap;
+        return new HashMap<>(this.volumeRatioMap);
     }
 
     @Override
