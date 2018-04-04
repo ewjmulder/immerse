@@ -1,5 +1,7 @@
 package com.programyourhome.immerse.audiostreaming;
 
+import static com.programyourhome.immerse.audiostreaming.StreamUtil.toMapFixedValue;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -60,14 +62,13 @@ public class ImmerseAudioLoop {
 
         List<SpeakerData> speakerDatasInput = StreamEx.of(this.activeScenarios)
                 .mapToEntry(this::readFromInputStreams)
-                .flatMapValues(this::optionalToStream)
+                .flatMapValues(StreamUtil::optionalToStream)
                 .mapKeys(this::getSpeakerVolumes)
                 .mapKeyValue(SpeakerData::new)
                 .toList();
 
-        return StreamEx.of(this.soundCardStreams)
-                // Every soundcard stream is coupled to the 'raw' input data.
-                .mapToEntry(soundCardStream -> speakerDatasInput)
+        // Every soundcard stream is coupled to the 'raw' input data.
+        return toMapFixedValue(this.soundCardStreams, speakerDatasInput)
                 .mapToValue(this::calculateAllSamples)
                 .mapValues(this::mergeAmplitudes)
                 .mapToValue(this::writeAmplitudes)
@@ -104,11 +105,6 @@ public class ImmerseAudioLoop {
             amplitudes[sampleIndex] = sanitizedAmplitude;
         }
         return amplitudes;
-    }
-
-    // TODO: move to some kind of util
-    private <T> StreamEx<T> optionalToStream(Optional<T> optional) {
-        return optional.isPresent() ? StreamEx.of(optional.get()) : StreamEx.empty();
     }
 
     // TODO: nicer!!

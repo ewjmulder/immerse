@@ -1,5 +1,9 @@
 package com.programyourhome.immerse.audiostreaming;
 
+import static com.programyourhome.immerse.audiostreaming.StreamUtil.optionalToStream;
+import static java.lang.Integer.parseInt;
+import static java.util.Optional.ofNullable;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -11,6 +15,8 @@ import java.util.stream.Collectors;
 
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Mixer;
+
+import one.util.streamex.StreamEx;
 
 // TODO: Javadoc: method order + OS dependent
 public class SoundCardDetector {
@@ -37,16 +43,15 @@ public class SoundCardDetector {
     }
 
     private Map<Integer, Mixer.Info> getJavaSoundCards() {
-        Map<Integer, Mixer.Info> javaSoundCards = new HashMap<>();
-        Mixer.Info[] mixerInfos = AudioSystem.getMixerInfo();
-        for (Mixer.Info mixerInfo : mixerInfos) {
-            Matcher matcher = MIXER_INFO_NAME_PATTERN.matcher(mixerInfo.getName());
-            if (matcher.matches()) {
-                int soundCardIndex = Integer.parseInt(matcher.group(1));
-                javaSoundCards.put(soundCardIndex, mixerInfo);
-            }
-        }
-        return javaSoundCards;
+        return StreamUtil.sameKeyAndValue(AudioSystem.getMixerInfo())
+                .flatMapKeys(this::matchOnMixerName)
+                .toMap();
+    }
+
+    private StreamEx<Integer> matchOnMixerName(Mixer.Info mixerInfo) {
+        Matcher matcher = MIXER_INFO_NAME_PATTERN.matcher(mixerInfo.getName());
+        matcher.matches();
+        return optionalToStream(ofNullable(parseInt(matcher.group(1))));
     }
 
     // OS specific solution, cause there is no Java API for this.

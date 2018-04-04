@@ -20,9 +20,6 @@ public class TimerPlayback implements Playback {
 
     @Override
     public boolean shouldStop() {
-        System.out.println("current: " + System.currentTimeMillis());
-        System.out.println("this.startMillis: " + this.startMillis);
-        System.out.println("System.currentTimeMillis() - this.startMillis: " + (System.currentTimeMillis() - this.startMillis));
         return this.startMillis > -1 && System.currentTimeMillis() - this.startMillis >= this.durationInMillis;
     }
 
