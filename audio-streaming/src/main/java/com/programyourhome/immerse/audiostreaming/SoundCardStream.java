@@ -10,12 +10,14 @@ public class SoundCardStream {
     private final SoundCard soundCard;
     private final SourceDataLine outputLine;
     private final ImmerseAudioFormat outputFormat;
+    private final double framesPerMilli;
     private long framesWritten;
 
     public SoundCardStream(SoundCard soundCard, SourceDataLine outputLine) {
         this.soundCard = soundCard;
         this.outputLine = outputLine;
         this.outputFormat = ImmerseAudioFormat.fromJavaAudioFormat(this.outputLine.getFormat());
+        this.framesPerMilli = this.outputFormat.getNumberOfFramesPerSecond() / 1000.0;
         this.framesWritten = 0;
     }
 
@@ -33,24 +35,22 @@ public class SoundCardStream {
     }
 
     public long getAmountOfFramesNeeded(int bufferMillis) {
-        double framesPerMilli = this.outputFormat.getNumberOfFramesPerSecond() / 1000.0;
-
-        double amountOfFramesToBuffer = bufferMillis * framesPerMilli;
+        double amountOfFramesToBuffer = bufferMillis * this.framesPerMilli;
         long lineFramePosition = this.outputLine.getLongFramePosition();
-        // Sanity check: the line position can never be higher than the frames written.
-        // Unfortunately, this sometimes happens with certain hardware.
-        if (lineFramePosition > this.framesWritten) {
-            lineFramePosition = this.framesWritten;
-        }
         double amountOfFramesAhead = this.framesWritten - lineFramePosition;
         long amountOfFramesNeeded = Math.round(amountOfFramesToBuffer - amountOfFramesAhead);
 
-        return amountOfFramesNeeded;
+        // Sanity check: amount of frames needed should never be negative.
+        // Unfortunately, this sometimes happens with certain hardware or thread race conditions.
+        return Math.max(0, amountOfFramesNeeded);
     }
 
+    // TODO: use thread pool!
     public void writeToLine(byte[] buffer) {
-        this.outputLine.write(buffer, 0, buffer.length);
-        this.framesWritten += buffer.length / this.outputFormat.getNumberOfBytesPerFrame();
+        new Thread(() -> {
+            this.outputLine.write(buffer, 0, buffer.length);
+            this.framesWritten += buffer.length / this.outputFormat.getNumberOfBytesPerFrame();
+        }).start();
     }
 
 }

@@ -42,11 +42,13 @@ public class Tester {
         Speaker speaker1 = speaker(1, 0, 10, 10);
         Speaker speaker2 = speaker(2, 10, 10, 10);
 
-        Room room = room(speaker1, speaker2);
+        // Room room = room(speaker1, speaker2);
 
-        // Speaker speaker3 = speaker(3, 10, 0, 10);
-        // Speaker speaker4 = speaker(4, 0, 0, 10);
-        // Room room = room(speaker1, speaker2, speaker3, speaker4);
+        Speaker speaker3 = speaker(3, 10, 0, 10);
+        Speaker speaker4 = speaker(4, 0, 0, 10);
+        Speaker speaker5 = speaker(3, 10, 0, 10);
+        Speaker speaker6 = speaker(4, 0, 0, 10);
+        Room room = room(speaker1, speaker2, speaker3, speaker4, speaker5, speaker6);
 
         // TODO: convenience class around key frames?
         // TODO: key frames options loop or once
@@ -62,29 +64,29 @@ public class Tester {
                 settings(VolumeRatiosAlgorithm.fieldOfHearing(60), NormalizeAlgorithm.maxSum(1), Playback.forever()));
 
         Scenario scenario2 = scenario(room, fromFilePath(CHILL), fixed(0, 0, 0), fixed(5, 5, 5),
-                settings(fixed(fixedSpeakerVolumeRatios), fractional(), Playback.timer(10000)));
+                settings(fixed(fixedSpeakerVolumeRatios), fractional(), Playback.forever()));
 
-        SoundCard soundCard1 = soundCard(1, "pci-0000:00:14.0-usb-0:6:1.0", speaker1, speaker2);
-        // SoundCard soundCard2 = soundCard(2, "pci-0000:00:14.0-usb-0:1:1.0", speaker3, speaker4);
+        SoundCard soundCard1 = soundCard(1, "pci-0000:00:14.0-usb-0:1.2:1.0", speaker1, speaker2);
+        SoundCard soundCard2 = soundCard(2, "pci-0000:00:14.0-usb-0:1.3:1.0", speaker3, speaker4);
+        SoundCard soundCard3 = soundCard(3, "pci-0000:00:14.0-usb-0:1.4:1.0", speaker5, speaker6);
 
         ImmerseAudioFormat outputFormat = ImmerseAudioFormat.builder()
                 .sampleRate(SampleRate.RATE_44K)
                 .sampleSize(SampleSize.TWO_BYTES)
                 .buildForOutput();
 
-        ImmerseAudioMixer mixer = new ImmerseAudioMixer(room, new HashSet<>(Arrays.asList(soundCard1)), outputFormat);
-        // mixer.initialize();
-        // mixer.start();
+        ImmerseAudioMixer mixer = new ImmerseAudioMixer(room, new HashSet<>(Arrays.asList(soundCard1, soundCard2, soundCard3)), outputFormat);
 
-        mixer.playScenario(scenario2);
+        mixer.initialize();
+        mixer.start();
 
-        // for (int i = 0; i < 4; i++) {
-        // try {
-        // Thread.sleep(500);
-        // } catch (InterruptedException e) {}
-        //
-        // mixer.playScenario(scenario1);
-        // }
+        for (int i = 0; i < 4; i++) {
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {}
+
+            mixer.playScenario(scenario2);
+        }
 
         // for (int i = 0; i < 1; i++) {
         // try {

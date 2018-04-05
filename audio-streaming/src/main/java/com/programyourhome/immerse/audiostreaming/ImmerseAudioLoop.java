@@ -24,7 +24,7 @@ import one.util.streamex.StreamEx;
 // instance for one loop
 public class ImmerseAudioLoop {
 
-    // TODO: make dynamic based on hardware tests. Although 30 seems like a reasonable default. (20 is not enough and cause distortion!)
+    // TODO: make dynamic based on hardware tests. Although 30 seems like a reasonable default. (20 is not enough and causes distortion!)
     private static final int BUFFER_MILLIS = 30;
 
     private final Set<ActiveScenario> activeScenarios;

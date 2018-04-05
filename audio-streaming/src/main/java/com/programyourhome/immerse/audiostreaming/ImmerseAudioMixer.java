@@ -3,7 +3,11 @@ package com.programyourhome.immerse.audiostreaming;
 import static com.programyourhome.immerse.audiostreaming.AudioUtil.toSigned;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -24,6 +28,9 @@ import one.util.streamex.EntryStream;
 public class ImmerseAudioMixer {
 
     // TODO: make configurable, for instance for refresh rate setting
+    // Note: setting this to less then 5 should not improve anything, because
+    // the 'resolution' of sound cards providing their current frame is about 5 ms.
+    // Note2: less then 5 makes sense when the update loop itself takes a considerable amount of time.
     private static final int SLEEP_MILLIS = 5;
 
     private final Room room;
@@ -31,6 +38,7 @@ public class ImmerseAudioMixer {
     private final Set<SoundCardStream> soundCardStreams;
     private final ImmerseAudioFormat outputFormat;
     private final ImmerseAudioFormat inputFormat;
+    private final Set<ActiveScenario> scenariosToActivate;
     private final Set<ActiveScenario> activeScenarios;
     private final SoundCardDetector soundCardDetector;
     private final Thread workerThread;
@@ -48,6 +56,8 @@ public class ImmerseAudioMixer {
         this.soundCardStreams = new HashSet<>();
         this.outputFormat = outputAudioFormat;
         this.inputFormat = this.createInputFormat();
+        // Explicitly synchronize this set, because it is the only 'overlapping' part between the mixer and the 'outside' world.
+        this.scenariosToActivate = Collections.synchronizedSet(new HashSet<>());
         this.activeScenarios = new HashSet<>();
         this.soundCardDetector = new SoundCardDetector();
         this.workerThread = new Thread(this::updateStreams);
@@ -66,7 +76,7 @@ public class ImmerseAudioMixer {
                 .buildForInput();
     }
 
-    public synchronized void initialize() throws IOException, LineUnavailableException {
+    public void initialize() throws IOException, LineUnavailableException {
         if (this.state != MixerState.NEW) {
             throw new IllegalStateException("Should be in state NEW to initialize");
         }
@@ -98,13 +108,14 @@ public class ImmerseAudioMixer {
         }
     }
 
-    public synchronized void start() {
+    public void start() {
         this.workerThread.start();
     }
 
     // TODO: naming of input / output / buffers / samples / amplitude etc.
     private void updateStreams() {
         while (this.state.isRunning()) {
+            this.activateScenarios();
             this.doUpdate();
             try {
                 Thread.sleep(SLEEP_MILLIS);
@@ -114,7 +125,15 @@ public class ImmerseAudioMixer {
         this.updateState(MixerState.STOPPED);
     }
 
-    private synchronized void doUpdate() {
+    private void activateScenarios() {
+        // Loop over a copy, to prevent concurrent modification issues. Make the copy in an atomic way by using the synchronized toArray.
+        List<ActiveScenario> scenariosToActivateCopy = new ArrayList<>(Arrays.asList(this.scenariosToActivate.toArray(new ActiveScenario[0])));
+        this.activeScenarios.addAll(scenariosToActivateCopy);
+        // Now remove all activated scenario's from the collection (which might have grown in the mean time).
+        this.scenariosToActivate.removeAll(scenariosToActivateCopy);
+    }
+
+    private void doUpdate() {
         long start = System.nanoTime();
 
         // Gather all data to write.
@@ -136,7 +155,7 @@ public class ImmerseAudioMixer {
         this.handleScenarioLifecycle(audioLoop);
 
         long end = System.nanoTime();
-        // System.out.println("Millis for loop: " + (end - start) / 1_000_000.0);
+        System.out.println("Millis for loop: " + (end - start) / 1_000_000.0);
     }
 
     private void handleScenarioLifecycle(ImmerseAudioLoop audioLoop) {
@@ -152,14 +171,14 @@ public class ImmerseAudioMixer {
         this.activeScenarios.removeAll(audioLoop.getScenariosToRemove());
     }
 
-    private synchronized void updateState(MixerState newState) {
+    private void updateState(MixerState newState) {
         if (!this.state.isAllowedNextState(newState)) {
             throw new IllegalStateException("Invalid state transition from: " + this.state + " to " + newState);
         }
         this.state = newState;
     }
 
-    public synchronized void playScenario(Scenario scenario) throws IOException {
+    public void playScenario(Scenario scenario) throws IOException {
         if (!this.state.isRunning()) {
             throw new IllegalStateException("Mixer is not in a running state (" + this.state + ")");
         }
@@ -172,7 +191,7 @@ public class ImmerseAudioMixer {
         // TODO: write more information about the bug: asymmetric unsigned byte --> signed float --> signed byte conversion
         AudioInputStream signedStream = AudioUtil.convert(originalStream, toSigned(originalStream.getFormat()));
         AudioInputStream converted = AudioUtil.convert(signedStream, this.inputFormat.toJavaAudioFormat());
-        this.activeScenarios.add(new ActiveScenario(scenario, scenario.getSettings().getPlaybackSupplier().get(), converted));
+        this.scenariosToActivate.add(new ActiveScenario(scenario, scenario.getSettings().getPlaybackSupplier().get(), converted));
     }
 
     public void stop() {
