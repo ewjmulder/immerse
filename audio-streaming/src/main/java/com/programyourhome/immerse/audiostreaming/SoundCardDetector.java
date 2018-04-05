@@ -50,8 +50,8 @@ public class SoundCardDetector {
 
     private StreamEx<Integer> matchOnMixerName(Mixer.Info mixerInfo) {
         Matcher matcher = MIXER_INFO_NAME_PATTERN.matcher(mixerInfo.getName());
-        matcher.matches();
-        return optionalToStream(ofNullable(parseInt(matcher.group(1))));
+        Integer soundCardIndex = matcher.matches() ? parseInt(matcher.group(1)) : null;
+        return optionalToStream(ofNullable(soundCardIndex));
     }
 
     // OS specific solution, cause there is no Java API for this.
