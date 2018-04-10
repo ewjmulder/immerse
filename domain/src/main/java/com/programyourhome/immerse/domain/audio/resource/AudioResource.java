@@ -3,6 +3,7 @@ package com.programyourhome.immerse.domain.audio.resource;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.function.Supplier;
 
 import javax.sound.sampled.AudioInputStream;
 
@@ -10,7 +11,7 @@ public interface AudioResource {
 
     /**
      * Get an audio stream of this audio resource.
-     * NB: Every call should create a new stream object, that can be played independently.
+     * NB: Every call should create a new stream object (with the same contents), that can be played independently.
      */
     public AudioInputStream getAudioStream() throws IOException;
 
@@ -28,6 +29,10 @@ public interface AudioResource {
 
     public static AudioResource fromUrl(URL url) {
         return new UrlAudioResource(url);
+    }
+
+    public static AudioResource fromSupplier(Supplier<AudioInputStream> audioInputStreamSupplier) {
+        return () -> audioInputStreamSupplier.get();
     }
 
 }

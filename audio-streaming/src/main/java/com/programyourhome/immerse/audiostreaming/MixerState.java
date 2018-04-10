@@ -7,7 +7,8 @@ import java.util.List;
 public enum MixerState {
 
     NEW(false),
-    INITIALIZED(true, NEW),
+    WARMUP(false, NEW),
+    INITIALIZED(true, WARMUP),
     STARTED(true, INITIALIZED),
     STOPPING(false, STARTED),
     STOPPED(false, STOPPING);

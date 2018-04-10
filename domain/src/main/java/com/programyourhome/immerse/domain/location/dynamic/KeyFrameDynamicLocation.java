@@ -11,6 +11,7 @@ public class KeyFrameDynamicLocation implements DynamicLocation {
 
     private final SortedMap<Long, Vector3D> keyFrames;
 
+    // TODO: key frames options loop or once
     public KeyFrameDynamicLocation(SortedMap<Long, Vector3D> keyFrames) {
         if (keyFrames.isEmpty()) {
             throw new IllegalArgumentException("At least 1 key frame is required.");

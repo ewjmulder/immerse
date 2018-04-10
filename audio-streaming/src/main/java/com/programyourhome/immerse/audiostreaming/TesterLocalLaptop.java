@@ -1,6 +1,6 @@
 package com.programyourhome.immerse.audiostreaming;
 
-import static com.programyourhome.immerse.domain.audio.resource.AudioResource.fromFilePath;
+import static com.programyourhome.immerse.domain.audio.resource.AudioResource.fromFile;
 import static com.programyourhome.immerse.domain.location.dynamic.DynamicLocation.fixed;
 import static com.programyourhome.immerse.domain.speakers.algorithms.normalize.NormalizeAlgorithm.fractional;
 import static com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.VolumeRatiosAlgorithm.fixed;
@@ -10,27 +10,23 @@ import static com.programyourhome.immerse.domain.util.TestData.settings;
 import static com.programyourhome.immerse.domain.util.TestData.soundCard;
 import static com.programyourhome.immerse.domain.util.TestData.speaker;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import com.programyourhome.immerse.audiostreaming.format.ImmerseAudioFormat;
+import com.programyourhome.immerse.audiostreaming.format.RecordingMode;
 import com.programyourhome.immerse.audiostreaming.format.SampleRate;
 import com.programyourhome.immerse.audiostreaming.format.SampleSize;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Scenario;
 import com.programyourhome.immerse.domain.audio.playback.Playback;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
-import com.programyourhome.immerse.domain.location.Vector3D;
-import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
 import com.programyourhome.immerse.domain.speakers.Speaker;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
-import com.programyourhome.immerse.domain.speakers.algorithms.normalize.NormalizeAlgorithm;
-import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.VolumeRatiosAlgorithm;
 
-public class Tester {
+public class TesterLocalLaptop {
 
     private static final String CHILL = "/home/emulder/Downloads/ChillingMusic.wav";
     private static final String BASS = "/home/emulder/Downloads/doublebass.wav";
@@ -41,39 +37,28 @@ public class Tester {
     public static void main(String[] args) throws Exception {
         Speaker speaker1 = speaker(1, 0, 10, 10);
         Speaker speaker2 = speaker(2, 10, 10, 10);
-
-        // Room room = room(speaker1, speaker2);
-
-        Speaker speaker3 = speaker(3, 10, 0, 10);
-        Speaker speaker4 = speaker(4, 0, 0, 10);
-        Speaker speaker5 = speaker(3, 10, 0, 10);
-        Speaker speaker6 = speaker(4, 0, 0, 10);
-        Room room = room(speaker1, speaker2, speaker3, speaker4, speaker5, speaker6);
-
-        SortedMap<Long, Vector3D> keyFrames = new TreeMap<>();
-        keyFrames.put(0L, new Vector3D(0, 10, 10));
-        keyFrames.put(6_000L, new Vector3D(10, 10, 10));
-        keyFrames.put(10_000L, new Vector3D(10, 0, 10));
-        keyFrames.put(12_000L, new Vector3D(0, 0, 10));
+        Room room = room(speaker1, speaker2);
 
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
                 room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0)));
-        Scenario scenario1 = scenario(room, fromFilePath(CHILL), DynamicLocation.keyFrames(keyFrames), fixed(5, 5, 5),
-                settings(VolumeRatiosAlgorithm.fieldOfHearing(60), NormalizeAlgorithm.maxSum(1), Playback.forever()));
-
-        Scenario scenario2 = scenario(room, fromFilePath(CHILL), fixed(0, 0, 0), fixed(5, 5, 5),
+        ImmerseAudioFormat format = ImmerseAudioFormat.builder()
+                .sampleRate(SampleRate.RATE_44K)
+                .sampleSize(SampleSize.ONE_BYTE)
+                .recordingMode(RecordingMode.MONO)
+                .signed()
+                .buildForInput();
+        // Scenario scenario = scenario(room, fromSupplier(generate(format, 2500, 10_000)), fixed(5, 10, 10), fixed(5, 5, 5),
+        Scenario scenario = scenario(room, fromFile(new File(CHILL)), fixed(5, 10, 10), fixed(5, 5, 5),
                 settings(fixed(fixedSpeakerVolumeRatios), fractional(), Playback.forever()));
 
-        SoundCard soundCard1 = soundCard(1, "pci-0000:00:14.0-usb-0:1.2:1.0", speaker1, speaker2);
-        SoundCard soundCard2 = soundCard(2, "pci-0000:00:14.0-usb-0:1.3:1.0", speaker3, speaker4);
-        SoundCard soundCard3 = soundCard(3, "pci-0000:00:14.0-usb-0:1.4:1.0", speaker5, speaker6);
+        SoundCard soundCard1 = soundCard(1, "pci-0000:00:14.0-usb-0:5:1.0", speaker1, speaker2);
 
         ImmerseAudioFormat outputFormat = ImmerseAudioFormat.builder()
                 .sampleRate(SampleRate.RATE_44K)
                 .sampleSize(SampleSize.TWO_BYTES)
                 .buildForOutput();
 
-        ImmerseAudioMixer mixer = new ImmerseAudioMixer(room, new HashSet<>(Arrays.asList(soundCard1, soundCard2, soundCard3)), outputFormat);
+        ImmerseAudioMixer mixer = new ImmerseAudioMixer(room, new HashSet<>(Arrays.asList(soundCard1)), outputFormat);
 
         mixer.addPlaybackListener(new ScenarioPlaybackListener() {
             @Override
@@ -96,21 +81,13 @@ public class Tester {
         mixer.initialize();
         mixer.start();
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 1; i++) {
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {}
 
-            mixer.playScenario(scenario2);
+            mixer.playScenario(scenario);
         }
-
-        // for (int i = 0; i < 1; i++) {
-        // try {
-        // Thread.sleep(500);
-        // } catch (InterruptedException e) {}
-        //
-        // mixer.playScenario(scenario2);
-        // }
 
     }
 

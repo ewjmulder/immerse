@@ -40,6 +40,7 @@ public class ImmerseAudioLoop {
         this.outputFormat = outputFormat;
         this.scenariosToRemove = new HashSet<>();
         this.scenariosToRestart = new HashSet<>();
+        // TODO: skip all code if this is 0
         this.amountOfFramesNeeded = this.calculateAmountOfFramesNeeded();
     }
 

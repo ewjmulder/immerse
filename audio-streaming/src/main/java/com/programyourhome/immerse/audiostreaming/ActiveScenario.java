@@ -9,14 +9,13 @@ public class ActiveScenario {
 
     private final Scenario scenario;
     private final Playback playback;
-    private final AudioInputStream inputStream;
+    private AudioInputStream inputStream;
     private long startMillis;
 
-    public ActiveScenario(Scenario scenario, Playback playback, AudioInputStream inputStream) {
+    public ActiveScenario(Scenario scenario, AudioInputStream inputStream) {
         this.scenario = scenario;
-        this.playback = playback;
-        this.inputStream = inputStream;
-        this.startMillis = -1;
+        this.playback = this.scenario.getSettings().getPlaybackSupplier().get();
+        this.reset(inputStream);
     }
 
     public Scenario getScenario() {
@@ -44,6 +43,11 @@ public class ActiveScenario {
             this.startMillis = System.currentTimeMillis();
             this.playback.audioStarted();
         }
+    }
+
+    public void reset(AudioInputStream inputStream) {
+        this.inputStream = inputStream;
+        this.startMillis = -1;
     }
 
 }
