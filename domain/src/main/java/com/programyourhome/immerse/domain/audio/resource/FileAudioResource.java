@@ -2,6 +2,7 @@ package com.programyourhome.immerse.domain.audio.resource;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.function.Supplier;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -27,12 +28,14 @@ public class FileAudioResource implements AudioResource {
     }
 
     @Override
-    public AudioInputStream constructAudioStream() throws IOException {
-        try {
-            return AudioSystem.getAudioInputStream(this.file);
-        } catch (UnsupportedAudioFileException e) {
-            throw new IOException(e);
-        }
+    public Supplier<AudioInputStream> getAudioInputStreamSupplier() {
+        return () -> {
+            try {
+                return AudioSystem.getAudioInputStream(this.file);
+            } catch (IOException | UnsupportedAudioFileException e) {
+                throw new IllegalStateException("Exception while getting audio input stream", e);
+            }
+        };
     }
 
 }

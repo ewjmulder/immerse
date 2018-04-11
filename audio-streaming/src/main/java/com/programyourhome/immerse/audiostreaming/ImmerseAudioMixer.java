@@ -298,7 +298,7 @@ public class ImmerseAudioMixer {
 
     private AudioInputStream convertAudioStream(Scenario scenario) {
         try {
-            AudioInputStream originalStream = scenario.getAudioResource().constructAudioStream();
+            AudioInputStream originalStream = scenario.getAudioResource().getAudioInputStreamSupplier().get();
             // Workaround for a JDK bug: https://bugs.java.com/bugdatabase/view_bug.do?bug_id=8146338
             // TODO: write more information about the bug: asymmetric unsigned byte --> signed float --> signed byte conversion
             AudioInputStream signedStream = AudioUtil.convert(originalStream, toSigned(originalStream.getFormat()));

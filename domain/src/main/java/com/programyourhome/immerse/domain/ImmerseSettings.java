@@ -28,7 +28,7 @@ public class ImmerseSettings {
 
     /**
      * For the Playback we use a supplier, because the domain should not keep state
-     * and a settings object can be reused.
+     * and a settings object should be reusable.
      */
     public Supplier<Playback> getPlaybackSupplier() {
         return this.playbackSupplier;

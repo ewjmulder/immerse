@@ -3,6 +3,7 @@ package com.programyourhome.immerse.domain.audio.resource;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.function.Supplier;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -29,12 +30,14 @@ public class UrlAudioResource implements AudioResource {
     }
 
     @Override
-    public AudioInputStream constructAudioStream() throws IOException {
-        try {
-            return AudioSystem.getAudioInputStream(this.url);
-        } catch (UnsupportedAudioFileException e) {
-            throw new IOException(e);
-        }
+    public Supplier<AudioInputStream> getAudioInputStreamSupplier() {
+        return () -> {
+            try {
+                return AudioSystem.getAudioInputStream(this.url);
+            } catch (IOException | UnsupportedAudioFileException e) {
+                throw new IllegalStateException("Exception while getting audio input stream", e);
+            }
+        };
     }
 
 }
