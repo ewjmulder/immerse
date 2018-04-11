@@ -1,10 +1,13 @@
 package com.programyourhome.immerse.audiostreaming;
 
-import static com.programyourhome.immerse.audiostreaming.playback.ForeverPlayback.forever;
-import static com.programyourhome.immerse.domain.audio.resource.AudioResource.fromFilePath;
-import static com.programyourhome.immerse.domain.location.dynamic.DynamicLocation.fixed;
-import static com.programyourhome.immerse.domain.speakers.algorithms.normalize.NormalizeAlgorithm.fractional;
-import static com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.VolumeRatiosAlgorithm.fixed;
+import static com.programyourhome.immerse.domain.audio.playback.ForeverPlayback.forever;
+import static com.programyourhome.immerse.domain.audio.resource.FileAudioResource.filePath;
+import static com.programyourhome.immerse.domain.location.dynamic.FixedDynamicLocation.fixed;
+import static com.programyourhome.immerse.domain.location.dynamic.KeyFramesDynamicLocation.keyFrames;
+import static com.programyourhome.immerse.domain.speakers.algorithms.normalize.FractionalNormalizeAlgorithm.fractional;
+import static com.programyourhome.immerse.domain.speakers.algorithms.normalize.MaxSumNormalizeAlgorithm.maxSum;
+import static com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.FieldOfHearingVolumeRatiosAlgorithm.fieldOfHearing;
+import static com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.FixedVolumeRatiosAlgorithm.fixed;
 import static com.programyourhome.immerse.domain.util.TestData.room;
 import static com.programyourhome.immerse.domain.util.TestData.scenario;
 import static com.programyourhome.immerse.domain.util.TestData.settings;
@@ -24,11 +27,8 @@ import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Scenario;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
 import com.programyourhome.immerse.domain.location.Vector3D;
-import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
 import com.programyourhome.immerse.domain.speakers.Speaker;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
-import com.programyourhome.immerse.domain.speakers.algorithms.normalize.NormalizeAlgorithm;
-import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.VolumeRatiosAlgorithm;
 
 public class Tester {
 
@@ -58,11 +58,11 @@ public class Tester {
 
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
                 room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0)));
-        Scenario scenario1 = scenario(room, fromFilePath(CHILL), DynamicLocation.keyFrames(keyFrames), fixed(5, 5, 5),
-                settings(VolumeRatiosAlgorithm.fieldOfHearing(60), NormalizeAlgorithm.maxSum(1), forever()));
+        Scenario scenario1 = scenario(room, settings(filePath(CHILL), keyFrames(keyFrames), fixed(5, 5, 5),
+                fieldOfHearing(60), maxSum(1), forever()));
 
-        Scenario scenario2 = scenario(room, fromFilePath(CHILL), fixed(0, 0, 0), fixed(5, 5, 5),
-                settings(fixed(fixedSpeakerVolumeRatios), fractional(), forever()));
+        Scenario scenario2 = scenario(room, settings(filePath(CHILL), fixed(0, 0, 0), fixed(5, 5, 5),
+                fixed(fixedSpeakerVolumeRatios), fractional(), forever()));
 
         SoundCard soundCard1 = soundCard(1, "pci-0000:00:14.0-usb-0:1.2:1.0", speaker1, speaker2);
         SoundCard soundCard2 = soundCard(2, "pci-0000:00:14.0-usb-0:1.3:1.0", speaker3, speaker4);

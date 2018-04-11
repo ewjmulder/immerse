@@ -2,7 +2,6 @@ package com.programyourhome.immerse.audiostreaming.simulation;
 
 import java.io.ByteArrayInputStream;
 import java.nio.ByteOrder;
-import java.util.function.Supplier;
 
 import javax.sound.sampled.AudioInputStream;
 
@@ -18,7 +17,7 @@ public class AudioInputStreamGenerator {
     private AudioInputStreamGenerator() {
     }
 
-    public static Supplier<AudioInputStream> generate(ImmerseAudioFormat format, int frequency, long lengthInMillis) {
+    public static AudioInputStream generate(ImmerseAudioFormat format, int frequency, long lengthInMillis) {
         if (format.getRecordingMode() == RecordingMode.STEREO) {
             throw new IllegalArgumentException("Recording mode stereo not supported");
         }
@@ -31,8 +30,7 @@ public class AudioInputStreamGenerator {
         int lengthInFrames = (int) (lengthInMillis / 1000.0 * format.getNumberOfFramesPerSecond());
         byte[] bytes = new byte[lengthInFrames * format.getNumberOfBytesPerFrame()];
         fillBytes(format, bytes, frequency);
-        // Very little logic in the supplier for early validation and performance.
-        return () -> new AudioInputStream(new ByteArrayInputStream(bytes), format.toJavaAudioFormat(), lengthInFrames);
+        return new AudioInputStream(new ByteArrayInputStream(bytes), format.toJavaAudioFormat(), lengthInFrames);
     }
 
     private static void fillBytes(ImmerseAudioFormat format, byte[] bytes, int frequency) {

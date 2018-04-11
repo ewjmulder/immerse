@@ -15,32 +15,4 @@ public interface VolumeRatiosAlgorithm {
      */
     public SpeakerVolumeRatios calculateVolumeRatios(Snapshot snapshot);
 
-    /**
-     * A fixed ratio.
-     */
-    public static VolumeRatiosAlgorithm fixed(SpeakerVolumeRatios speakerVolumeRatios) {
-        return new FixedVolumeRatiosAlgorithm(speakerVolumeRatios);
-    }
-
-    /**
-     * Only the closest speaker has volume, the others are silent.
-     */
-    public static VolumeRatiosAlgorithm onlyClosest() {
-        return new OnlyClosestVolumeRatiosAlgorithm();
-    }
-
-    /**
-     * A 'field of hearing' algorithm with the default 'cutoff' angle.
-     */
-    public static VolumeRatiosAlgorithm fieldOfHearing() {
-        return new FieldOfHearingVolumeRatiosAlgorithm();
-    }
-
-    /**
-     * A 'field of hearing' algorithm with a certain 'cutoff' angle.
-     */
-    public static VolumeRatiosAlgorithm fieldOfHearing(double cutoffAngle) {
-        return new FieldOfHearingVolumeRatiosAlgorithm(cutoffAngle);
-    }
-
 }

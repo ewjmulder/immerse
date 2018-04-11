@@ -15,20 +15,6 @@ public interface NormalizeAlgorithm {
      */
     public SpeakerVolumes calculateVolumes(SpeakerVolumeRatios speakerVolumeRatios);
 
-    /**
-     * Max sum algorithm with a certain max value.
-     */
-    public static NormalizeAlgorithm maxSum(double maxSum) {
-        return new MaxSumNormalizeAlgorithm(maxSum);
-    }
-
-    /**
-     * Fractional algorithm.
-     */
-    public static NormalizeAlgorithm fractional() {
-        return new FractionalNormalizeAlgorithm();
-    }
-
     public default DoubleStreamEx streamRatios(SpeakerVolumeRatios speakerVolumeRatios) {
         return DoubleStreamEx.of(speakerVolumeRatios.getVolumeRatioMap().values());
     }

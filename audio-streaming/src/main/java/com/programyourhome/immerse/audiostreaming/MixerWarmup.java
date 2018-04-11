@@ -1,15 +1,16 @@
 package com.programyourhome.immerse.audiostreaming;
 
-import static com.programyourhome.immerse.audiostreaming.playback.LoopPlayback.times;
-import static com.programyourhome.immerse.audiostreaming.playback.TimerPlayback.timer;
 import static com.programyourhome.immerse.audiostreaming.simulation.AudioInputStreamGenerator.generate;
-import static com.programyourhome.immerse.domain.location.dynamic.DynamicLocation.fixed;
-import static com.programyourhome.immerse.domain.location.dynamic.DynamicLocation.keyFrames;
-import static com.programyourhome.immerse.domain.speakers.algorithms.normalize.NormalizeAlgorithm.fractional;
-import static com.programyourhome.immerse.domain.speakers.algorithms.normalize.NormalizeAlgorithm.maxSum;
-import static com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.VolumeRatiosAlgorithm.fieldOfHearing;
-import static com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.VolumeRatiosAlgorithm.fixed;
-import static com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.VolumeRatiosAlgorithm.onlyClosest;
+import static com.programyourhome.immerse.domain.audio.playback.LoopPlayback.times;
+import static com.programyourhome.immerse.domain.audio.playback.TimerPlayback.timer;
+import static com.programyourhome.immerse.domain.audio.resource.FixedAudioResource.fixed;
+import static com.programyourhome.immerse.domain.location.dynamic.FixedDynamicLocation.fixed;
+import static com.programyourhome.immerse.domain.location.dynamic.KeyFramesDynamicLocation.keyFrames;
+import static com.programyourhome.immerse.domain.speakers.algorithms.normalize.FractionalNormalizeAlgorithm.fractional;
+import static com.programyourhome.immerse.domain.speakers.algorithms.normalize.MaxSumNormalizeAlgorithm.maxSum;
+import static com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.FieldOfHearingVolumeRatiosAlgorithm.fieldOfHearing;
+import static com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.FixedVolumeRatiosAlgorithm.fixed;
+import static com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.OnlyClosestVolumeRatiosAlgorithm.onlyClosest;
 import static com.programyourhome.immerse.domain.util.TestData.scenario;
 import static com.programyourhome.immerse.domain.util.TestData.settings;
 
@@ -53,27 +54,27 @@ public class MixerWarmup {
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
                 mixer.getRoom().getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0)));
 
-        warmupScenarios.add(scenario(room, () -> generate(
-                this.format(RecordingMode.MONO, SampleRate.RATE_8K, SampleSize.ONE_BYTE, true, ByteOrder.BIG_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS),
-                fixed(betweenTwoSpakers), fixed(0, 0, 0), settings(fieldOfHearing(), fractional(), times(REPETITIONS))));
-        warmupScenarios.add(scenario(room, () -> generate(
-                this.format(RecordingMode.MONO, SampleRate.RATE_11K, SampleSize.ONE_BYTE, true, ByteOrder.BIG_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS),
-                keyFrames(keyFrames), fixed(0, 0, 0), settings(fixed(fixedSpeakerVolumeRatios), fractional(), times(REPETITIONS))));
-        warmupScenarios.add(scenario(room, () -> generate(
-                this.format(RecordingMode.MONO, SampleRate.RATE_16K, SampleSize.ONE_BYTE, true, ByteOrder.LITTLE_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS),
-                fixed(betweenTwoSpakers), fixed(0, 0, 0), settings(onlyClosest(), maxSum(1), timer(LENGTH_IN_MILLIS * REPETITIONS))));
-        warmupScenarios.add(scenario(room, () -> generate(
-                this.format(RecordingMode.MONO, SampleRate.RATE_22K, SampleSize.ONE_BYTE, true, ByteOrder.LITTLE_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS),
-                keyFrames(keyFrames), fixed(0, 0, 0), settings(fieldOfHearing(), maxSum(1), timer(LENGTH_IN_MILLIS * REPETITIONS))));
-        warmupScenarios.add(scenario(room, () -> generate(
-                this.format(RecordingMode.MONO, SampleRate.RATE_32K, SampleSize.ONE_BYTE, true, ByteOrder.BIG_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS),
-                fixed(betweenTwoSpakers), fixed(0, 0, 0), settings(fixed(fixedSpeakerVolumeRatios), maxSum(1), times(REPETITIONS))));
-        warmupScenarios.add(scenario(room, () -> generate(
-                this.format(RecordingMode.MONO, SampleRate.RATE_44K, SampleSize.ONE_BYTE, true, ByteOrder.BIG_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS),
-                keyFrames(keyFrames), fixed(0, 0, 0), settings(onlyClosest(), fractional(), times(REPETITIONS))));
-        warmupScenarios.add(scenario(room, () -> generate(
-                this.format(RecordingMode.MONO, SampleRate.RATE_48K, SampleSize.ONE_BYTE, true, ByteOrder.LITTLE_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS),
-                fixed(betweenTwoSpakers), fixed(0, 0, 0), settings(fieldOfHearing(), maxSum(1), timer(LENGTH_IN_MILLIS * REPETITIONS))));
+        warmupScenarios.add(scenario(room, settings(fixed(generate(
+                this.format(RecordingMode.MONO, SampleRate.RATE_8K, SampleSize.ONE_BYTE, true, ByteOrder.BIG_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS)),
+                fixed(betweenTwoSpakers), fixed(0, 0, 0), fieldOfHearing(), fractional(), times(REPETITIONS))));
+        warmupScenarios.add(scenario(room, settings(fixed(generate(
+                this.format(RecordingMode.MONO, SampleRate.RATE_11K, SampleSize.ONE_BYTE, true, ByteOrder.BIG_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS)),
+                keyFrames(keyFrames), fixed(0, 0, 0), fixed(fixedSpeakerVolumeRatios), fractional(), times(REPETITIONS))));
+        warmupScenarios.add(scenario(room, settings(fixed(generate(
+                this.format(RecordingMode.MONO, SampleRate.RATE_16K, SampleSize.ONE_BYTE, true, ByteOrder.LITTLE_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS)),
+                fixed(betweenTwoSpakers), fixed(0, 0, 0), onlyClosest(), maxSum(1), timer(LENGTH_IN_MILLIS * REPETITIONS))));
+        warmupScenarios.add(scenario(room, settings(fixed(generate(
+                this.format(RecordingMode.MONO, SampleRate.RATE_22K, SampleSize.ONE_BYTE, true, ByteOrder.LITTLE_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS)),
+                keyFrames(keyFrames), fixed(0, 0, 0), fieldOfHearing(), maxSum(1), timer(LENGTH_IN_MILLIS * REPETITIONS))));
+        warmupScenarios.add(scenario(room, settings(fixed(generate(
+                this.format(RecordingMode.MONO, SampleRate.RATE_32K, SampleSize.ONE_BYTE, true, ByteOrder.BIG_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS)),
+                fixed(betweenTwoSpakers), fixed(0, 0, 0), fixed(fixedSpeakerVolumeRatios), maxSum(1), times(REPETITIONS))));
+        warmupScenarios.add(scenario(room, settings(fixed(generate(
+                this.format(RecordingMode.MONO, SampleRate.RATE_44K, SampleSize.ONE_BYTE, true, ByteOrder.BIG_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS)),
+                keyFrames(keyFrames), fixed(0, 0, 0), onlyClosest(), fractional(), times(REPETITIONS))));
+        warmupScenarios.add(scenario(room, settings(fixed(generate(
+                this.format(RecordingMode.MONO, SampleRate.RATE_48K, SampleSize.ONE_BYTE, true, ByteOrder.LITTLE_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS)),
+                fixed(betweenTwoSpakers), fixed(0, 0, 0), fieldOfHearing(), maxSum(1), timer(LENGTH_IN_MILLIS * REPETITIONS))));
 
         return warmupScenarios;
     }

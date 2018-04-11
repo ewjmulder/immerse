@@ -1,10 +1,10 @@
 package com.programyourhome.immerse.audiostreaming;
 
-import static com.programyourhome.immerse.audiostreaming.playback.ForeverPlayback.forever;
-import static com.programyourhome.immerse.domain.audio.resource.AudioResource.fromFile;
-import static com.programyourhome.immerse.domain.location.dynamic.DynamicLocation.fixed;
-import static com.programyourhome.immerse.domain.speakers.algorithms.normalize.NormalizeAlgorithm.fractional;
-import static com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.VolumeRatiosAlgorithm.fixed;
+import static com.programyourhome.immerse.domain.audio.playback.ForeverPlayback.forever;
+import static com.programyourhome.immerse.domain.audio.resource.FileAudioResource.file;
+import static com.programyourhome.immerse.domain.location.dynamic.FixedDynamicLocation.fixed;
+import static com.programyourhome.immerse.domain.speakers.algorithms.normalize.FractionalNormalizeAlgorithm.fractional;
+import static com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.FixedVolumeRatiosAlgorithm.fixed;
 import static com.programyourhome.immerse.domain.util.TestData.room;
 import static com.programyourhome.immerse.domain.util.TestData.scenario;
 import static com.programyourhome.immerse.domain.util.TestData.settings;
@@ -48,8 +48,8 @@ public class TesterLocalLaptop {
                 .signed()
                 .buildForInput();
         // Scenario scenario = scenario(room, fromSupplier(generate(format, 2500, 10_000)), fixed(5, 10, 10), fixed(5, 5, 5),
-        Scenario scenario = scenario(room, fromFile(new File(CHILL)), fixed(5, 10, 10), fixed(5, 5, 5),
-                settings(fixed(fixedSpeakerVolumeRatios), fractional(), forever()));
+        Scenario scenario = scenario(room, settings(file(new File(CHILL)), fixed(5, 10, 10), fixed(5, 5, 5),
+                fixed(fixedSpeakerVolumeRatios), fractional(), forever()));
 
         SoundCard soundCard1 = soundCard(1, "pci-0000:00:14.0-usb-0:5:1.0", speaker1, speaker2);
 

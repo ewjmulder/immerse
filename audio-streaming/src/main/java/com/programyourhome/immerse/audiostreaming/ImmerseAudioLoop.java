@@ -138,15 +138,15 @@ public class ImmerseAudioLoop {
         if (activeScenario.isStarted()) {
             millisSinceStart = System.currentTimeMillis() - activeScenario.getStartMillis();
         }
-        Vector3D listener = activeScenario.getScenario().getListenerLocation().getLocation(millisSinceStart);
-        Vector3D source = activeScenario.getScenario().getSourceLocation().getLocation(millisSinceStart);
+        Vector3D listener = activeScenario.getListenerLocation().getLocation(millisSinceStart);
+        Vector3D source = activeScenario.getSourceLocation().getLocation(millisSinceStart);
         Snapshot snapshot = Snapshot.builder()
                 .scenario(activeScenario.getScenario())
                 .source(source)
                 .listener(listener)
                 .build();
-        SpeakerVolumeRatios speakerVolumeRatios = activeScenario.getScenario().getSettings().getVolumeRatiosAlgorithm().calculateVolumeRatios(snapshot);
-        return activeScenario.getScenario().getSettings().getNormalizeAlgorithm().calculateVolumes(speakerVolumeRatios);
+        SpeakerVolumeRatios speakerVolumeRatios = activeScenario.getVolumeRatiosAlgorithm().calculateVolumeRatios(snapshot);
+        return activeScenario.getNormalizeAlgorithm().calculateVolumes(speakerVolumeRatios);
     }
 
     private Optional<short[]> readFromInputStreams(ActiveScenario activeScenario) {

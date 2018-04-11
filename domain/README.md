@@ -4,11 +4,25 @@
 
 The Immerse domain module contains all classes that make up the world of dynamic sound. It has classes for real world items such as a room,
 speaker and sound card. It uses concepts like scenario, snapshot and playback to define the desired playback scenarios. And for the dynamic part
-we have locations and volume algorithms that calculate the volume distribution among the speakers.
+we have locations and volume algorithms that calculate the volume distribution among the speakers. For more detailed information about these
+classes, see their javadoc.
 
 ## Design
 
 Some important points about the design considerations of the domain module.
+
+### Extensible
+
+The case classes like `Scenario`, `Room` and `Speaker` are fixed, but the domain module defines several extension points for dynamic logic.
+At those points an interface is defined that defines what kind of behavior is expected. Several possible implementation are
+provided in the [toolbox module](../toolbox/README.md), but of course it's possible to create your own implementations as well.
+
+The following interfaces exist:
+* `AudioResource`, that provides an AudioInputStream
+* `Playback`, that defines when to stop the playback of a scenario
+* `DynamicLocation`, that represents a location that changes over time
+* `VolumeRatiosAlgorithm`, that calculated the relative volumes for all speakers
+* `NormalizeAlgorithm`, that normalizes the relative volumes for the speakers
 
 ### Immutable
 
@@ -19,23 +33,12 @@ classes and mutable state. Immutability is generally considered good practice in
 A further reason within Immerse is that a `Scenario` object (or any domain object for that matter) can be re-used / re-played multiple
 times without the risk of state pollution by previous actions or tricky reset methods.
 
-There are a few points where this concept is hard to uphold. For instance an implementation of `Playback` may need to keep state about
-the amount of loops done or of elapsed time. And an `AudioResource` should not return the same `AudioInputStream` each time, cause
+There are a few points where this concept is hard to uphold. Implementations of the extension point interfaces mentioned above might contain state.
+For instance an implementation of `Playback` may need to keep state about the amount of loops done or of elapsed time.
+And an `AudioResource` should not return the same `AudioInputStream` each time, cause
 that has internal state about the playback position. In those cases the solution is to let the domain object return a `Supplier` that
 can construct a new instance (that has state) every time a certain producer method is called. The domain object itself has no state,
 but can produce an object that has. The code that uses this domain should then keep track of those stateful objects and their lifecycle.
-This means there are no implementations of the `Playback` interface provided in the domain module (but you can find them in the audio-streaming module).
-
-### Extensible
-
-The case classes like `Scenario`, `Room` and `Speaker` are fixed, but the domain module defines several extension points for dynamic logic.
-At those points an interface is defined and mostly several implementations are already provided. But of course it's possible to create your own
-implementation as well. The following interfaces exist:
-* `AudioResource`, that can provide an AudioInputStream
-* `Playback`, for defining when to stop the playback of a scenario
-* `DynamicLocation`, a location that changes over time
-* `VolumeRatiosAlgorithm`, that calculated the relative volumes for all speakers
-* `NormalizeAlgorithm`, that normalizes the relative volumes for the speakers
 
 ### Validation
 
@@ -43,8 +46,8 @@ The choice is to have very minimal validation on the domain classes, in line wit
 know how to validate itself. You can freely choose the field values via the builders. When these constructed objects are used in another module,
 that module should perform the validation that is applicable in the specific context. The downside is that no validation is provided by this module,
 not even very basic checks. But the upside is that the usage of the domain is very flexible and no build-in checks can get in the way of creative usage.
-Furthermore, this approach fits well with the fact that the audio-streaming module mostly has one 'point of entry' for a new `Scenario` that can
-then be validated easily before being accepted into the streaming system.
+Furthermore, this approach fits well with the fact that the [audio-streaming module](../audio-streaming/README.md) 
+has one 'point of entry' for a new `Scenario` that can then be validated easily before being accepted into the streaming system.
 
 ### Builders
 
@@ -58,5 +61,5 @@ there are no methods defined that change them, they still are effectively final.
 
 ## Usage
 
-This domain module has little use on it's own. It is primarily meant to serve as a model for the audio-streaming module, although you could use it as a base
-for another streaming implementation.
+This domain module has little use on it's own. It is primarily meant to serve as a model for the [audio-streaming module](../audio-streaming/README.md),
+although you could use it as a base for another streaming implementation.
