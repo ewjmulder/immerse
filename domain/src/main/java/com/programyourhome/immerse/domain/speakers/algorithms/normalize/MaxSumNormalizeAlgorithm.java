@@ -5,7 +5,14 @@ import com.programyourhome.immerse.domain.speakers.SpeakerVolumes;
 
 import one.util.streamex.EntryStream;
 
-public class MaxSumNormalizeAlgorithm extends AbstractNormalizeAlgorithm {
+/**
+ * Max sum normalize algorithm that takes the ratio between the input volumes
+ * and tunes that down until all values summed are equal to the max sum.
+ *
+ * The idea is that this will produce a constant 'amount' of sound, independent of the speaker distribution.
+ * You can provide a total max value higher than 1, but individual speaker volumes will always be cut off at 1.
+ */
+public class MaxSumNormalizeAlgorithm implements NormalizeAlgorithm {
 
     private final double maxSum;
 

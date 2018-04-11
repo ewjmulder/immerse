@@ -3,15 +3,19 @@ package com.programyourhome.immerse.domain.location.dynamic;
 import static com.programyourhome.immerse.domain.util.MathUtil.calculateValueInRange;
 
 import java.util.SortedMap;
-import java.util.TreeMap;
 
 import com.programyourhome.immerse.domain.location.Vector3D;
 
+/**
+ * Dynamic location based on a path, defined by key frames.
+ * For a time before the first key frame, use the location of the first key frame.
+ * For a time after the last key frame, use the location of the last key frame.
+ * For a time in between 2 key frames, use linear interpolation.
+ */
 public class KeyFrameDynamicLocation implements DynamicLocation {
 
     private final SortedMap<Long, Vector3D> keyFrames;
 
-    // TODO: key frames options loop or once
     public KeyFrameDynamicLocation(SortedMap<Long, Vector3D> keyFrames) {
         if (keyFrames.isEmpty()) {
             throw new IllegalArgumentException("At least 1 key frame is required.");
@@ -26,18 +30,18 @@ public class KeyFrameDynamicLocation implements DynamicLocation {
             // Special case: direct hit.
             location = this.keyFrames.get(millisSinceStart);
         } else if (millisSinceStart < this.keyFrames.firstKey()) {
-            // Special case: before first keyframe. Use value of first keyframe.
+            // Special case: before first key frame. Use value of first key frame.
             location = this.keyFrames.get(this.keyFrames.firstKey());
         } else if (millisSinceStart > this.keyFrames.lastKey()) {
-            // Special case: after last keyframe. Use value of last keyframe.
+            // Special case: after last key frame. Use value of last key frame.
             location = this.keyFrames.get(this.keyFrames.lastKey());
         } else {
             Long millisKeyFrameBefore = this.keyFrames.headMap(millisSinceStart).lastKey();
             Vector3D vectorKeyFrameBefore = this.keyFrames.get(millisKeyFrameBefore);
-            Long millisKeyFromAfter = this.keyFrames.tailMap(millisSinceStart).firstKey();
-            Vector3D vectorKeyFrameAfter = this.keyFrames.get(millisKeyFromAfter);
+            Long millisKeyFrameAfter = this.keyFrames.tailMap(millisSinceStart).firstKey();
+            Vector3D vectorKeyFrameAfter = this.keyFrames.get(millisKeyFrameAfter);
 
-            double distance = millisKeyFromAfter - millisKeyFrameBefore;
+            double distance = millisKeyFrameAfter - millisKeyFrameBefore;
             double fraction = (millisSinceStart - millisKeyFrameBefore) / distance;
 
             double locationX = calculateValueInRange(vectorKeyFrameBefore.getX(), vectorKeyFrameAfter.getX(), fraction);
@@ -46,20 +50,6 @@ public class KeyFrameDynamicLocation implements DynamicLocation {
             location = new Vector3D(locationX, locationY, locationZ);
         }
         return location;
-    }
-
-    // TODO: make into good unit test
-    public static void main(String[] args) {
-        SortedMap<Long, Vector3D> keyFrames = new TreeMap<>();
-        keyFrames.put(0L, new Vector3D(0, 0, 0));
-        keyFrames.put(10L, new Vector3D(10, 10, 10));
-        keyFrames.put(20L, new Vector3D(210, 210, 210));
-        keyFrames.put(30L, new Vector3D(3210, 3210, 3210));
-
-        KeyFrameDynamicLocation keyFramedDynamicLocation = new KeyFrameDynamicLocation(keyFrames);
-        System.out.println(keyFramedDynamicLocation.getLocation(9));
-        System.out.println(keyFramedDynamicLocation.getLocation(15));
-        System.out.println(keyFramedDynamicLocation.getLocation(28));
     }
 
 }

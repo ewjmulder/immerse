@@ -1,5 +1,12 @@
-package com.programyourhome.immerse.domain.audio.playback;
+package com.programyourhome.immerse.audiostreaming.playback;
 
+import java.util.function.Supplier;
+
+import com.programyourhome.immerse.domain.audio.playback.Playback;
+
+/**
+ * Loops a certain amount of times.
+ */
 public class LoopPlayback implements Playback {
 
     private final int times;
@@ -26,7 +33,22 @@ public class LoopPlayback implements Playback {
     @Override
     public boolean endOfStream() {
         this.loopCount++;
+        // Continue while the loop count is less the the configured amount of loops.
         return this.loopCount < this.times;
+    }
+
+    /**
+     * Play exactly one.
+     */
+    public static Supplier<Playback> once() {
+        return () -> new LoopPlayback(1);
+    }
+
+    /**
+     * Play a certain amount of times.
+     */
+    public static Supplier<Playback> times(int times) {
+        return () -> new LoopPlayback(times);
     }
 
 }

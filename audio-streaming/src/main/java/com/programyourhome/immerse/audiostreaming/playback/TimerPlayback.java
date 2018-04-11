@@ -1,5 +1,13 @@
-package com.programyourhome.immerse.domain.audio.playback;
+package com.programyourhome.immerse.audiostreaming.playback;
 
+import java.util.function.Supplier;
+
+import com.programyourhome.immerse.domain.audio.playback.Playback;
+
+/**
+ * Plays until the timer runs out.
+ * Will loop if end of stream is reached before the timer runs out.
+ */
 public class TimerPlayback implements Playback {
 
     private long startMillis;
@@ -20,6 +28,7 @@ public class TimerPlayback implements Playback {
 
     @Override
     public boolean shouldStop() {
+        // We should stop when the audio has started and is running longer than the configured duration.
         return this.startMillis > -1 && System.currentTimeMillis() - this.startMillis >= this.durationInMillis;
     }
 
@@ -29,4 +38,10 @@ public class TimerPlayback implements Playback {
         return true;
     }
 
+    /**
+     * Play for a certain amount of millis, looping if needed.
+     */
+    public static Supplier<Playback> timer(long millis) {
+        return () -> new TimerPlayback(millis);
+    }
 }

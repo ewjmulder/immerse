@@ -241,7 +241,7 @@ public class ImmerseAudioMixer {
         ImmerseAudioLoop audioLoop = new ImmerseAudioLoop(this.activeScenarios, this.soundCardStreams, this.outputFormat);
         Map<SoundCardStream, byte[]> dataToWrite = audioLoop.getDataToWrite();
 
-        // Signal start just before adding the audio data to the buffer.
+        // Signal scenario start just before adding the audio data to the buffer.
         this.activeScenarios.forEach(ActiveScenario::startIfNotStarted);
 
         // Actually write to the sound card
@@ -298,7 +298,7 @@ public class ImmerseAudioMixer {
 
     private AudioInputStream convertAudioStream(Scenario scenario) {
         try {
-            AudioInputStream originalStream = scenario.getAudioResource().getAudioStream();
+            AudioInputStream originalStream = scenario.getAudioResource().constructAudioStream();
             // Workaround for a JDK bug: https://bugs.java.com/bugdatabase/view_bug.do?bug_id=8146338
             // TODO: write more information about the bug: asymmetric unsigned byte --> signed float --> signed byte conversion
             AudioInputStream signedStream = AudioUtil.convert(originalStream, toSigned(originalStream.getFormat()));

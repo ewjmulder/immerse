@@ -42,7 +42,7 @@ public class AudioInputStreamGenerator {
             double elapsedTimeInMillis = frame / (double) format.getNumberOfFramesPerSecond() * 1000;
             double fractionOfWave = elapsedTimeInMillis % waveLengthInMillis / waveLengthInMillis;
             double amplitudeNormalized = Math.sin(fractionOfWave * 2 * Math.PI);
-            double amplitudeFraction = MathUtil.calculateFraction(-1, 1, amplitudeNormalized);
+            double amplitudeFraction = MathUtil.calculateFractionInRange(-1, 1, amplitudeNormalized);
             double amplitude = MathUtil.calculateValueInRange(Byte.MIN_VALUE, Byte.MAX_VALUE, amplitudeFraction);
             // Default to half the max volume.
             amplitude *= 0.5;

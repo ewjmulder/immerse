@@ -8,24 +8,28 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
+/**
+ * An audio resource based on a URL.
+ * The supported audio file types are the ones accepted by JVM's AudioSystem.
+ */
 public class UrlAudioResource implements AudioResource {
 
     private URL url;
 
-    protected UrlAudioResource(String urlString) {
+    public UrlAudioResource(String urlString) {
         try {
             this.url = new URL(urlString);
         } catch (MalformedURLException e) {
-            throw new IllegalArgumentException("URL is not valid.", e);
+            throw new IllegalArgumentException("URL is not valid", e);
         }
     }
 
-    protected UrlAudioResource(URL url) {
+    public UrlAudioResource(URL url) {
         this.url = url;
     }
 
     @Override
-    public AudioInputStream getAudioStream() throws IOException {
+    public AudioInputStream constructAudioStream() throws IOException {
         try {
             return AudioSystem.getAudioInputStream(this.url);
         } catch (UnsupportedAudioFileException e) {

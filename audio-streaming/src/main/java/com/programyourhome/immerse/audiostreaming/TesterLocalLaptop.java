@@ -1,5 +1,6 @@
 package com.programyourhome.immerse.audiostreaming;
 
+import static com.programyourhome.immerse.audiostreaming.playback.ForeverPlayback.forever;
 import static com.programyourhome.immerse.domain.audio.resource.AudioResource.fromFile;
 import static com.programyourhome.immerse.domain.location.dynamic.DynamicLocation.fixed;
 import static com.programyourhome.immerse.domain.speakers.algorithms.normalize.NormalizeAlgorithm.fractional;
@@ -21,7 +22,6 @@ import com.programyourhome.immerse.audiostreaming.format.SampleRate;
 import com.programyourhome.immerse.audiostreaming.format.SampleSize;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Scenario;
-import com.programyourhome.immerse.domain.audio.playback.Playback;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
 import com.programyourhome.immerse.domain.speakers.Speaker;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
@@ -49,7 +49,7 @@ public class TesterLocalLaptop {
                 .buildForInput();
         // Scenario scenario = scenario(room, fromSupplier(generate(format, 2500, 10_000)), fixed(5, 10, 10), fixed(5, 5, 5),
         Scenario scenario = scenario(room, fromFile(new File(CHILL)), fixed(5, 10, 10), fixed(5, 5, 5),
-                settings(fixed(fixedSpeakerVolumeRatios), fractional(), Playback.forever()));
+                settings(fixed(fixedSpeakerVolumeRatios), fractional(), forever()));
 
         SoundCard soundCard1 = soundCard(1, "pci-0000:00:14.0-usb-0:5:1.0", speaker1, speaker2);
 

@@ -3,18 +3,18 @@ package com.programyourhome.immerse.domain;
 import java.util.function.Supplier;
 
 import com.programyourhome.immerse.domain.audio.playback.Playback;
-import com.programyourhome.immerse.domain.speakers.algorithms.normalize.FractionalNormalizeAlgorithm;
 import com.programyourhome.immerse.domain.speakers.algorithms.normalize.NormalizeAlgorithm;
-import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.FieldOfHearingVolumeRatiosAlgorithm;
 import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.VolumeRatiosAlgorithm;
 
+/**
+ * Settings class for storing the fields that define how a scenario should be played.
+ */
 public class ImmerseSettings {
 
     private VolumeRatiosAlgorithm volumeRatiosAlgorithm;
     private NormalizeAlgorithm normalizeAlgorithm;
     private Supplier<Playback> playbackSupplier;
 
-    // Use sensible defaults.
     private ImmerseSettings() {
     }
 
@@ -26,13 +26,12 @@ public class ImmerseSettings {
         return this.normalizeAlgorithm;
     }
 
-    // Supplier to avoid state in the Scenario
+    /**
+     * For the Playback we use a supplier, because the domain should not keep state
+     * and a settings object can be reused.
+     */
     public Supplier<Playback> getPlaybackSupplier() {
         return this.playbackSupplier;
-    }
-
-    public static ImmerseSettings defaults() {
-        return builder().defaults().build();
     }
 
     public static Builder builder() {
@@ -44,13 +43,6 @@ public class ImmerseSettings {
 
         public Builder() {
             this.settings = new ImmerseSettings();
-        }
-
-        public Builder defaults() {
-            this.settings.volumeRatiosAlgorithm = new FieldOfHearingVolumeRatiosAlgorithm();
-            this.settings.normalizeAlgorithm = new FractionalNormalizeAlgorithm();
-            this.settings.playbackSupplier = Playback.once();
-            return this;
         }
 
         public Builder volumeRatiosAlgorithm(VolumeRatiosAlgorithm volumeRatiosAlgorithm) {

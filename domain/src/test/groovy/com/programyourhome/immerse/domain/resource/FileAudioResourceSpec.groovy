@@ -11,7 +11,7 @@ class FileAudioResourceSpec extends Specification {
         def audioResource = new FileAudioResource("src/test/resources/clip-10ms.wav");
 
         when:
-        def audioStream = audioResource.getAudioStream();
+        def audioStream = audioResource.constructAudioStream();
 
         then:
         audioStream.available() > 0
@@ -25,7 +25,7 @@ class FileAudioResourceSpec extends Specification {
         def audioResource = new FileAudioResource("src/test/resources/bogus.wav");
 
         when:
-        def audioStream = audioResource.getAudioStream();
+        def audioStream = audioResource.constructAudioStream();
 
         then:
         thrown IOException

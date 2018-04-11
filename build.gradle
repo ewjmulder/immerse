@@ -5,7 +5,6 @@ subprojects {
 
     apply plugin: "java"
     apply plugin: "groovy"
-    apply plugin: "application"
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
@@ -21,11 +20,4 @@ subprojects {
         testCompile "org.codehaus.groovy:groovy:2.4.1"
     }
 
-    mainClassName = "com.programyourhome.immerse.audiostreaming.Tester"
-
 }
-
-ext.depVersions = [
-    //TODO: upgrade spring boot to 1.5.6.RELEASE
-    "spring_boot": "1.2.7.RELEASE",
-]

@@ -9,7 +9,6 @@ import com.programyourhome.immerse.domain.Snapshot;
 import com.programyourhome.immerse.domain.audio.playback.Playback;
 import com.programyourhome.immerse.domain.audio.resource.AudioResource;
 import com.programyourhome.immerse.domain.audio.soundcard.MixerInfo;
-import com.programyourhome.immerse.domain.audio.soundcard.PhysicalDeviceInfo;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
 import com.programyourhome.immerse.domain.location.Vector3D;
 import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
@@ -39,7 +38,7 @@ public class TestData {
                 .id(id)
                 .name("Speaker " + id)
                 .description("Description of speaker " + id)
-                .vector(x, y, z)
+                .position(x, y, z)
                 .build();
     }
 
@@ -77,7 +76,7 @@ public class TestData {
     }
 
     public static ImmerseSettings settings() {
-        return ImmerseSettings.defaults();
+        return settings(VolumeRatiosAlgorithm.fieldOfHearing(), NormalizeAlgorithm.fractional(), () -> new PlaybackForever());
     }
 
     public static ImmerseSettings settings(VolumeRatiosAlgorithm volumeRatiosAlgorithm,
@@ -101,15 +100,26 @@ public class TestData {
                         .description("Description of MixerInfo")
                         .version("1.0")
                         .build())
-                .physicalDeviceInfo(PhysicalDeviceInfo.builder()
-                        .name("PhysicalDeviceInfo")
-                        .vendor("Vendor")
-                        .product("Product")
-                        .serialNumber("12345")
-                        .build())
                 .leftSpeaker(leftSpeaker)
                 .rightSpeaker(rightSpeaker)
                 .build();
+    }
+
+    private static class PlaybackForever implements Playback {
+
+        @Override
+        public boolean shouldStop() {
+            return false;
+        }
+
+        @Override
+        public boolean endOfStream() {
+            return true;
+        }
+
+        @Override
+        public void audioStarted() {
+        }
     }
 
 }

@@ -1,5 +1,6 @@
 package com.programyourhome.immerse.audiostreaming;
 
+import static com.programyourhome.immerse.audiostreaming.playback.ForeverPlayback.forever;
 import static com.programyourhome.immerse.domain.audio.resource.AudioResource.fromFilePath;
 import static com.programyourhome.immerse.domain.location.dynamic.DynamicLocation.fixed;
 import static com.programyourhome.immerse.domain.speakers.algorithms.normalize.NormalizeAlgorithm.fractional;
@@ -21,7 +22,6 @@ import com.programyourhome.immerse.audiostreaming.format.SampleRate;
 import com.programyourhome.immerse.audiostreaming.format.SampleSize;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Scenario;
-import com.programyourhome.immerse.domain.audio.playback.Playback;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
 import com.programyourhome.immerse.domain.location.Vector3D;
 import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
@@ -59,10 +59,10 @@ public class Tester {
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
                 room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0)));
         Scenario scenario1 = scenario(room, fromFilePath(CHILL), DynamicLocation.keyFrames(keyFrames), fixed(5, 5, 5),
-                settings(VolumeRatiosAlgorithm.fieldOfHearing(60), NormalizeAlgorithm.maxSum(1), Playback.forever()));
+                settings(VolumeRatiosAlgorithm.fieldOfHearing(60), NormalizeAlgorithm.maxSum(1), forever()));
 
         Scenario scenario2 = scenario(room, fromFilePath(CHILL), fixed(0, 0, 0), fixed(5, 5, 5),
-                settings(fixed(fixedSpeakerVolumeRatios), fractional(), Playback.forever()));
+                settings(fixed(fixedSpeakerVolumeRatios), fractional(), forever()));
 
         SoundCard soundCard1 = soundCard(1, "pci-0000:00:14.0-usb-0:1.2:1.0", speaker1, speaker2);
         SoundCard soundCard2 = soundCard(2, "pci-0000:00:14.0-usb-0:1.3:1.0", speaker3, speaker4);

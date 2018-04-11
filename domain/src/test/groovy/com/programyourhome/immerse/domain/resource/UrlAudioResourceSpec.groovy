@@ -12,7 +12,7 @@ class UrlAudioResourceSpec extends Specification {
         def audioResource = new UrlAudioResource(url);
 
         when:
-        def audioStream = audioResource.getAudioStream();
+        def audioStream = audioResource.constructAudioStream();
 
         then:
         audioStream.available() > 0
@@ -27,7 +27,7 @@ class UrlAudioResourceSpec extends Specification {
         def audioResource = new UrlAudioResource(url);
 
         when:
-        def audioStream = audioResource.getAudioStream();
+        def audioStream = audioResource.constructAudioStream();
 
         then:
         thrown IOException

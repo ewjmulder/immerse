@@ -3,6 +3,11 @@ package com.programyourhome.immerse.domain.speakers;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Convenience wrapper around a volume ratio map.
+ * Represents the relative volumes for each speaker.
+ * The values cannot be used directly as volumes, but need normalization first.
+ */
 public class SpeakerVolumeRatios {
 
     private final Map<Integer, Double> volumeRatioMap;

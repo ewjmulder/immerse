@@ -2,6 +2,9 @@ package com.programyourhome.immerse.domain.location;
 
 import org.la4j.Vector;
 
+/**
+ * A vector in 3D space.
+ */
 public class Vector3D {
 
     private final double x;

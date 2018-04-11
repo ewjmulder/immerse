@@ -2,6 +2,10 @@ package com.programyourhome.immerse.domain.location.dynamic;
 
 import com.programyourhome.immerse.domain.location.Vector3D;
 
+/**
+ * Dynamic location that circles 'horizontally' around a certain center with a certain radius
+ * at a certain speed, either clockwise or not.
+ */
 public class HorizontalCircleDynamicLocation implements DynamicLocation {
 
     private final double centerX;
@@ -11,8 +15,6 @@ public class HorizontalCircleDynamicLocation implements DynamicLocation {
     private final double radius;
     private final boolean clockwise;
     private final double millisPerDegreeAngle;
-    // TODO: support for secondsPerFullCircle
-    // TODO: support for circling around any of the axis
 
     public HorizontalCircleDynamicLocation(Vector3D center, double startAngleInDegrees, double radius, boolean clockwise, double millisPerDegreeAngle) {
         this.centerX = center.getX();
@@ -37,19 +39,7 @@ public class HorizontalCircleDynamicLocation implements DynamicLocation {
         // Mirror y to let an increase in angle mean clockwise rotation.
         y *= -1;
 
-        // System.out.println("millisSinceStart: " + millisSinceStart);
-        // System.out.println("currentAngleInDegrees: " + currentAngleInDegrees);
-        // System.out.println("radius: " + this.radius);
-        // System.out.println("x: " + x);
-        // System.out.println("y: " + y);
-
         return new Vector3D(this.centerX + x, this.centerY + y, this.z);
-    }
-
-    // TODO: This screams for a good unit test!!!
-    public static void main(String[] args) {
-        // HorizontalCircleDynamicLocation h = new HorizontalCircleDynamicLocation(0, 0, 0, 90, 1, true, 1);
-        // System.out.println(h.getLocation(0));
     }
 
 }
