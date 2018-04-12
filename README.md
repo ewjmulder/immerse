@@ -4,15 +4,22 @@ Immerse yourself in the waves of dynamic surround sound!
 
 ## Features
 
-TODO: nice feature one-liners
-* f1
-* f2
+* Set up your room with a great surround sound experience
+* Stream audio to an unlimited amount* of speakers simultaneously
+* Configure your scenario with ease, play it and immerse yourself in the sound waves
+* Works well on cheap computer, sound card and speaker hardware
 
-## Further documentation
+(*) Tested with up to 12 speakers, more should be no problem
 
-Note: this section is still work in progress!
+## Getting Started
+
+TODO: getting started section
+
+## Modules
+
 For details about the different modules, see:
-* [Domain - Data modeling and volume algorithms](domain/README.md)
+* [Domain - Data modeling with extensible interfaces](domain/README.md)
+* [Toolbox - Possible implementations for the domain interfaces](toolbox/README.md)
 * [Audio Streaming - The heart of Immerse](audio-streaming/README.md)
 
 ## Road Map
