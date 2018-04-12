@@ -10,7 +10,7 @@ public class Scenario {
     private String name;
     private String description;
     private Room room;
-    private ImmerseSettings settings;
+    private Settings settings;
 
     private Scenario() {
     }
@@ -27,7 +27,7 @@ public class Scenario {
         return this.room;
     }
 
-    public ImmerseSettings getSettings() {
+    public Settings getSettings() {
         return this.settings;
     }
 
@@ -57,7 +57,7 @@ public class Scenario {
             return this;
         }
 
-        public Builder settings(ImmerseSettings settings) {
+        public Builder settings(Settings settings) {
             this.scenario.settings = settings;
             return this;
         }
