@@ -2,6 +2,10 @@ package com.programyourhome.immerse.audiostreaming.format;
 
 import java.util.Arrays;
 
+/**
+ * Enum for sample size: 1 or 2 bytes (8 or 16 bits).
+ * Any other bit sizes are not supported.
+ */
 public enum SampleSize {
 
     ONE_BYTE(1, false),

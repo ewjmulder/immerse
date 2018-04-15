@@ -1,4 +1,4 @@
-package com.programyourhome.immerse.audiostreaming.mixer.loop;
+package com.programyourhome.immerse.audiostreaming.mixer.step;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -7,14 +7,24 @@ import javax.sound.sampled.AudioInputStream;
 
 import com.programyourhome.immerse.audiostreaming.format.ImmerseAudioFormat;
 import com.programyourhome.immerse.audiostreaming.format.SampleSize;
+import com.programyourhome.immerse.audiostreaming.util.AudioUtil;
 
+/**
+ * Reads sample values from an audio stream.
+ */
 public class SampleReader {
 
     private SampleReader() {
     }
 
+    /**
+     * Read as many samples from the audio stream as fit in the provided buffer (or until end of stream).
+     * The return boolean indicates if the end of the stream has been reached or not.
+     * If so, the remaining samples are set to 0.
+     */
     public static boolean readSamples(AudioInputStream stream, short[] sampleBuffer) throws IOException {
         ImmerseAudioFormat format = ImmerseAudioFormat.fromJavaAudioFormat(stream.getFormat());
+        AudioUtil.assertSigned(format);
         boolean endOfStream = false;
 
         int bytesToRead = sampleBuffer.length * format.getNumberOfBytesPerSample();
@@ -36,7 +46,11 @@ public class SampleReader {
         return endOfStream;
     }
 
+    /**
+     * Read one sample from the given byte array at the given index.
+     */
     public static short readSample(byte[] byteBuffer, int sampleIndex, ImmerseAudioFormat format) {
+        AudioUtil.assertSigned(format);
         short sampleValue;
         int byteIndex = sampleIndex * format.getNumberOfBytesPerSample();
         if (format.getSampleSize() == SampleSize.ONE_BYTE) {

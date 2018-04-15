@@ -18,12 +18,13 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.programyourhome.immerse.audiostreaming.format.ImmerseAudioFormat;
 import com.programyourhome.immerse.audiostreaming.format.SampleRate;
 import com.programyourhome.immerse.audiostreaming.format.SampleSize;
-import com.programyourhome.immerse.audiostreaming.mixer.ImmerseAudioMixer;
+import com.programyourhome.immerse.audiostreaming.mixer.ImmerseMixer;
 import com.programyourhome.immerse.audiostreaming.mixer.scenario.ScenarioPlaybackListener;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Scenario;
@@ -36,7 +37,6 @@ public class Tester {
 
     private static final String CHILL = "/home/emulder/Downloads/ChillingMusic.wav";
     private static final String BASS = "/home/emulder/Downloads/doublebass.wav";
-    // TODO: find out why clapping has a tick but clapping-saved (load+save by Audacity) does not.
     private static final String CLAPPING = "/home/emulder/Downloads/clapping.wav";
     private static final String VOICE = "/home/emulder/Downloads/voice.wav";
 
@@ -75,22 +75,22 @@ public class Tester {
                 .sampleSize(SampleSize.TWO_BYTES)
                 .buildForOutput();
 
-        ImmerseAudioMixer mixer = new ImmerseAudioMixer(room, new HashSet<>(Arrays.asList(soundCard1, soundCard2, soundCard3)), outputFormat);
+        ImmerseMixer mixer = new ImmerseMixer(room, new HashSet<>(Arrays.asList(soundCard1, soundCard2, soundCard3)), outputFormat);
 
         mixer.addPlaybackListener(new ScenarioPlaybackListener() {
             @Override
-            public void scenarioStarted(Scenario scenario) {
-                System.out.println("Scenario started: " + scenario.getName());
+            public void scenarioStarted(UUID playbackId) {
+                System.out.println("Scenario started: " + playbackId);
             }
 
             @Override
-            public void scenarioRestarted(Scenario scenario) {
-                System.out.println("Scenario restarted: " + scenario.getName());
+            public void scenarioRestarted(UUID playbackId) {
+                System.out.println("Scenario restarted: " + playbackId);
             }
 
             @Override
-            public void scenarioStopped(Scenario scenario) {
-                System.out.println("Scenario stopped: " + scenario.getName());
+            public void scenarioStopped(UUID playbackId) {
+                System.out.println("Scenario stopped: " + playbackId);
             }
         });
         mixer.addStateListener((fromState, toState) -> System.out.println("State change from " + fromState + " to " + toState));

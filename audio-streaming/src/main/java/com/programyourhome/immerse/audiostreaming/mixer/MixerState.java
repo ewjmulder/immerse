@@ -3,7 +3,11 @@ package com.programyourhome.immerse.audiostreaming.mixer;
 import java.util.Arrays;
 import java.util.List;
 
-// Using allowed previous states because of enum cannot reference
+/**
+ * Enum for possible mixer states, used to keep track of the startup and shutdown process of a mixer.
+ * Technical note: using allowed previous states instead of next states because of enum cannot reference ahead,
+ * but isAllowedNextState is possible after creation by reverse checking.
+ */
 public enum MixerState {
 
     NEW(false),

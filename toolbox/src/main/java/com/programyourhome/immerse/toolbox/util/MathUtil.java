@@ -91,6 +91,15 @@ public class MathUtil {
     }
 
     /**
+     * Calculate a value from one range into another range by first calculating the fraction in the 'from range'
+     * and then back to a value in the 'to range'.
+     */
+    public static double calculateFromRangeToRange(final double fromMin, final double fromMax, final double fromValue,
+            final double toMin, final double toMax) {
+        return calculateValueInRange(toMin, toMax, calculateFractionInRange(fromMin, fromMax, fromValue));
+    }
+
+    /**
      * Calculate the normalized form of a vector (with length 1).
      */
     public static Vector normalize(Vector input) {

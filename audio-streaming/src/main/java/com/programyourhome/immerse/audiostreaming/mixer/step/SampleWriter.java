@@ -1,25 +1,34 @@
-package com.programyourhome.immerse.audiostreaming.mixer.loop;
+package com.programyourhome.immerse.audiostreaming.mixer.step;
 
 import com.programyourhome.immerse.audiostreaming.format.ImmerseAudioFormat;
 import com.programyourhome.immerse.audiostreaming.format.SampleSize;
+import com.programyourhome.immerse.audiostreaming.util.AudioUtil;
 
+/**
+ * Write sample values from a samples array to a byte array.
+ */
 public class SampleWriter {
 
     private SampleWriter() {
     }
 
-    public static void writeSamples(short[] samples, byte[] outputBuffer, ImmerseAudioFormat format) {
-        int bytesToWrite = samples.length * format.getNumberOfBytesPerSample();
-        if (outputBuffer.length != bytesToWrite) {
-            throw new IllegalArgumentException(
-                    "Expected number of bytes to write: '" + bytesToWrite + "' does not match buffer size: '" + outputBuffer.length + "'");
-        }
+    /**
+     * Writes as many samples as are present in the sample array into a byte array.
+     */
+    public static byte[] writeSamples(short[] samples, ImmerseAudioFormat format) {
+        AudioUtil.assertSigned(format);
+        byte[] outputBuffer = new byte[samples.length * format.getNumberOfBytesPerSample()];
         for (int i = 0; i < samples.length; i++) {
             writeSample(samples[i], outputBuffer, i, format);
         }
+        return outputBuffer;
     }
 
+    /**
+     * Write one sample into the given byte array at the given index.
+     */
     public static void writeSample(short sample, byte[] outputBuffer, int sampleIndex, ImmerseAudioFormat format) {
+        AudioUtil.assertSigned(format);
         int byteIndex = sampleIndex * format.getNumberOfBytesPerSample();
         if (format.getSampleSize() == SampleSize.ONE_BYTE) {
             // Simple case, just write the sample as 1 byte.
