@@ -1,5 +1,7 @@
 package com.programyourhome.immerse.audiostreaming.mixer;
 
+import org.pmw.tinylog.Logger;
+
 /**
  * Listener of state changes of a mixer.
  * Defined as functional interface for easy lambda based definitions.
@@ -14,8 +16,7 @@ public interface MixerStateListener {
         try {
             this.stateChanged(fromState, toState);
         } catch (Exception e) {
-            // TODO: logging
-            e.printStackTrace();
+            Logger.error(e, "Exception while notifying state listener");
         }
     }
 

@@ -126,22 +126,18 @@ public class SoundCardStream {
 
     /**
      * Write the contents of the given buffer to the sound card, taking mute settings into account.
-     * NB: This is a non-blocking method, the I/O operation is executed in a separate thread.
      */
     public void writeToLine(byte[] buffer) {
-        // TODO: use thread pool! TODO: should this method create the thread or rather let the choice be on the 'outisde'?
-        new Thread(() -> {
-            if (this.mutedLeft) {
-                this.mute(buffer, 0);
-            }
-            if (this.mutedRight) {
-                this.mute(buffer, this.outputFormat.getNumberOfBytesPerSample());
-            }
-            // This performs the actual I/O on the sound card hardware.
-            this.outputLine.write(buffer, 0, buffer.length);
-            // Update the frames written by calculating how many were in the byte array.
-            this.framesWritten += buffer.length / this.outputFormat.getNumberOfBytesPerFrame();
-        }).start();
+        if (this.mutedLeft) {
+            this.mute(buffer, 0);
+        }
+        if (this.mutedRight) {
+            this.mute(buffer, this.outputFormat.getNumberOfBytesPerSample());
+        }
+        // This performs the actual I/O on the sound card hardware.
+        this.outputLine.write(buffer, 0, buffer.length);
+        // Update the frames written by calculating how many were in the byte array.
+        this.framesWritten += buffer.length / this.outputFormat.getNumberOfBytesPerFrame();
     }
 
     /**

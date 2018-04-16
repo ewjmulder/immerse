@@ -3,6 +3,8 @@ package com.programyourhome.immerse.audiostreaming.mixer.scenario;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import org.pmw.tinylog.Logger;
+
 /**
  * Listener interface for the scenario lifecycle inside a mixer.
  * Notifications contain the playback id, that is received when calling playScenario on a mixer.
@@ -34,8 +36,7 @@ public interface ScenarioPlaybackListener {
         try {
             eventConsumer.accept(playbackId);
         } catch (Exception e) {
-            // TODO: proper logging
-            e.printStackTrace();
+            Logger.error(e, "Exception while notifying scenario listener");
         }
     }
 

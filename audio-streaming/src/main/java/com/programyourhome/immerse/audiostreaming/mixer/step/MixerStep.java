@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import org.pmw.tinylog.Logger;
+
 import com.programyourhome.immerse.audiostreaming.format.ImmerseAudioFormat;
 import com.programyourhome.immerse.audiostreaming.format.SampleSize;
 import com.programyourhome.immerse.audiostreaming.mixer.scenario.ActiveScenario;
@@ -88,8 +90,7 @@ public class MixerStep {
         long minFramesNeeded = Collections.min(allFramesNeededAmounts);
         long maxFramesNeeded = Collections.max(allFramesNeededAmounts);
         // Trace write the diff between max and min, since that is an indication of how well the sound card streams are in sync.
-        // TODO: debug log amount of frames diff (max-min)
-        System.out.println("Diff between max and min amount of frames needed: " + (maxFramesNeeded - minFramesNeeded));
+        Logger.trace("Diff between max and min amount of frames needed: {}", maxFramesNeeded - minFramesNeeded);
         // Since we have to keep in sync with all streams, we take the max frames needed as the amount needed for all streams.
         long amountOfFramesNeeded = maxFramesNeeded;
         // We want an int for easier use as array size and we know it will never be bigger than the limits of Integer.
@@ -182,7 +183,7 @@ public class MixerStep {
             return Optional.of(samples);
         } catch (IOException e) {
             // Instead of crashing upon an IOException in reading, we just log it and remove that scenario.
-            // TODO: log error
+            Logger.error(e, "Exception while reading from audio input stream");
             this.scenariosToRemove.add(activeScenario);
             // Return an empty optional to signal failure.
             return Optional.empty();

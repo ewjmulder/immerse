@@ -18,14 +18,12 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.programyourhome.immerse.audiostreaming.format.ImmerseAudioFormat;
 import com.programyourhome.immerse.audiostreaming.format.SampleRate;
 import com.programyourhome.immerse.audiostreaming.format.SampleSize;
 import com.programyourhome.immerse.audiostreaming.mixer.ImmerseMixer;
-import com.programyourhome.immerse.audiostreaming.mixer.scenario.ScenarioPlaybackListener;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Scenario;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
@@ -76,24 +74,6 @@ public class Tester {
                 .buildForOutput();
 
         ImmerseMixer mixer = new ImmerseMixer(room, new HashSet<>(Arrays.asList(soundCard1, soundCard2, soundCard3)), outputFormat);
-
-        mixer.addPlaybackListener(new ScenarioPlaybackListener() {
-            @Override
-            public void scenarioStarted(UUID playbackId) {
-                System.out.println("Scenario started: " + playbackId);
-            }
-
-            @Override
-            public void scenarioRestarted(UUID playbackId) {
-                System.out.println("Scenario restarted: " + playbackId);
-            }
-
-            @Override
-            public void scenarioStopped(UUID playbackId) {
-                System.out.println("Scenario stopped: " + playbackId);
-            }
-        });
-        mixer.addStateListener((fromState, toState) -> System.out.println("State change from " + fromState + " to " + toState));
 
         mixer.initialize();
         mixer.start();

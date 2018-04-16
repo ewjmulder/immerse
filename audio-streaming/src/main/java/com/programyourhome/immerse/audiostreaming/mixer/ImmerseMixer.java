@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 import javax.sound.sampled.AudioInputStream;
@@ -18,6 +21,8 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.Mixer;
 import javax.sound.sampled.SourceDataLine;
+
+import org.pmw.tinylog.Logger;
 
 import com.programyourhome.immerse.audiostreaming.format.ImmerseAudioFormat;
 import com.programyourhome.immerse.audiostreaming.mixer.scenario.ActiveScenario;
@@ -34,16 +39,26 @@ import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
 import one.util.streamex.EntryStream;
 import one.util.streamex.StreamEx;
 
-// TODO: mention API to the outside is just lifecycle: initialize, start, stop and playScenario
-// No 'leaking' of internal data like ActiveScenario, just communication with playback id's
-// and mention the scenariosToActive synchronysation
+/**
+ * The Immerse Mixer is the 'player' of the Immerse system.
+ * The mixer itself should be created, initialized and started.
+ * After it is fully started, it can play scenarios.
+ * It's main loop will keep updating the sound card streams with new buffer data, so essentially keep Immerse running.
+ *
+ * This class also contains a lot of 'book keeping' about scenario playback state.
+ * Furthermore, it can 'warm up' the system for smooth audio playback later.
+ *
+ * For more information about the setup of this class, see the javadoc and comments in this class and the project documentation.
+ */
 public class ImmerseMixer {
-
-    // TODO: make issue to remove all TODO's into solutions or issues (unless about logging or unit tests)
 
     private static final int STEP_PACE_MILLIS = 5;
     private static final int WAIT_FOR_PREDICATE = 5;
 
+    // A name to differentiate the main and warmup mixer in the logs.
+    private String name;
+    // The executor service for all asynchronous tasks.
+    private final ExecutorService executorService;
     // Listeners for the mixer state changes.
     private final Set<MixerStateListener> stateListeners;
     // Listeners for the scenario playback changes.
@@ -70,7 +85,7 @@ public class ImmerseMixer {
     private final Thread workerThread;
     // The current state of this mixer.
     private MixerState state;
-    // Whether this is a warmup mixer or not.
+    // Whether this is the warmup mixer or not.
     private boolean warmupMixer;
 
     public ImmerseMixer(Room room, Set<SoundCard> soundCards, ImmerseAudioFormat outputAudioFormat) {
@@ -83,6 +98,8 @@ public class ImmerseMixer {
         if (!outputAudioFormat.isOutput()) {
             throw new IllegalArgumentException("The provided output audio format should be marked as output");
         }
+        this.name = "Main mixer";
+        this.executorService = Executors.newCachedThreadPool();
         this.stateListeners = new HashSet<>();
         this.playbackListeners = new HashSet<>();
         this.room = room;
@@ -97,7 +114,7 @@ public class ImmerseMixer {
         this.activeScenarios = new HashSet<>();
         this.soundCardDetector = new SoundCardDetector();
         // Prepare the worker thread (but do not start it yet).
-        this.workerThread = new Thread(this::run);
+        this.workerThread = new Thread(this::run, "Main Mixer Worker");
         this.state = MixerState.NEW;
         // Default to 'standard' mixer. Property is only settable from inside this class, since warmup is no 'external feature'.
         this.warmupMixer = false;
@@ -163,13 +180,13 @@ public class ImmerseMixer {
         }
         this.updateState(MixerState.WARMUP);
         if (this.warmupMixer) {
-            // If we are a warmup mixer, mute all sound cards so warmup is silent ...
+            // If we are the warmup mixer, mute all sound cards so warmup is silent ...
             this.soundCardStreams.forEach(SoundCardStream::mute);
             // ... and set the state to initialized so warmup scenarios can start playing.
             this.updateState(MixerState.INITIALIZED);
         } else {
-            // If we are not a warmup mixer (so a regular mixer), we should initiate warmup (asynchronously).
-            new Thread(() -> this.warmup()).start();
+            // If we are not the warmup mixer (so the main mixer), we should initiate warmup (asynchronously).
+            new Thread(() -> this.warmup(), "Warmup Mixer Executor").start();
         }
     }
 
@@ -188,11 +205,13 @@ public class ImmerseMixer {
             try {
                 outputLine = AudioSystem.getSourceDataLine(this.outputFormat.toJavaAudioFormat(), mixerInfo);
             } catch (IllegalArgumentException e) {
-                // TODO: logging / warning
-                System.out.println("Exception for systemMixerInfo: " + mixerInfo);
-                // TODO: some way to check this assumption? -> try to set the default audio out in the OS and see if this behavior changes
-                // In case an exception is thrown for this mixer, it's probably used as the default,
-                // so use that one by setting the mixer info to 'null' (Java Sound API limitation?).
+                // This exception is a 'known issue' of Java Sound when targeting the system default audio device.
+                // As a workaround use the default audio device by setting the mixer info to 'null'.
+                // Will show up in the logs for the main mixer, so do not log again in case of the warmup mixer.
+                if (!this.warmupMixer) {
+                    Logger.info("Exception for mixer info: '" + mixerInfo.getName() + "'. "
+                            + "Known Java Sound API issue, falling back to default audio device.");
+                }
                 outputLine = AudioSystem.getSourceDataLine(this.outputFormat.toJavaAudioFormat(), null);
             }
             this.soundCardStreams.add(new SoundCardStream(soundCard, outputLine));
@@ -210,8 +229,10 @@ public class ImmerseMixer {
 
         // Create a new mixer with the same configuration as this one.
         ImmerseMixer warmupMixer = new ImmerseMixer(this.room, this.soundCards, this.outputFormat);
-        // Set that mixer to be a warmup mixer.
+        // Set that mixer to be the warmup mixer.
         warmupMixer.warmupMixer = true;
+        warmupMixer.name = "Warmup mixer";
+        warmupMixer.workerThread.setName("Warmup Mixer Worker");
 
         warmupMixer.initialize();
         warmupMixer.start();
@@ -225,12 +246,11 @@ public class ImmerseMixer {
         this.waitFor(() -> !warmupMixer.hasScenariosInPlayback());
         // Warmup is done, stop the warmup mixer.
         warmupMixer.stop();
-        // This mixer, the 'regular' mixer is now initialized and ready to play 'real' scenarios.
+        // This mixer, the 'main' mixer is now initialized and ready to play 'real' scenarios.
         this.updateState(MixerState.INITIALIZED);
 
         long end = System.nanoTime();
-        // TOOD: proper logging
-        System.out.println("Millis for warmup: " + (end - start) / 1_000_000.0);
+        Logger.info("Warmup completed in {0.000} seconds", (end - start) / 1_000_000_000.0);
     }
 
     /**
@@ -260,10 +280,11 @@ public class ImmerseMixer {
             // Update the audio buffers and record the processing time.
             long stepNanos = this.updateBuffers();
             double stepMillis = stepNanos / 1_000_000.0;
-            // TODO: sleep millis - actual step execution time. + warn when actual time is bigger than sleep time!
-            System.out.println("Millis for step: " + stepMillis);
             if (stepMillis > STEP_PACE_MILLIS) {
-                // TODO: log warn about not keeping up the pace!
+                // Some large step times are to be expected in warmup mode, so only log a warning if we are not the warmup mixer.
+                if (!this.warmupMixer) {
+                    Logger.warn("Risk for hickups in playback: actual step millis {} was bigger than the step pace millis {}.", stepMillis, STEP_PACE_MILLIS);
+                }
             } else {
                 // Sleep for the step pace millis - the time it took to run the step logic.
                 this.sleep(STEP_PACE_MILLIS - (int) Math.round(stepMillis));
@@ -289,8 +310,10 @@ public class ImmerseMixer {
         this.activeScenarios.addAll(scenariosToActivateCopy);
         // Now remove all activated scenario's from the collection (which might have grown in the mean time).
         this.scenariosToActivate.removeAll(scenariosToActivateCopy);
+        scenariosToActivateCopy.forEach(scenario -> this.logScenarioEvent(scenario, "started"));
+        // Notify of start event asynchronously.
         scenariosToActivateCopy.forEach(scenario -> this.playbackListeners
-                .forEach(listener -> listener.scenarioEventNoException(listener::scenarioStarted, scenario.getId())));
+                .forEach(listener -> this.executorService.submit(() -> listener.scenarioEventNoException(listener::scenarioStarted, scenario.getId()))));
     }
 
     /**
@@ -301,13 +324,14 @@ public class ImmerseMixer {
 
         // Gather all data to write by running the mixer step algorithm.
         MixerStep mixerStep = new MixerStep(this.activeScenarios, this.soundCardStreams, this.outputFormat);
-        Map<SoundCardStream, byte[]> dataToWrite = mixerStep.calculateBufferData();
+        Map<SoundCardStream, byte[]> soundCardBufferData = mixerStep.calculateBufferData();
 
         // Signal scenario start just before adding the audio data to the buffer.
         this.activeScenarios.forEach(ActiveScenario::startIfNotStarted);
 
-        // Actually write the buffer data to the sound card stream (will run in a separate thread).
-        EntryStream.of(dataToWrite).forKeyValue(SoundCardStream::writeToLine);
+        // Actually write the buffer data to the sound card stream (asynchronously).
+        EntryStream.of(soundCardBufferData).forKeyValue(
+                (soundCardStream, bufferData) -> this.executorService.submit(() -> soundCardStream.writeToLine(bufferData)));
 
         // If not started, do start the streams after the initial buffer fill, to be in sync as much as possible.
         if (this.state == MixerState.INITIALIZED) {
@@ -330,16 +354,19 @@ public class ImmerseMixer {
     private void handleScenarioLifecycle(MixerStep mixerStep) {
         for (ActiveScenario activeScenario : mixerStep.getScenariosToRestart()) {
             this.activeScenarios.remove(activeScenario);
-            // TODO: use thread pool
-            new Thread(() -> ImmerseMixer.this.restartScenario(activeScenario)).start();
-            // TODO: handle events in a separate thread to prevent expensive listeners from giving hickups in playback
-            this.playbackListeners.forEach(listener -> listener.scenarioEventNoException(listener::scenarioRestarted, activeScenario.getId()));
+            // Restart asynchronously.
+            this.executorService.submit(() -> ImmerseMixer.this.restartScenario(activeScenario));
+            this.logScenarioEvent(activeScenario, "restarted");
+            // Notify of restart event asynchronously.
+            this.playbackListeners.forEach(
+                    listener -> this.executorService.submit(() -> listener.scenarioEventNoException(listener::scenarioRestarted, activeScenario.getId())));
         }
         this.activeScenarios.removeAll(mixerStep.getScenariosToRemove());
         this.scenariosInPlayback.removeAll(mixerStep.getScenariosToRemove());
-        // TODO: handle events in a separate thread to prevent expensive listeners from giving hickups in playback
+        mixerStep.getScenariosToRemove().forEach(scenario -> this.logScenarioEvent(scenario, "stopped"));
+        // Notify of stop event asynchronously.
         mixerStep.getScenariosToRemove().forEach(scenario -> this.playbackListeners
-                .forEach(listener -> listener.scenarioEventNoException(listener::scenarioStopped, scenario.getId())));
+                .forEach(listener -> this.executorService.submit(() -> listener.scenarioEventNoException(listener::scenarioStopped, scenario.getId()))));
     }
 
     /**
@@ -381,7 +408,7 @@ public class ImmerseMixer {
     private AudioInputStream convertAudioStream(Scenario scenario) {
         AudioInputStream originalStream = scenario.getSettings().getAudioResourceSupplier().get().getAudioInputStream();
         // Workaround for a JDK bug: https://bugs.java.com/bugdatabase/view_bug.do?bug_id=8146338
-        // TODO: write more information about the bug: asymmetric unsigned byte --> signed float --> signed byte conversion
+        // See the documentation of this project for more information.
         AudioInputStream signedStream = AudioUtil.convert(originalStream, toSigned(originalStream.getFormat()));
         AudioInputStream converted = AudioUtil.convert(signedStream, this.inputFormat.toJavaAudioFormat());
         return converted;
@@ -411,8 +438,31 @@ public class ImmerseMixer {
         }
         MixerState oldState = this.state;
         this.state = newState;
-        // TODO: handle events in a separate thread to prevent expensive listeners from giving hickups in playback
-        this.stateListeners.forEach(listener -> listener.stateChangedNoException(oldState, this.state));
+        this.logStateEvent(oldState, this.state);
+        // Notify of state change event asynchronously.
+        this.stateListeners.forEach(listener -> this.executorService.submit(() -> listener.stateChangedNoException(oldState, this.state)));
+    }
+
+    /**
+     * Log a scenario event in a generic way.
+     */
+    private void logScenarioEvent(ActiveScenario activeScenario, String event) {
+        this.getEventLogMethod().accept("{} {} scenario {}", new Object[] { this.name, event, activeScenario.getScenario().getName() });
+    }
+
+    /**
+     * Log a state change event in a generic way.
+     */
+    private void logStateEvent(MixerState oldState, MixerState newState) {
+        this.getEventLogMethod().accept("{} changed from state {} to {}", new Object[] { this.name, oldState, newState });
+    }
+
+    /**
+     * In case of the main mixer, we log events at level info.
+     * But in case of the warmup mixer, use trace to avoid polluting the logs.
+     */
+    private BiConsumer<String, Object[]> getEventLogMethod() {
+        return this.warmupMixer ? Logger::trace : Logger::info;
     }
 
     /**
