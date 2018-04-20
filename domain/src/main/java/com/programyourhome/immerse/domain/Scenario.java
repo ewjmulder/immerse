@@ -1,27 +1,16 @@
 package com.programyourhome.immerse.domain;
 
-import com.programyourhome.immerse.domain.audio.resource.AudioResource;
-import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
-
-//TODO: refactor the domain ideas:
-//- Include room instance in a scenario: it makes no sense to have location specifiers without knowing the room dimensions
-//- Rename 'scene' to something that is more 'static', like 'snapshot' or 'state'
-//- Should speaker know it's own coordinates?
-//- SoundCardStream naar audio-streaming
-//- Add option for dynamic volume, independent from location of sound source.
-//- Keep type aliasses like SpeakerVolumeRatios?
-//- Move all general math stuff to MathUtil class
-//- All domain classes should be without state, esp. the whole scenario tree!
-
+/**
+ * A scenario represents an audio resource in a room with speakers, with a dynamic source and listener locations.
+ * A scenario should be played according to these properties and the algorithm settings.
+ * The scenario object and fields themselves will not contain state, so they can be re-used for repeated playback.
+ */
 public class Scenario {
 
     private String name;
     private String description;
     private Room room;
-    private AudioResource audioResource;
-    private DynamicLocation sourceLocation;
-    private DynamicLocation listenerLocation;
-    private ImmerseSettings settings;
+    private Settings settings;
 
     private Scenario() {
     }
@@ -38,19 +27,7 @@ public class Scenario {
         return this.room;
     }
 
-    public AudioResource getAudioResource() {
-        return this.audioResource;
-    }
-
-    public DynamicLocation getSourceLocation() {
-        return this.sourceLocation;
-    }
-
-    public DynamicLocation getListenerLocation() {
-        return this.listenerLocation;
-    }
-
-    public ImmerseSettings getSettings() {
+    public Settings getSettings() {
         return this.settings;
     }
 
@@ -80,22 +57,7 @@ public class Scenario {
             return this;
         }
 
-        public Builder audioResource(AudioResource audioResource) {
-            this.scenario.audioResource = audioResource;
-            return this;
-        }
-
-        public Builder sourceLocation(DynamicLocation sourceLocation) {
-            this.scenario.sourceLocation = sourceLocation;
-            return this;
-        }
-
-        public Builder listenerLocation(DynamicLocation listenerLocation) {
-            this.scenario.listenerLocation = listenerLocation;
-            return this;
-        }
-
-        public Builder settings(ImmerseSettings settings) {
+        public Builder settings(Settings settings) {
             this.scenario.settings = settings;
             return this;
         }

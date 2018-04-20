@@ -21,3 +21,10 @@ Steps taken / notes:
   NB2: After that: JAVA_HOME will be back to oracle. So either set it to always openjdk or do not install oracle jdk
 - Test: switch back to Oracle JDK: does still not work! We actually do need openjdk!
 - So with user in audio group, JAVA_HOME and java to openjdk we can actually play!
+- Another important point: running with ./gradlew run seems to be much slower than 'plain' command line Java
+- Does 'tick' around restarting of Scenario, so look into that if it causes much load and if so, if that can be initialized in the background somehow.
+  When starting in new Thread: seems to be bothered by 'warmup' effect of JVM, so take this into account for the warmup scenario, loop a few times of small length
+- Other trick is also to print millis per loop and other important events and see if there is a correlation.
+  For example: JVM garbage collection!
+
+

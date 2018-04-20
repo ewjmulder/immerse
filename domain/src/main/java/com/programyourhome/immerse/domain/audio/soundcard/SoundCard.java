@@ -2,13 +2,19 @@ package com.programyourhome.immerse.domain.audio.soundcard;
 
 import com.programyourhome.immerse.domain.speakers.Speaker;
 
+/**
+ * Represents a physical sound card on a computer.
+ * Inside immerse, a sound card is identified by it's id.
+ * For human readers, a name and description are available.
+ * For the OS, a physical port string is the identifier. (read more about this mechanism in the documentation)
+ * Last but not least, the sound card knows what it's left and right speakers are.
+ */
 public class SoundCard {
 
     private int id;
     private String name;
     private String description;
     private String physicalPort;
-    private PhysicalDeviceInfo physicalDeviceInfo;
     private MixerInfo mixerInfo;
     private Speaker leftSpeaker;
     private Speaker rightSpeaker;
@@ -30,10 +36,6 @@ public class SoundCard {
 
     public String getPhysicalPort() {
         return this.physicalPort;
-    }
-
-    public PhysicalDeviceInfo getPhysicalDeviceInfo() {
-        return this.physicalDeviceInfo;
     }
 
     public MixerInfo getMixerInfo() {
@@ -81,11 +83,6 @@ public class SoundCard {
 
         public Builder physicalPort(String physicalPort) {
             this.soundCard.physicalPort = physicalPort;
-            return this;
-        }
-
-        public Builder physicalDeviceInfo(PhysicalDeviceInfo physicalDeviceInfo) {
-            this.soundCard.physicalDeviceInfo = physicalDeviceInfo;
             return this;
         }
 

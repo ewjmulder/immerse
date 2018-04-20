@@ -2,6 +2,10 @@ package com.programyourhome.immerse.audiostreaming.format;
 
 import java.util.Arrays;
 
+/**
+ * Enum for recording mode: mono or stereo.
+ * More than 2 channels are not supported.
+ */
 public enum RecordingMode {
 
     MONO(1),

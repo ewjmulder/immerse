@@ -2,11 +2,14 @@ package com.programyourhome.immerse.domain.location;
 
 import org.la4j.Vector;
 
+/**
+ * A vector in 3D space.
+ */
 public class Vector3D {
 
-    private double x;
-    private double y;
-    private double z;
+    private final double x;
+    private final double y;
+    private final double z;
 
     public Vector3D(double x, double y, double z) {
         this.x = x;
@@ -33,6 +36,13 @@ public class Vector3D {
     @Override
     public String toString() {
         return "(" + this.x + ", " + this.y + ", " + this.z + ")";
+    }
+
+    public static Vector3D fromLa4j(Vector vector) {
+        if (vector.length() != 3) {
+            throw new IllegalArgumentException("Provided vector must be of length 3");
+        }
+        return new Vector3D(vector.get(0), vector.get(1), vector.get(2));
     }
 
 }

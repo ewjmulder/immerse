@@ -1,33 +1,16 @@
 package com.programyourhome.immerse.domain.audio.resource;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-
 import javax.sound.sampled.AudioInputStream;
 
+/**
+ * An audio resource is an object that can provide an AudioInputStream.
+ */
 public interface AudioResource {
 
     /**
-     * Get an audio stream of this audio resource.
-     * NB: Every call should create a new stream object, that can be played independently.
+     * Get the AudioInputStream for this audio resource.
+     * This method should always return the same object.
      */
-    public AudioInputStream getAudioStream() throws IOException;
-
-    public static AudioResource fromFilePath(String filePath) {
-        return new FileAudioResource(filePath);
-    }
-
-    public static AudioResource fromFile(File file) {
-        return new FileAudioResource(file);
-    }
-
-    public static AudioResource fromUrlString(String urlString) {
-        return new UrlAudioResource(urlString);
-    }
-
-    public static AudioResource fromUrl(URL url) {
-        return new UrlAudioResource(url);
-    }
+    public AudioInputStream getAudioInputStream();
 
 }

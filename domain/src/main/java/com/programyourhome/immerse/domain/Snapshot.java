@@ -2,6 +2,11 @@ package com.programyourhome.immerse.domain;
 
 import com.programyourhome.immerse.domain.location.Vector3D;
 
+/**
+ * A snapshot is a 'moment in time' when playing a scenario.
+ * It contains the scenario and the 'current' locations of the source and listener.
+ * A snapshot can be used as input for volume calculation algorithms.
+ */
 public class Snapshot {
 
     private Scenario scenario;

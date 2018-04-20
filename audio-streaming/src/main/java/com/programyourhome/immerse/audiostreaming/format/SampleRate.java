@@ -2,6 +2,10 @@ package com.programyourhome.immerse.audiostreaming.format;
 
 import java.util.Arrays;
 
+/**
+ * Enum for sample rate with the most common sample rates as options.
+ * Slightly simplified numbering, e.g. 44K instead of 44100.
+ */
 public enum SampleRate {
 
     RATE_8K(8000),

@@ -1,5 +1,5 @@
 dependencies {
-    compile project(":domain")
+    compile project(":toolbox")
 
     testCompile "org.usb4java:usb4java:1.2.0"
 }

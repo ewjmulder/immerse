@@ -3,6 +3,12 @@ package com.programyourhome.immerse.domain.speakers;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Convenience wrapper around a volume map.
+ * Represents the absolute volumes for each speaker, as a value between 0 (mute) and 1 (max volume).
+ * NB: These volumes are meant as a multiplier of the amplitudes of the audio data,
+ * so 1 does not always mean very loud, this depends on the actual audio resources.
+ */
 public class SpeakerVolumes {
 
     private final Map<Integer, Double> volumeMap;

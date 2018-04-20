@@ -5,6 +5,10 @@ import java.nio.ByteOrder;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioFormat.Encoding;
 
+/**
+ * Audio format with all relevant information about the details of the format.
+ * Is equivalent to the Java Sound AudioFormat class, but more type safe and more tailored to Immerse.
+ */
 public class ImmerseAudioFormat {
 
     private boolean output;
@@ -17,26 +21,45 @@ public class ImmerseAudioFormat {
     private ImmerseAudioFormat() {
     }
 
+    /**
+     * Whether or not the audio format is meant for Immerse output or not.
+     * (an output format has extra constraints)
+     */
     public boolean isOutput() {
         return this.output;
     }
 
+    /**
+     * Recording mode can be mono or stereo.
+     */
     public RecordingMode getRecordingMode() {
         return this.recordingMode;
     }
 
+    /**
+     * One of the predefined possible sample rates.
+     */
     public SampleRate getSampleRate() {
         return this.sampleRate;
     }
 
+    /**
+     * Sample size can be one or two bytes.
+     */
     public SampleSize getSampleSize() {
         return this.sampleSize;
     }
 
+    /**
+     * Whether the sample values are signed or not.
+     */
     public boolean isSigned() {
         return this.signed;
     }
 
+    /**
+     * The byte order can be little or big endian.
+     */
     public ByteOrder getByteOrder() {
         return this.byteOrder;
     }
@@ -57,17 +80,12 @@ public class ImmerseAudioFormat {
         return this.recordingMode.getNumberOfChannels() * this.sampleSize.getNumberOfBytes();
     }
 
-    public int getNumberOfBytesPerSecond() {
-        return this.sampleRate.getNumberOfSamplesPerSecond() * this.getNumberOfBytesPerFrame();
-    }
-
-    /**
-     * The number of frames per second. Since we are using a non-compressed format, the frame rate is the same as the sample rate.
-     *
-     * @return number of frames per second
-     */
     public int getNumberOfFramesPerSecond() {
         return this.sampleRate.getNumberOfSamplesPerSecond();
+    }
+
+    public int getNumberOfBytesPerSecond() {
+        return this.sampleRate.getNumberOfSamplesPerSecond() * this.getNumberOfBytesPerFrame();
     }
 
     public AudioFormat toJavaAudioFormat() {
@@ -75,28 +93,13 @@ public class ImmerseAudioFormat {
                 this.recordingMode.getNumberOfChannels(), this.signed, this.byteOrder == ByteOrder.BIG_ENDIAN);
     }
 
-    // TODO: nice for a unit test
-    public static void main(String[] args) {
-        ImmerseAudioFormat original = ImmerseAudioFormat.builder()
-                .recordingMode(RecordingMode.STEREO)
-                .sampleRate(SampleRate.RATE_44K)
-                .sampleSize(SampleSize.TWO_BYTES)
-                .signed()
-                .byteOrder(ByteOrder.LITTLE_ENDIAN)
-                .buildForInput();
-        ImmerseAudioFormat doubleConverted = ImmerseAudioFormat.fromJavaAudioFormat(original.toJavaAudioFormat());
-        System.out.println(original);
-        System.out.println(doubleConverted);
-    }
-
     public static ImmerseAudioFormat fromJavaAudioFormat(AudioFormat audioFormat) {
         return builder()
-                // TODO: move fromXxx calls to builder overload methods
-                .recordingMode(RecordingMode.fromNumberOfChannels(audioFormat.getChannels()))
-                .sampleRate(SampleRate.fromNumberOfSamplesPerSecond(audioFormat.getSampleRate()))
-                .sampleSize(SampleSize.fromNumberOfBits(audioFormat.getSampleSizeInBits()))
-                .setSigned(encodingToSigned(audioFormat.getEncoding()))
-                .byteOrder(audioFormat.isBigEndian() ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN)
+                .recordingMode(audioFormat.getChannels())
+                .sampleRate(audioFormat.getSampleRate())
+                .sampleSizeBits(audioFormat.getSampleSizeInBits())
+                .setSigned(audioFormat.getEncoding())
+                .byteOrderBig(audioFormat.isBigEndian())
                 .buildForInput();
     }
 
@@ -118,9 +121,17 @@ public class ImmerseAudioFormat {
             this.format = new ImmerseAudioFormat();
         }
 
+        public Builder recordingMode(int numberOfChannels) {
+            return this.recordingMode(RecordingMode.fromNumberOfChannels(numberOfChannels));
+        }
+
         public Builder recordingMode(RecordingMode recordingMode) {
             this.format.recordingMode = recordingMode;
             return this;
+        }
+
+        public Builder sampleRate(float sampleRate) {
+            return this.sampleRate(SampleRate.fromNumberOfSamplesPerSecond(sampleRate));
         }
 
         public Builder sampleRate(SampleRate sampleRate) {
@@ -128,9 +139,21 @@ public class ImmerseAudioFormat {
             return this;
         }
 
+        public Builder sampleSizeBits(int numberOfBits) {
+            return this.sampleSize(SampleSize.fromNumberOfBits(numberOfBits));
+        }
+
+        public Builder sampleSizeBytes(int numberOfBytes) {
+            return this.sampleSize(SampleSize.fromNumberOfBytes(numberOfBytes));
+        }
+
         public Builder sampleSize(SampleSize sampleSize) {
             this.format.sampleSize = sampleSize;
             return this;
+        }
+
+        public Builder setSigned(Encoding encoding) {
+            return this.setSigned(encodingToSigned(encoding));
         }
 
         public Builder setSigned(boolean signed) {
@@ -144,6 +167,14 @@ public class ImmerseAudioFormat {
 
         public Builder unsigned() {
             return this.setSigned(false);
+        }
+
+        public Builder byteOrderLittle(boolean littleEndian) {
+            return this.byteOrder(littleEndian ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
+        }
+
+        public Builder byteOrderBig(boolean bigEndian) {
+            return this.byteOrderLittle(!bigEndian);
         }
 
         public Builder byteOrder(ByteOrder byteOrder) {
@@ -160,7 +191,7 @@ public class ImmerseAudioFormat {
             if (this.format.recordingMode != null) {
                 throw new IllegalStateException("Cannot set recording mode for output format");
             } else {
-                // Always stereo mode, because we want to supply output to both channels.
+                // Always stereo mode, because we want to supply output to both channels / speakers.
                 this.format.recordingMode = RecordingMode.STEREO;
             }
             if (this.format.signed != null) {
