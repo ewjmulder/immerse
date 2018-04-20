@@ -1,14 +1,18 @@
-package com.programyourhome.immerse.audiostreaming;
+package com.programyourhome.immerse.testscripts.scenarios;
 
-import static com.programyourhome.immerse.domain.audio.resource.AudioResource.fromFilePath;
-import static com.programyourhome.immerse.domain.location.dynamic.DynamicLocation.fixed;
-import static com.programyourhome.immerse.domain.speakers.algorithms.normalize.NormalizeAlgorithm.fractional;
-import static com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.VolumeRatiosAlgorithm.fixed;
-import static com.programyourhome.immerse.domain.util.TestData.room;
-import static com.programyourhome.immerse.domain.util.TestData.scenario;
-import static com.programyourhome.immerse.domain.util.TestData.settings;
-import static com.programyourhome.immerse.domain.util.TestData.soundCard;
-import static com.programyourhome.immerse.domain.util.TestData.speaker;
+import static com.programyourhome.immerse.toolbox.audio.playback.ForeverPlayback.forever;
+import static com.programyourhome.immerse.toolbox.audio.resource.FileAudioResource.filePath;
+import static com.programyourhome.immerse.toolbox.location.dynamic.FixedDynamicLocation.fixed;
+import static com.programyourhome.immerse.toolbox.location.dynamic.KeyFramesDynamicLocation.keyFrames;
+import static com.programyourhome.immerse.toolbox.speakers.algorithms.normalize.FractionalNormalizeAlgorithm.fractional;
+import static com.programyourhome.immerse.toolbox.speakers.algorithms.normalize.MaxSumNormalizeAlgorithm.maxSum;
+import static com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios.FieldOfHearingVolumeRatiosAlgorithm.fieldOfHearing;
+import static com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios.FixedVolumeRatiosAlgorithm.fixed;
+import static com.programyourhome.immerse.toolbox.util.TestData.room;
+import static com.programyourhome.immerse.toolbox.util.TestData.scenario;
+import static com.programyourhome.immerse.toolbox.util.TestData.settings;
+import static com.programyourhome.immerse.toolbox.util.TestData.soundCard;
+import static com.programyourhome.immerse.toolbox.util.TestData.speaker;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -19,18 +23,15 @@ import java.util.stream.Collectors;
 import com.programyourhome.immerse.audiostreaming.format.ImmerseAudioFormat;
 import com.programyourhome.immerse.audiostreaming.format.SampleRate;
 import com.programyourhome.immerse.audiostreaming.format.SampleSize;
+import com.programyourhome.immerse.audiostreaming.mixer.ImmerseMixer;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Scenario;
-import com.programyourhome.immerse.domain.audio.playback.Playback;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
 import com.programyourhome.immerse.domain.location.Vector3D;
-import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
 import com.programyourhome.immerse.domain.speakers.Speaker;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
-import com.programyourhome.immerse.domain.speakers.algorithms.normalize.NormalizeAlgorithm;
-import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.VolumeRatiosAlgorithm;
 
-public class Tester {
+public class TesterSparrenBurcht {
 
     private static final String CHILL_PINE = "/home/ubuntu/sandbox/ChillingMusic_Loud.wav";
     private static final String CLAPPING_PINE = "/home/ubuntu/sandbox/clapping-louder-long.wav";
@@ -42,15 +43,15 @@ public class Tester {
     private static final String VOICE = "/home/emulder/Downloads/voice.wav";
 
     public static void main(String[] args) throws Exception {
-        Speaker speaker1  = speaker(1,  120, 0,   250);
-        Speaker speaker2  = speaker(2,  240, 0,   250);
-        Speaker speaker3  = speaker(3,  0,   0,   250);
-        Speaker speaker4  = speaker(4,  0,   240, 250);
-        Speaker speaker5  = speaker(5,  0,   365, 250);
-        Speaker speaker6  = speaker(6,  0,   75,  250);
-        Speaker speaker7  = speaker(7,  365, 0,   250);
-        Speaker speaker8  = speaker(8,  365, 120, 250);
-        Speaker speaker9  = speaker(9,  365, 240, 250);
+        Speaker speaker1 = speaker(1, 120, 0, 250);
+        Speaker speaker2 = speaker(2, 240, 0, 250);
+        Speaker speaker3 = speaker(3, 0, 0, 250);
+        Speaker speaker4 = speaker(4, 0, 240, 250);
+        Speaker speaker5 = speaker(5, 0, 365, 250);
+        Speaker speaker6 = speaker(6, 0, 75, 250);
+        Speaker speaker7 = speaker(7, 365, 0, 250);
+        Speaker speaker8 = speaker(8, 365, 120, 250);
+        Speaker speaker9 = speaker(9, 365, 240, 250);
         Speaker speaker10 = speaker(10, 365, 365, 250);
         Speaker speaker11 = speaker(11, 120, 365, 250);
         Speaker speaker12 = speaker(12, 240, 365, 250);
@@ -66,13 +67,13 @@ public class Tester {
         keyFrames.put(12_000L, new Vector3D(0, 0, 250));
 
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
-                room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0))); //speaker.getId() == 11 ? 1.0 : 0.0)));
-        Scenario scenario1 = scenario(room, fromFilePath(CHILL_PINE), DynamicLocation.keyFrames(keyFrames), fixed(5, 5, 5),
-                settings(VolumeRatiosAlgorithm.fieldOfHearing(60), NormalizeAlgorithm.maxSum(1), Playback.forever()));
+                room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0))); // speaker.getId() == 11 ? 1.0 : 0.0)));
+        Scenario scenario1 = scenario(room, settings(filePath(CHILL_PINE), keyFrames(keyFrames), fixed(5, 5, 5),
+                fieldOfHearing(60), maxSum(1), forever()));
 
-        Scenario scenario2 = scenario(room, fromFilePath(CHILL_PINE), DynamicLocation.keyFrames(keyFrames), fixed(180, 180, 150),
-//                settings(VolumeRatiosAlgorithm.fieldOfHearing(45), NormalizeAlgorithm.maxSum(1), Playback.forever()));
-                settings(fixed(fixedSpeakerVolumeRatios), fractional(), Playback.forever()));
+        Scenario scenario2 = scenario(room, settings(filePath(CHILL_PINE), keyFrames(keyFrames), fixed(180, 180, 150),
+                // VolumeRatiosAlgorithm.fieldOfHearing(45), NormalizeAlgorithm.maxSum(1), Playback.forever()));
+                fixed(fixedSpeakerVolumeRatios), fractional(), forever()));
 
         SoundCard soundCard1 = soundCard(1, "platform-1c1a000.ehci0-controller-usb-0:1.2:1.0", speaker1, speaker2);
         SoundCard soundCard2 = soundCard(2, "platform-1c1a000.ehci0-controller-usb-0:1.3:1.0", speaker3, speaker4);
@@ -86,7 +87,8 @@ public class Tester {
                 .sampleSize(SampleSize.TWO_BYTES)
                 .buildForOutput();
 
-        ImmerseAudioMixer mixer = new ImmerseAudioMixer(room, new HashSet<>(Arrays.asList(soundCard1, soundCard2, soundCard3, soundCard4, soundCard5, soundCard6)), outputFormat);
+        ImmerseMixer mixer = new ImmerseMixer(room,
+                new HashSet<>(Arrays.asList(soundCard1, soundCard2, soundCard3, soundCard4, soundCard5, soundCard6)), outputFormat);
 
         mixer.initialize();
         mixer.start();
