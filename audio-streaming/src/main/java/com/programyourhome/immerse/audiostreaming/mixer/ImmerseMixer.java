@@ -3,7 +3,6 @@ package com.programyourhome.immerse.audiostreaming.mixer;
 import static com.programyourhome.immerse.audiostreaming.util.AudioUtil.toSigned;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -32,6 +31,7 @@ import com.programyourhome.immerse.audiostreaming.mixer.warmup.CoverAllSettingsW
 import com.programyourhome.immerse.audiostreaming.soundcard.SoundCardDetector;
 import com.programyourhome.immerse.audiostreaming.soundcard.SoundCardStream;
 import com.programyourhome.immerse.audiostreaming.util.AudioUtil;
+import com.programyourhome.immerse.audiostreaming.util.MemoryUtil;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Scenario;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
@@ -54,6 +54,7 @@ public class ImmerseMixer {
 
     private static final int STEP_PACE_MILLIS = 5;
     private static final int WAIT_FOR_PREDICATE = 5;
+    private static final int TRIGGER_MINOR_GC_THRESHOLD_KB = 1000;
 
     // A name to differentiate the main and warmup mixer in the logs.
     private String name;
@@ -100,17 +101,12 @@ public class ImmerseMixer {
         }
         this.name = "Main mixer";
         this.executorService = Executors.newCachedThreadPool();
-        this.stateListeners = new HashSet<>();
-        this.playbackListeners = new HashSet<>();
         this.room = room;
         this.soundCards = soundCards;
         this.soundCardStreams = new HashSet<>();
         this.outputFormat = outputAudioFormat;
         // For input: just switch from stereo to mono, because an input stream should always consist of 1 channel that will be mixed dynamically.
         this.inputFormat = AudioUtil.toMonoInput(this.outputFormat);
-        // Explicitly synchronize this set, because it is the only 'overlapping' part between the mixer internals and the 'outside' world.
-        this.scenariosToActivate = Collections.synchronizedSet(new HashSet<>());
-        this.scenariosInPlayback = new HashSet<>();
         this.activeScenarios = new HashSet<>();
         this.soundCardDetector = new SoundCardDetector();
         // Prepare the worker thread (but do not start it yet).
@@ -118,6 +114,13 @@ public class ImmerseMixer {
         this.state = MixerState.NEW;
         // Default to 'standard' mixer. Property is only settable from inside this class, since warmup is no 'external feature'.
         this.warmupMixer = false;
+
+        // Explicitly synchronize these sets, because they are the 'overlapping' part between the mixer internals and the 'outside' world
+        // and are susceptible for ConcurrentModificationException.
+        this.stateListeners = Collections.synchronizedSet(new HashSet<>());
+        this.playbackListeners = Collections.synchronizedSet(new HashSet<>());
+        this.scenariosToActivate = Collections.synchronizedSet(new HashSet<>());
+        this.scenariosInPlayback = Collections.synchronizedSet(new HashSet<>());
     }
 
     public Room getRoom() {
@@ -144,14 +147,14 @@ public class ImmerseMixer {
      * Whether or not this mixer has scenarios in playback.
      */
     public boolean hasScenariosInPlayback() {
-        return !this.getScenariosInPlayback().isEmpty();
+        return !this.scenariosInPlayback.isEmpty();
     }
 
     /**
      * Get all playback id's of all scenarios in playback.
      */
     public Set<UUID> getScenariosInPlayback() {
-        return StreamEx.of(this.scenariosInPlayback)
+        return StreamEx.of(this.scenariosInPlayback.toArray(new ActiveScenario[0]))
                 .map(ActiveScenario::getId)
                 .toSet();
     }
@@ -161,6 +164,20 @@ public class ImmerseMixer {
      */
     public boolean isScenarioInPlayback(UUID playbackId) {
         return this.getScenariosInPlayback().contains(playbackId);
+    }
+
+    /**
+     * Get an atomically created copy of the state listeners, to loop over without possible concurrent modification issues.
+     */
+    private List<MixerStateListener> getStateListenersCopy() {
+        return Arrays.asList(this.stateListeners.toArray(new MixerStateListener[0]));
+    }
+
+    /**
+     * Get an atomically created copy of the playback listeners, to loop over without possible concurrent modification issues.
+     */
+    private List<ScenarioPlaybackListener> getPlaybackListenersCopy() {
+        return Arrays.asList(this.playbackListeners.toArray(new ScenarioPlaybackListener[0]));
     }
 
     /**
@@ -241,6 +258,8 @@ public class ImmerseMixer {
             warmupMixer.playScenario(scenario);
             // Sleep for a fraction of the running time, so multiple scenarios will overlap during warmup.
             this.sleep((long) (runningTime * 0.3));
+            // Also perform some GC to warm up the GC logic.
+            System.gc();
         });
         // Now wait for all warmup scenarios to complete.
         this.waitFor(() -> !warmupMixer.hasScenariosInPlayback());
@@ -275,19 +294,35 @@ public class ImmerseMixer {
      */
     private void run() {
         while (this.state.isRunning()) {
+            long start = System.nanoTime();
+
             // Activate any 'waiting' scenarios.
             this.activateScenarios();
-            // Update the audio buffers and record the processing time.
-            long stepNanos = this.updateBuffers();
-            double stepMillis = stepNanos / 1_000_000.0;
+            // Update the audio buffers.
+            this.updateBuffers();
+
+            long end = System.nanoTime();
+
+            double stepMillis = (end - start) / 1_000_000.0;
             if (stepMillis > STEP_PACE_MILLIS) {
                 // Some large step times are to be expected in warmup mode, so only log a warning if we are not the warmup mixer.
                 if (!this.warmupMixer) {
                     Logger.warn("Risk for hickups in playback: actual step millis {} was bigger than the step pace millis {}.", stepMillis, STEP_PACE_MILLIS);
                 }
             } else {
-                // Sleep for the step pace millis - the time it took to run the step logic.
-                this.sleep(STEP_PACE_MILLIS - (int) Math.round(stepMillis));
+                // If we are almost running out of Eden space, trigger a minor GC in a controlled manner.
+                // Otherwise, sleep for however long is left of the step pace.
+                // NB: only do this if the current step was not slower than the pace, to not trigger an extra delay on an already slow step.
+                if (MemoryUtil.getFreeEdenSpaceInKB() < TRIGGER_MINOR_GC_THRESHOLD_KB) {
+                    // Allocate the right amount of bytes to just go over the limit, so a minor GC is triggered.
+                    byte[] triggerBuffer = new byte[TRIGGER_MINOR_GC_THRESHOLD_KB * 1024];
+                    // Do 'something' with the array or the JIT might just 'optimize it away'.
+                    // In fact, that 'something' is just printing an empty String, but hopefully enough to forever fool JIT ;).
+                    System.out.print(triggerBuffer.length > 0 ? "" : "0");
+                } else {
+                    // Sleep for the step pace millis - the time it took to run the step logic.
+                    this.sleep(STEP_PACE_MILLIS - (int) Math.round(stepMillis));
+                }
             }
         }
         // When the while loop above has broken, we should stop this mixer, so stop all sound card streams.
@@ -306,22 +341,20 @@ public class ImmerseMixer {
      */
     private void activateScenarios() {
         // Loop over a copy, to prevent concurrent modification issues. Make the copy in an atomic way by using the synchronized toArray.
-        List<ActiveScenario> scenariosToActivateCopy = new ArrayList<>(Arrays.asList(this.scenariosToActivate.toArray(new ActiveScenario[0])));
+        List<ActiveScenario> scenariosToActivateCopy = Arrays.asList(this.scenariosToActivate.toArray(new ActiveScenario[0]));
         this.activeScenarios.addAll(scenariosToActivateCopy);
         // Now remove all activated scenario's from the collection (which might have grown in the mean time).
         this.scenariosToActivate.removeAll(scenariosToActivateCopy);
         scenariosToActivateCopy.forEach(scenario -> this.logScenarioEvent(scenario, "started"));
         // Notify of start event asynchronously.
-        scenariosToActivateCopy.forEach(scenario -> this.playbackListeners
+        scenariosToActivateCopy.forEach(scenario -> this.getPlaybackListenersCopy()
                 .forEach(listener -> this.executorService.submit(() -> listener.scenarioEventNoException(listener::scenarioStarted, scenario.getId()))));
     }
 
     /**
      * Update the sound card buffers with the next step of audio data.
      */
-    private long updateBuffers() {
-        long start = System.nanoTime();
-
+    private void updateBuffers() {
         // Gather all data to write by running the mixer step algorithm.
         MixerStep mixerStep = new MixerStep(this.activeScenarios, this.soundCardStreams, this.outputFormat);
         Map<SoundCardStream, byte[]> soundCardBufferData = mixerStep.calculateBufferData();
@@ -341,9 +374,6 @@ public class ImmerseMixer {
 
         // Now handle the scenario life cycle actions that were gathered during the mixer step.
         this.handleScenarioLifecycle(mixerStep);
-
-        long end = System.nanoTime();
-        return end - start;
     }
 
     /**
@@ -358,14 +388,14 @@ public class ImmerseMixer {
             this.executorService.submit(() -> ImmerseMixer.this.restartScenario(activeScenario));
             this.logScenarioEvent(activeScenario, "restarted");
             // Notify of restart event asynchronously.
-            this.playbackListeners.forEach(
+            this.getPlaybackListenersCopy().forEach(
                     listener -> this.executorService.submit(() -> listener.scenarioEventNoException(listener::scenarioRestarted, activeScenario.getId())));
         }
         this.activeScenarios.removeAll(mixerStep.getScenariosToRemove());
         this.scenariosInPlayback.removeAll(mixerStep.getScenariosToRemove());
         mixerStep.getScenariosToRemove().forEach(scenario -> this.logScenarioEvent(scenario, "stopped"));
         // Notify of stop event asynchronously.
-        mixerStep.getScenariosToRemove().forEach(scenario -> this.playbackListeners
+        mixerStep.getScenariosToRemove().forEach(scenario -> this.getPlaybackListenersCopy()
                 .forEach(listener -> this.executorService.submit(() -> listener.scenarioEventNoException(listener::scenarioStopped, scenario.getId()))));
     }
 
@@ -440,7 +470,7 @@ public class ImmerseMixer {
         this.state = newState;
         this.logStateEvent(oldState, this.state);
         // Notify of state change event asynchronously.
-        this.stateListeners.forEach(listener -> this.executorService.submit(() -> listener.stateChangedNoException(oldState, this.state)));
+        this.getStateListenersCopy().forEach(listener -> this.executorService.submit(() -> listener.stateChangedNoException(oldState, this.state)));
     }
 
     /**

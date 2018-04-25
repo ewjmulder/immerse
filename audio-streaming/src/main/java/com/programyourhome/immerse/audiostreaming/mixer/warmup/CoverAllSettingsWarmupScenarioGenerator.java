@@ -2,7 +2,7 @@ package com.programyourhome.immerse.audiostreaming.mixer.warmup;
 
 import static com.programyourhome.immerse.toolbox.audio.playback.LoopPlayback.times;
 import static com.programyourhome.immerse.toolbox.audio.playback.TimerPlayback.timer;
-import static com.programyourhome.immerse.toolbox.audio.resource.FixedAudioResource.fixed;
+import static com.programyourhome.immerse.toolbox.audio.resource.SuppliedAudioResource.supplied;
 import static com.programyourhome.immerse.toolbox.location.dynamic.FixedDynamicLocation.fixed;
 import static com.programyourhome.immerse.toolbox.location.dynamic.KeyFramesDynamicLocation.keyFrames;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.normalize.FractionalNormalizeAlgorithm.fractional;
@@ -65,25 +65,25 @@ public class CoverAllSettingsWarmupScenarioGenerator implements WarmupScenarioGe
 
         // Use various random combinations of settings, where each option of each setting is used at least once
         // and with (almost) equal ratio.
-        warmupScenarios.put(scenario(room, settings(fixed(this.generate(
+        warmupScenarios.put(scenario(room, settings(supplied(() -> this.generate(
                 this.format(RecordingMode.MONO, SampleRate.RATE_8K, SampleSize.ONE_BYTE, true, ByteOrder.BIG_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS)),
                 fixed(betweenTwoSpakers), fixed(0, 0, 0), fieldOfHearing(), fractional(), times(REPETITIONS))), LENGTH_IN_MILLIS * REPETITIONS);
-        warmupScenarios.put(scenario(room, settings(fixed(this.generate(
+        warmupScenarios.put(scenario(room, settings(supplied(() -> this.generate(
                 this.format(RecordingMode.MONO, SampleRate.RATE_11K, SampleSize.ONE_BYTE, true, ByteOrder.BIG_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS)),
                 keyFrames(keyFrames), fixed(0, 0, 0), fixed(fixedSpeakerVolumeRatios), fractional(), times(REPETITIONS))), LENGTH_IN_MILLIS * REPETITIONS);
-        warmupScenarios.put(scenario(room, settings(fixed(this.generate(
+        warmupScenarios.put(scenario(room, settings(supplied(() -> this.generate(
                 this.format(RecordingMode.MONO, SampleRate.RATE_16K, SampleSize.ONE_BYTE, true, ByteOrder.LITTLE_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS)),
                 fixed(betweenTwoSpakers), fixed(0, 0, 0), onlyClosest(), maxSum(1), timer(LENGTH_IN_MILLIS * REPETITIONS))), LENGTH_IN_MILLIS * REPETITIONS);
-        warmupScenarios.put(scenario(room, settings(fixed(this.generate(
+        warmupScenarios.put(scenario(room, settings(supplied(() -> this.generate(
                 this.format(RecordingMode.MONO, SampleRate.RATE_22K, SampleSize.ONE_BYTE, true, ByteOrder.LITTLE_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS)),
                 keyFrames(keyFrames), fixed(0, 0, 0), fieldOfHearing(), maxSum(1), timer(LENGTH_IN_MILLIS * REPETITIONS))), LENGTH_IN_MILLIS * REPETITIONS);
-        warmupScenarios.put(scenario(room, settings(fixed(this.generate(
+        warmupScenarios.put(scenario(room, settings(supplied(() -> this.generate(
                 this.format(RecordingMode.MONO, SampleRate.RATE_32K, SampleSize.ONE_BYTE, true, ByteOrder.BIG_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS)),
                 fixed(betweenTwoSpakers), fixed(0, 0, 0), fixed(fixedSpeakerVolumeRatios), maxSum(1), times(REPETITIONS))), LENGTH_IN_MILLIS * REPETITIONS);
-        warmupScenarios.put(scenario(room, settings(fixed(this.generate(
+        warmupScenarios.put(scenario(room, settings(supplied(() -> this.generate(
                 this.format(RecordingMode.MONO, SampleRate.RATE_44K, SampleSize.ONE_BYTE, true, ByteOrder.BIG_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS)),
                 keyFrames(keyFrames), fixed(0, 0, 0), onlyClosest(), fractional(), times(REPETITIONS))), LENGTH_IN_MILLIS * REPETITIONS);
-        warmupScenarios.put(scenario(room, settings(fixed(this.generate(
+        warmupScenarios.put(scenario(room, settings(supplied(() -> this.generate(
                 this.format(RecordingMode.MONO, SampleRate.RATE_48K, SampleSize.ONE_BYTE, true, ByteOrder.LITTLE_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS)),
                 fixed(betweenTwoSpakers), fixed(0, 0, 0), fieldOfHearing(), maxSum(1), timer(LENGTH_IN_MILLIS * REPETITIONS))), LENGTH_IN_MILLIS * REPETITIONS);
 

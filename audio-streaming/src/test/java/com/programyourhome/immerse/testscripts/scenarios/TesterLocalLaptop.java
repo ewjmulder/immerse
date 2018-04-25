@@ -1,7 +1,6 @@
 package com.programyourhome.immerse.testscripts.scenarios;
 
 import static com.programyourhome.immerse.toolbox.audio.playback.ForeverPlayback.forever;
-import static com.programyourhome.immerse.toolbox.audio.resource.FixedAudioResource.fixed;
 import static com.programyourhome.immerse.toolbox.location.dynamic.FixedDynamicLocation.fixed;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.normalize.FractionalNormalizeAlgorithm.fractional;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios.FixedVolumeRatiosAlgorithm.fixed;
@@ -11,6 +10,7 @@ import static com.programyourhome.immerse.toolbox.util.TestData.settings;
 import static com.programyourhome.immerse.toolbox.util.TestData.soundCard;
 import static com.programyourhome.immerse.toolbox.util.TestData.speaker;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.stream.Collectors;
@@ -32,6 +32,7 @@ import com.programyourhome.immerse.domain.Scenario;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
 import com.programyourhome.immerse.domain.speakers.Speaker;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
+import com.programyourhome.immerse.toolbox.audio.resource.FileAudioResource;
 
 public class TesterLocalLaptop {
 
@@ -41,6 +42,12 @@ public class TesterLocalLaptop {
     private static final String VOICE = "/home/emulder/Downloads/voice.wav";
 
     public static void main(String[] args) throws Exception {
+        // -XX:MaxNewSize=10M -XX:+PrintGCDetails -XX:+PrintCommandLineFlags // -XX:+PrintTenuringDistribution
+        // For jconsole coupling
+        // try {
+        // Thread.sleep(10_000);
+        // } catch (InterruptedException e) {}
+
         Speaker speaker1 = speaker(1, 0, 10, 10);
         Speaker speaker2 = speaker(2, 10, 10, 10);
         Room room = room(speaker1, speaker2);
@@ -53,8 +60,8 @@ public class TesterLocalLaptop {
                 .recordingMode(RecordingMode.MONO)
                 .signed()
                 .buildForInput();
-        Scenario scenario = scenario(room, settings(fixed(generate(format, 500, 10_000)), fixed(5, 10, 10), fixed(5, 5, 5),
-                // Scenario scenario = scenario(room, settings(file(new File(CHILL)), fixed(5, 10, 10), fixed(5, 5, 5),
+        // Scenario scenario = scenario(room, settings(SuppliedAudioResource.supplied(() -> generate(format, 500, 10_000)), fixed(5, 10, 10), fixed(5, 5, 5),
+        Scenario scenario = scenario(room, settings(FileAudioResource.file(new File(CHILL)), fixed(5, 10, 10), fixed(5, 5, 5),
                 fixed(fixedSpeakerVolumeRatios), fractional(), forever()));
 
         SoundCard soundCard1 = soundCard(1, "pci-0000:00:1f.3", speaker1, speaker2);
@@ -78,11 +85,12 @@ public class TesterLocalLaptop {
 
         for (int i = 0; i < 1; i++) {
             try {
-                Thread.sleep(500);
+                Thread.sleep(100);
             } catch (InterruptedException e) {}
 
             mixer.playScenario(scenario);
         }
+
     }
 
     private static AudioInputStream generate(ImmerseAudioFormat format, int frequency, long lengthInMillis) {
