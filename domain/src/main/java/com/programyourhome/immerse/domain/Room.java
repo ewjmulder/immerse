@@ -8,7 +8,7 @@ import com.programyourhome.immerse.domain.location.Vector3D;
 import com.programyourhome.immerse.domain.speakers.Speaker;
 
 /**
- * A room object represents an actual room in the real world where immerse will be running.
+ * A room object represents an actual room in the real world where Immerse will be running.
  * You can provide a name and description and the dimensions of the room.
  * Furthermore, a room holds the speakers that are present in it.
  */

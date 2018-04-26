@@ -48,7 +48,7 @@ import one.util.streamex.StreamEx;
  * This class also contains a lot of 'book keeping' about scenario playback state.
  * Furthermore, it can 'warm up' the system for smooth audio playback later.
  *
- * For more information about the setup of this class, see the javadoc and comments in this class and the project documentation.
+ * For more information about the setup of this class, see the Javadoc and comments in this class and the project documentation.
  */
 public class ImmerseMixer {
 

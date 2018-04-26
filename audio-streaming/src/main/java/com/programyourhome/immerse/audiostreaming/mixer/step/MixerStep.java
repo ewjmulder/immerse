@@ -33,7 +33,7 @@ import one.util.streamex.StreamEx;
  *
  * Since this logic is the most important part of the system, this class and all it's methods are well
  * documented and described to preserve the knowledge about how the algorithm works and make it easier
- * to understand and debug it. Don't just read the javadoc, but also check out the comments
+ * to understand and debug it. Don't just read the Javadoc, but also check out the comments
  * inside the method code for more detailed information.
  */
 public class MixerStep {

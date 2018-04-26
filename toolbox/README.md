@@ -1,9 +1,7 @@
 # Immerse - Toolbox
 
-## Introduction
-
 The Immerse toolbox module contains a 'toolbox' full of implementations of the extension interfaces defined in the
-[domain module](../domain/README.md). For more information about the individual implementation classes, see their javadoc.
+[domain module](../domain/README.md). For more information about the individual implementation classes, see their Javadoc.
 
 ## Design
 

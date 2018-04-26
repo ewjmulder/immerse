@@ -1,11 +1,9 @@
 # Immerse - Domain
 
-## Introduction
-
 The Immerse domain module contains all classes that make up the world of dynamic sound. It has classes for real world items such as a room,
 speaker and sound card. It uses concepts like scenario, snapshot and playback to define the desired playback scenarios. And for the dynamic part
 we have locations and volume algorithms that calculate the volume distribution among the speakers. For more detailed information about these
-classes, see their javadoc.
+classes, see their Javadoc.
 
 ## Design
 
