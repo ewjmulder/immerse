@@ -67,13 +67,13 @@ public class TesterSparrenBurcht {
         keyFrames.put(12_000L, new Vector3D(0, 0, 250));
 
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
-                room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0))); // speaker.getId() == 11 ? 1.0 : 0.0)));
-        Scenario scenario1 = scenario(room, settings(filePath(CHILL_PINE), keyFrames(keyFrames), fixed(5, 5, 5),
-                fieldOfHearing(60), maxSum(1), forever()));
+                room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 0.5))); // speaker.getId() == 11 ? 1.0 : 0.0)));
+        Scenario scenario1 = scenario(room, settings(filePath(CHILL_PINE), keyFrames(keyFrames), fixed(180, 180, 150),
+                fixed(fixedSpeakerVolumeRatios), maxSum(1), forever()));
 
-        Scenario scenario2 = scenario(room, settings(filePath(CHILL_PINE), keyFrames(keyFrames), fixed(180, 180, 150),
-                // VolumeRatiosAlgorithm.fieldOfHearing(45), NormalizeAlgorithm.maxSum(1), Playback.forever()));
-                fixed(fixedSpeakerVolumeRatios), fractional(), forever()));
+        Scenario scenario2 = scenario(room, settings(filePath(VOICE_PINE), keyFrames(keyFrames), fixed(180, 180, 150),
+                fieldOfHearing(45), maxSum(1), forever()));
+                //fixed(fixedSpeakerVolumeRatios), fractional(), forever()));
 
         SoundCard soundCard1 = soundCard(1, "platform-1c1a000.ehci0-controller-usb-0:1.2:1.0", speaker1, speaker2);
         SoundCard soundCard2 = soundCard(2, "platform-1c1a000.ehci0-controller-usb-0:1.3:1.0", speaker3, speaker4);
@@ -93,13 +93,15 @@ public class TesterSparrenBurcht {
         mixer.initialize();
         mixer.start();
 
-        for (int i = 0; i < 1; i++) {
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {}
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {}
+        mixer.playScenario(scenario1);
 
-            mixer.playScenario(scenario2);
-        }
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {}
+        mixer.playScenario(scenario2);
 
         // for (int i = 0; i < 1; i++) {
         // try {
