@@ -33,9 +33,12 @@ For implementation details on the different modules, see:
 * [Toolbox - Provided implementations for the domain interfaces](toolbox/README.md)
 * [Audio Streaming - The heart of Immerse](audio-streaming/README.md)
 
+## Releases
+
+* 0.5.0-ALPHA - 2018-05-01 - It contains all the needed functionality to start using it, but has limited guarantee on stability and robustness.
+
 ## Road Map
 
-* 0.5.0-ALPHA contains the basic functionality but limited guarantee on stability and robustness. It is planned for end of April 2018.
 * 0.8.0-BETA will contain some more features, bug fixes and a more stable system in general. It is planned for autumn 2018.
 * 1.0.0 will be feature complete for general usage of the library and should be stable enough to use in real life situations. It does not have a planned release date yet.
 
