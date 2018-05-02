@@ -1,5 +1,7 @@
 # Immerse
- 
+
+[![Build Status](https://travis-ci.org/ewjmulder/immerse.svg?branch=master)](https://travis-ci.org/ewjmulder/immerse)
+
 Immerse yourself in the waves of dynamic surround sound!
 
 ## Use Cases
