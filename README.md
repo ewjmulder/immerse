@@ -37,7 +37,7 @@ For implementation details on the different modules, see:
 
 ## Releases
 
-* 0.5.0-ALPHA - 2018-05-01 - It contains all the needed functionality to start using it, but has limited guarantee on stability and robustness.
+* 0.5.0-ALPHA - 2018-05-01 - Contains all the needed functionality to start using Immerse, but has limited guarantee on stability and robustness.
 
 ## Road Map
 
