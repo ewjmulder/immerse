@@ -1,7 +1,7 @@
 package com.programyourhome.immerse.toolbox.speakers.algorithms.normalize;
 
-import java.util.function.Supplier;
-
+import com.programyourhome.immerse.domain.Factory;
+import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumes;
 import com.programyourhome.immerse.domain.speakers.algorithms.normalize.NormalizeAlgorithm;
@@ -16,6 +16,8 @@ import one.util.streamex.EntryStream;
  * You can provide a total max value higher than 1, but individual speaker volumes will always be cut off at 1.
  */
 public class MaxSumNormalizeAlgorithm implements NormalizeAlgorithm {
+
+    private static final long serialVersionUID = Serialization.VERSION;
 
     private final double maxSum;
 
@@ -32,7 +34,7 @@ public class MaxSumNormalizeAlgorithm implements NormalizeAlgorithm {
                 .toMap());
     }
 
-    public static Supplier<NormalizeAlgorithm> maxSum(double maxSum) {
+    public static Factory<NormalizeAlgorithm> maxSum(double maxSum) {
         return () -> new MaxSumNormalizeAlgorithm(maxSum);
     }
 

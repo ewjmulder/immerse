@@ -1,5 +1,8 @@
 package com.programyourhome.immerse.domain.audio.soundcard;
 
+import java.io.Serializable;
+
+import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.speakers.Speaker;
 
 /**
@@ -9,7 +12,9 @@ import com.programyourhome.immerse.domain.speakers.Speaker;
  * For the OS, a physical port string is the identifier. (read more about this mechanism in the documentation)
  * Last but not least, the sound card knows what it's left and right speakers are.
  */
-public class SoundCard {
+public class SoundCard implements Serializable {
+
+    private static final long serialVersionUID = Serialization.VERSION;
 
     private int id;
     private String name;

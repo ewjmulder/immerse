@@ -1,5 +1,7 @@
 package com.programyourhome.immerse.domain.speakers.algorithms.normalize;
 
+import java.io.Serializable;
+
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumes;
 
@@ -8,7 +10,7 @@ import one.util.streamex.DoubleStreamEx;
 /**
  * Algorithm that can turn a series of speaker volume ratios into values between 0 and 1 for each speaker.
  */
-public interface NormalizeAlgorithm {
+public interface NormalizeAlgorithm extends Serializable {
 
     /**
      * Calculate the normalized volume for all speakers.

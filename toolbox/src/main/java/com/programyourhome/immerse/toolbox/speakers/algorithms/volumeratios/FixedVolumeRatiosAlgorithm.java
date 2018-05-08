@@ -1,7 +1,7 @@
 package com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios;
 
-import java.util.function.Supplier;
-
+import com.programyourhome.immerse.domain.Factory;
+import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.Snapshot;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
 import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.VolumeRatiosAlgorithm;
@@ -10,6 +10,8 @@ import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.Volum
  * Fixed volume ratios, independent of the scene and locations.
  */
 public class FixedVolumeRatiosAlgorithm implements VolumeRatiosAlgorithm {
+
+    private static final long serialVersionUID = Serialization.VERSION;
 
     private final SpeakerVolumeRatios speakerVolumeRatios;
 
@@ -22,7 +24,7 @@ public class FixedVolumeRatiosAlgorithm implements VolumeRatiosAlgorithm {
         return this.speakerVolumeRatios;
     }
 
-    public static Supplier<VolumeRatiosAlgorithm> fixed(SpeakerVolumeRatios speakerVolumeRatios) {
+    public static Factory<VolumeRatiosAlgorithm> fixed(SpeakerVolumeRatios speakerVolumeRatios) {
         return () -> new FixedVolumeRatiosAlgorithm(speakerVolumeRatios);
     }
 

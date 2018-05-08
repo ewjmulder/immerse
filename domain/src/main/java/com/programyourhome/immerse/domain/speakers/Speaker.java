@@ -1,11 +1,16 @@
 package com.programyourhome.immerse.domain.speakers;
 
+import java.io.Serializable;
+
+import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.location.Vector3D;
 
 /**
  * Represents a physical speaker at a specific location.
  */
-public class Speaker {
+public class Speaker implements Serializable {
+
+    private static final long serialVersionUID = Serialization.VERSION;
 
     private int id;
     private String name;

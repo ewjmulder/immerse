@@ -3,8 +3,9 @@ package com.programyourhome.immerse.toolbox.location.dynamic;
 import static com.programyourhome.immerse.toolbox.util.MathUtil.calculateValueInRange;
 
 import java.util.SortedMap;
-import java.util.function.Supplier;
 
+import com.programyourhome.immerse.domain.Factory;
+import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.location.Vector3D;
 import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
 
@@ -15,6 +16,8 @@ import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
  * For a time in between 2 key frames, use linear interpolation.
  */
 public class KeyFramesDynamicLocation implements DynamicLocation {
+
+    private static final long serialVersionUID = Serialization.VERSION;
 
     private final SortedMap<Long, Vector3D> keyFrames;
 
@@ -54,7 +57,7 @@ public class KeyFramesDynamicLocation implements DynamicLocation {
         return location;
     }
 
-    public static Supplier<DynamicLocation> keyFrames(SortedMap<Long, Vector3D> keyFrames) {
+    public static Factory<DynamicLocation> keyFrames(SortedMap<Long, Vector3D> keyFrames) {
         return () -> new KeyFramesDynamicLocation(keyFrames);
     }
 

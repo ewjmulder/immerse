@@ -31,7 +31,7 @@ public class ActiveScenario {
     public ActiveScenario(Scenario scenario, AudioInputStream inputStream) {
         this.id = UUID.randomUUID();
         this.scenario = scenario;
-        this.playback = this.scenario.getSettings().getPlaybackSupplier().get();
+        this.playback = this.scenario.getSettings().getPlaybackFactory().create();
         this.resetForNextStart(inputStream);
     }
 
@@ -98,10 +98,10 @@ public class ActiveScenario {
         this.inputStream = inputStream;
         this.startMillis = -1;
 
-        this.sourceLocation = this.scenario.getSettings().getSourceLocationSupplier().get();
-        this.listenerLocation = this.scenario.getSettings().getListenerLocationSupplier().get();
-        this.volumeRatiosAlgorithm = this.scenario.getSettings().getVolumeRatiosAlgorithmSupplier().get();
-        this.normalizeAlgorithm = this.scenario.getSettings().getNormalizeAlgorithmSupplier().get();
+        this.sourceLocation = this.scenario.getSettings().getSourceLocationFactory().create();
+        this.listenerLocation = this.scenario.getSettings().getListenerLocationFactory().create();
+        this.volumeRatiosAlgorithm = this.scenario.getSettings().getVolumeRatiosAlgorithmFactory().create();
+        this.normalizeAlgorithm = this.scenario.getSettings().getNormalizeAlgorithmFactory().create();
     }
 
 }

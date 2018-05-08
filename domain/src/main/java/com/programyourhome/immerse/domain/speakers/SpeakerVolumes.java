@@ -1,7 +1,10 @@
 package com.programyourhome.immerse.domain.speakers;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.programyourhome.immerse.domain.Serialization;
 
 /**
  * Convenience wrapper around a volume map.
@@ -9,7 +12,9 @@ import java.util.Map;
  * NB: These volumes are meant as a multiplier of the amplitudes of the audio data,
  * so 1 does not always mean very loud, this depends on the actual audio resources.
  */
-public class SpeakerVolumes {
+public class SpeakerVolumes implements Serializable {
+
+    private static final long serialVersionUID = Serialization.VERSION;
 
     private final Map<Integer, Double> volumeMap;
 

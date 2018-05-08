@@ -1,15 +1,19 @@
 package com.programyourhome.immerse.audiostreaming.format;
 
-import java.nio.ByteOrder;
+import java.io.Serializable;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioFormat.Encoding;
+
+import com.programyourhome.immerse.domain.Serialization;
 
 /**
  * Audio format with all relevant information about the details of the format.
  * Is equivalent to the Java Sound AudioFormat class, but more type safe and more tailored to Immerse.
  */
-public class ImmerseAudioFormat {
+public class ImmerseAudioFormat implements Serializable {
+
+    private static final long serialVersionUID = Serialization.VERSION;
 
     private boolean output;
     private RecordingMode recordingMode;
@@ -90,7 +94,7 @@ public class ImmerseAudioFormat {
 
     public AudioFormat toJavaAudioFormat() {
         return new AudioFormat(this.sampleRate.getNumberOfSamplesPerSecond(), this.sampleSize.getNumberOfBits(),
-                this.recordingMode.getNumberOfChannels(), this.signed, this.byteOrder == ByteOrder.BIG_ENDIAN);
+                this.recordingMode.getNumberOfChannels(), this.signed, this.byteOrder.isBigEndian());
     }
 
     public static ImmerseAudioFormat fromJavaAudioFormat(AudioFormat audioFormat) {
@@ -170,11 +174,19 @@ public class ImmerseAudioFormat {
         }
 
         public Builder byteOrderLittle(boolean littleEndian) {
-            return this.byteOrder(littleEndian ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
+            return this.byteOrder(ByteOrder.fromLittleEndian(littleEndian));
         }
 
         public Builder byteOrderBig(boolean bigEndian) {
-            return this.byteOrderLittle(!bigEndian);
+            return this.byteOrder(ByteOrder.fromBigEndian(bigEndian));
+        }
+
+        public Builder byteOrderLittle() {
+            return this.byteOrder(ByteOrder.LITTLE_ENDIAN);
+        }
+
+        public Builder byteOrderBig() {
+            return this.byteOrder(ByteOrder.BIG_ENDIAN);
         }
 
         public Builder byteOrder(ByteOrder byteOrder) {

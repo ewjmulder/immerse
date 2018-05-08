@@ -2,8 +2,9 @@ package com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios;
 
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.Supplier;
 
+import com.programyourhome.immerse.domain.Factory;
+import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.Snapshot;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
 import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.VolumeRatiosAlgorithm;
@@ -19,6 +20,8 @@ import one.util.streamex.StreamEx;
  */
 public class OnlyClosestVolumeRatiosAlgorithm implements VolumeRatiosAlgorithm {
 
+    private static final long serialVersionUID = Serialization.VERSION;
+
     @Override
     public SpeakerVolumeRatios calculateVolumeRatios(Snapshot snapshot) {
         Map<Integer, Double> speakerAngles = EntryStream.of(snapshot.getScenario().getRoom().getSpeakers())
@@ -29,7 +32,7 @@ public class OnlyClosestVolumeRatiosAlgorithm implements VolumeRatiosAlgorithm {
                 StreamEx.of(snapshot.getScenario().getRoom().getSpeakers().keySet()).toMap(speakerId -> speakerId == speakerIdOfMinAngle ? 1.0 : 0.0));
     }
 
-    public static Supplier<VolumeRatiosAlgorithm> onlyClosest() {
+    public static Factory<VolumeRatiosAlgorithm> onlyClosest() {
         return () -> new OnlyClosestVolumeRatiosAlgorithm();
     }
 

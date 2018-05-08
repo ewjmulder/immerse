@@ -1,13 +1,15 @@
 package com.programyourhome.immerse.toolbox.audio.playback;
 
-import java.util.function.Supplier;
-
+import com.programyourhome.immerse.domain.Factory;
+import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.audio.playback.Playback;
 
 /**
  * Will loop forever and never stops.
  */
 public class ForeverPlayback implements Playback {
+
+    private static final long serialVersionUID = Serialization.VERSION;
 
     public ForeverPlayback() {
     }
@@ -26,7 +28,7 @@ public class ForeverPlayback implements Playback {
         return true;
     }
 
-    public static Supplier<Playback> forever() {
+    public static Factory<Playback> forever() {
         return () -> new ForeverPlayback();
     }
 

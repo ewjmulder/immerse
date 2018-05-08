@@ -3,12 +3,13 @@ package com.programyourhome.immerse.toolbox.audio.resource;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.function.Supplier;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
+import com.programyourhome.immerse.domain.Factory;
+import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.audio.resource.AudioResource;
 
 /**
@@ -16,6 +17,8 @@ import com.programyourhome.immerse.domain.audio.resource.AudioResource;
  * The supported audio file types are the ones accepted by JVM's AudioSystem.
  */
 public class UrlAudioResource implements AudioResource {
+
+    private static final long serialVersionUID = Serialization.VERSION;
 
     private AudioInputStream audioInputStream;
 
@@ -44,11 +47,11 @@ public class UrlAudioResource implements AudioResource {
         return this.audioInputStream;
     }
 
-    public static Supplier<AudioResource> urlString(String urlString) {
+    public static Factory<AudioResource> urlString(String urlString) {
         return () -> new UrlAudioResource(urlString);
     }
 
-    public static Supplier<AudioResource> url(URL url) {
+    public static Factory<AudioResource> url(URL url) {
         return () -> new UrlAudioResource(url);
     }
 

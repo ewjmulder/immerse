@@ -13,7 +13,6 @@ import static com.programyourhome.immerse.toolbox.speakers.algorithms.volumerati
 import static com.programyourhome.immerse.toolbox.util.TestData.scenario;
 import static com.programyourhome.immerse.toolbox.util.TestData.settings;
 
-import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -23,6 +22,7 @@ import java.util.stream.Collectors;
 
 import javax.sound.sampled.AudioInputStream;
 
+import com.programyourhome.immerse.audiostreaming.format.ByteOrder;
 import com.programyourhome.immerse.audiostreaming.format.ImmerseAudioFormat;
 import com.programyourhome.immerse.audiostreaming.format.RecordingMode;
 import com.programyourhome.immerse.audiostreaming.format.SampleRate;

@@ -6,11 +6,10 @@ import static com.programyourhome.immerse.toolbox.location.dynamic.FixedDynamicL
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.normalize.FractionalNormalizeAlgorithm.fractional;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios.FieldOfHearingVolumeRatiosAlgorithm.fieldOfHearing;
 
-import java.util.function.Supplier;
-
-import com.programyourhome.immerse.domain.Settings;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Scenario;
+import com.programyourhome.immerse.domain.Factory;
+import com.programyourhome.immerse.domain.Settings;
 import com.programyourhome.immerse.domain.Snapshot;
 import com.programyourhome.immerse.domain.audio.playback.Playback;
 import com.programyourhome.immerse.domain.audio.resource.AudioResource;
@@ -81,16 +80,16 @@ public class TestData {
         return settings(silence(), fixed(0, 0, 0), fixed(0, 0, 0), fieldOfHearing(), fractional(), forever());
     }
 
-    public static Settings settings(Supplier<AudioResource> audioResource, Supplier<DynamicLocation> sourceLocation,
-            Supplier<DynamicLocation> listenerLocation, Supplier<VolumeRatiosAlgorithm> volumeRatiosAlgorithm,
-            Supplier<NormalizeAlgorithm> normalizeAlgorithm, Supplier<Playback> playbackSupplier) {
+    public static Settings settings(Factory<AudioResource> audioResource, Factory<DynamicLocation> sourceLocation,
+            Factory<DynamicLocation> listenerLocation, Factory<VolumeRatiosAlgorithm> volumeRatiosAlgorithm,
+            Factory<NormalizeAlgorithm> normalizeAlgorithm, Factory<Playback> playback) {
         return Settings.builder()
                 .audioResource(audioResource)
                 .sourceLocation(sourceLocation)
                 .listenerLocation(listenerLocation)
                 .volumeRatiosAlgorithm(volumeRatiosAlgorithm)
                 .normalizeAlgorithm(normalizeAlgorithm)
-                .playback(playbackSupplier)
+                .playback(playback)
                 .build();
     }
 

@@ -1,7 +1,7 @@
 package com.programyourhome.immerse.toolbox.location.dynamic;
 
-import java.util.function.Supplier;
-
+import com.programyourhome.immerse.domain.Factory;
+import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.location.Vector3D;
 import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
 
@@ -9,6 +9,8 @@ import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
  * A fixed location, static at all times.
  */
 public class FixedDynamicLocation implements DynamicLocation {
+
+    private static final long serialVersionUID = Serialization.VERSION;
 
     private final Vector3D location;
 
@@ -21,11 +23,11 @@ public class FixedDynamicLocation implements DynamicLocation {
         return this.location;
     }
 
-    public static Supplier<DynamicLocation> fixed(double x, double y, double z) {
+    public static Factory<DynamicLocation> fixed(double x, double y, double z) {
         return fixed(new Vector3D(x, y, z));
     }
 
-    public static Supplier<DynamicLocation> fixed(Vector3D location) {
+    public static Factory<DynamicLocation> fixed(Vector3D location) {
         return () -> new FixedDynamicLocation(location);
     }
 

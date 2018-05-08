@@ -1,11 +1,13 @@
 package com.programyourhome.immerse.domain.location.dynamic;
 
+import java.io.Serializable;
+
 import com.programyourhome.immerse.domain.location.Vector3D;
 
 /**
  * A location that changes over time.
  */
-public interface DynamicLocation {
+public interface DynamicLocation extends Serializable {
 
     /**
      * Get the location on a certain moment in time.

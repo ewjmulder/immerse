@@ -1,6 +1,6 @@
 package com.programyourhome.immerse.domain;
 
-import java.util.function.Supplier;
+import java.io.Serializable;
 
 import com.programyourhome.immerse.domain.audio.playback.Playback;
 import com.programyourhome.immerse.domain.audio.resource.AudioResource;
@@ -11,42 +11,44 @@ import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.Volum
 /**
  * Settings class for storing the fields that define how a scenario should be played.
  * Since all these classes are interfaces of which the implementation could keep state,
- * they are all defined as Suppliers of the actual object, so this settings object can be re-used.
+ * they are all defined as Factory's of the actual object, so this settings object can be re-used.
  */
-public class Settings {
+public class Settings implements Serializable {
 
-    private Supplier<AudioResource> audioResourceSupplier;
-    private Supplier<DynamicLocation> sourceLocationSupplier;
-    private Supplier<DynamicLocation> listenerLocationSupplier;
-    private Supplier<VolumeRatiosAlgorithm> volumeRatiosAlgorithmSupplier;
-    private Supplier<NormalizeAlgorithm> normalizeAlgorithmSupplier;
-    private Supplier<Playback> playbackSupplier;
+    private static final long serialVersionUID = Serialization.VERSION;
+
+    private Factory<AudioResource> audioResourceFactory;
+    private Factory<DynamicLocation> sourceLocationFactory;
+    private Factory<DynamicLocation> listenerLocationFactory;
+    private Factory<VolumeRatiosAlgorithm> volumeRatiosAlgorithmFactory;
+    private Factory<NormalizeAlgorithm> normalizeAlgorithmFactory;
+    private Factory<Playback> playbackFactory;
 
     private Settings() {
     }
 
-    public Supplier<AudioResource> getAudioResourceSupplier() {
-        return this.audioResourceSupplier;
+    public Factory<AudioResource> getAudioResourceFactory() {
+        return this.audioResourceFactory;
     }
 
-    public Supplier<DynamicLocation> getSourceLocationSupplier() {
-        return this.sourceLocationSupplier;
+    public Factory<DynamicLocation> getSourceLocationFactory() {
+        return this.sourceLocationFactory;
     }
 
-    public Supplier<DynamicLocation> getListenerLocationSupplier() {
-        return this.listenerLocationSupplier;
+    public Factory<DynamicLocation> getListenerLocationFactory() {
+        return this.listenerLocationFactory;
     }
 
-    public Supplier<VolumeRatiosAlgorithm> getVolumeRatiosAlgorithmSupplier() {
-        return this.volumeRatiosAlgorithmSupplier;
+    public Factory<VolumeRatiosAlgorithm> getVolumeRatiosAlgorithmFactory() {
+        return this.volumeRatiosAlgorithmFactory;
     }
 
-    public Supplier<NormalizeAlgorithm> getNormalizeAlgorithmSupplier() {
-        return this.normalizeAlgorithmSupplier;
+    public Factory<NormalizeAlgorithm> getNormalizeAlgorithmFactory() {
+        return this.normalizeAlgorithmFactory;
     }
 
-    public Supplier<Playback> getPlaybackSupplier() {
-        return this.playbackSupplier;
+    public Factory<Playback> getPlaybackFactory() {
+        return this.playbackFactory;
     }
 
     public static Builder builder() {
@@ -60,33 +62,33 @@ public class Settings {
             this.settings = new Settings();
         }
 
-        public Builder audioResource(Supplier<AudioResource> audioResourceSupplier) {
-            this.settings.audioResourceSupplier = audioResourceSupplier;
+        public Builder audioResource(Factory<AudioResource> audioResourceFactory) {
+            this.settings.audioResourceFactory = audioResourceFactory;
             return this;
         }
 
-        public Builder sourceLocation(Supplier<DynamicLocation> sourceLocationSupplier) {
-            this.settings.sourceLocationSupplier = sourceLocationSupplier;
+        public Builder sourceLocation(Factory<DynamicLocation> sourceLocationFactory) {
+            this.settings.sourceLocationFactory = sourceLocationFactory;
             return this;
         }
 
-        public Builder listenerLocation(Supplier<DynamicLocation> listenerLocationSupplier) {
-            this.settings.listenerLocationSupplier = listenerLocationSupplier;
+        public Builder listenerLocation(Factory<DynamicLocation> listenerLocationFactory) {
+            this.settings.listenerLocationFactory = listenerLocationFactory;
             return this;
         }
 
-        public Builder volumeRatiosAlgorithm(Supplier<VolumeRatiosAlgorithm> volumeRatiosAlgorithmSupplier) {
-            this.settings.volumeRatiosAlgorithmSupplier = volumeRatiosAlgorithmSupplier;
+        public Builder volumeRatiosAlgorithm(Factory<VolumeRatiosAlgorithm> volumeRatiosAlgorithmFactory) {
+            this.settings.volumeRatiosAlgorithmFactory = volumeRatiosAlgorithmFactory;
             return this;
         }
 
-        public Builder normalizeAlgorithm(Supplier<NormalizeAlgorithm> normalizeAlgorithmSupplier) {
-            this.settings.normalizeAlgorithmSupplier = normalizeAlgorithmSupplier;
+        public Builder normalizeAlgorithm(Factory<NormalizeAlgorithm> normalizeAlgorithmFactory) {
+            this.settings.normalizeAlgorithmFactory = normalizeAlgorithmFactory;
             return this;
         }
 
-        public Builder playback(Supplier<Playback> playbackSupplier) {
-            this.settings.playbackSupplier = playbackSupplier;
+        public Builder playback(Factory<Playback> playbackFactory) {
+            this.settings.playbackFactory = playbackFactory;
             return this;
         }
 

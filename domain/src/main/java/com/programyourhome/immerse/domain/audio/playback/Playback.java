@@ -1,11 +1,13 @@
 package com.programyourhome.immerse.domain.audio.playback;
 
+import java.io.Serializable;
+
 /**
  * A Playback object decides when playback should be stopped.
  * Since Playback implementations have mutable state and the domain module is designed to be immutable,
  * no actual implementation are provided in this module.
  */
-public interface Playback {
+public interface Playback extends Serializable {
 
     /**
      * Signals that the audio playback has started.

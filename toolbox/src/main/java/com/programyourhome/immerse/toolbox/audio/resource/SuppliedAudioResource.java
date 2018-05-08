@@ -4,6 +4,8 @@ import java.util.function.Supplier;
 
 import javax.sound.sampled.AudioInputStream;
 
+import com.programyourhome.immerse.domain.Factory;
+import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.audio.resource.AudioResource;
 
 /**
@@ -12,6 +14,8 @@ import com.programyourhome.immerse.domain.audio.resource.AudioResource;
  * that can be played individually.
  */
 public class SuppliedAudioResource implements AudioResource {
+
+    private static final long serialVersionUID = Serialization.VERSION;
 
     private final Supplier<AudioInputStream> audioInputStreamSupplier;
 
@@ -24,7 +28,7 @@ public class SuppliedAudioResource implements AudioResource {
         return this.audioInputStreamSupplier.get();
     }
 
-    public static Supplier<AudioResource> supplied(Supplier<AudioInputStream> audioInputStreamSupplier) {
+    public static Factory<AudioResource> supplied(Supplier<AudioInputStream> audioInputStreamSupplier) {
         return () -> new SuppliedAudioResource(audioInputStreamSupplier);
     }
 

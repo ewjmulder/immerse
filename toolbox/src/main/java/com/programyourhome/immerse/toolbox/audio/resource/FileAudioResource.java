@@ -2,12 +2,13 @@ package com.programyourhome.immerse.toolbox.audio.resource;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.function.Supplier;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
+import com.programyourhome.immerse.domain.Factory;
+import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.audio.resource.AudioResource;
 
 /**
@@ -15,6 +16,8 @@ import com.programyourhome.immerse.domain.audio.resource.AudioResource;
  * The supported audio file types are the ones accepted by JVM's AudioSystem.
  */
 public class FileAudioResource implements AudioResource {
+
+    private static final long serialVersionUID = Serialization.VERSION;
 
     private final AudioInputStream audioInputStream;
 
@@ -38,11 +41,11 @@ public class FileAudioResource implements AudioResource {
         return this.audioInputStream;
     }
 
-    public static Supplier<AudioResource> filePath(String filePath) {
+    public static Factory<AudioResource> filePath(String filePath) {
         return () -> new FileAudioResource(filePath);
     }
 
-    public static Supplier<AudioResource> file(File file) {
+    public static Factory<AudioResource> file(File file) {
         return () -> new FileAudioResource(file);
     }
 

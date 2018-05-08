@@ -2,17 +2,20 @@ package com.programyourhome.immerse.toolbox.audio.resource;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.function.Supplier;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 
+import com.programyourhome.immerse.domain.Factory;
+import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.audio.resource.AudioResource;
 
 /**
  * An audio resource that only provides silence.
  */
 public class SilenceAudioResource implements AudioResource {
+
+    private static final long serialVersionUID = Serialization.VERSION;
 
     private final AudioInputStream audioInputStream;
 
@@ -30,7 +33,7 @@ public class SilenceAudioResource implements AudioResource {
         return this.audioInputStream;
     }
 
-    public static Supplier<AudioResource> silence() {
+    public static Factory<AudioResource> silence() {
         return () -> new SilenceAudioResource();
     }
 

@@ -1,11 +1,15 @@
 package com.programyourhome.immerse.domain;
 
+import java.io.Serializable;
+
 /**
  * A scenario represents an audio resource in a room with speakers, with a dynamic source and listener locations.
  * A scenario should be played according to these properties and the algorithm settings.
  * The scenario object and fields themselves will not contain state, so they can be re-used for repeated playback.
  */
-public class Scenario {
+public class Scenario implements Serializable {
+
+    private static final long serialVersionUID = Serialization.VERSION;
 
     private String name;
     private String description;

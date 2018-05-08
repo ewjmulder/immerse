@@ -1,12 +1,18 @@
 package com.programyourhome.immerse.domain.audio.soundcard;
 
+import java.io.Serializable;
+
 import javax.sound.sampled.Mixer;
+
+import com.programyourhome.immerse.domain.Serialization;
 
 /**
  * The mixer information of a sound card.
  * Has the same fields as the Java Sound Mixer.Info, but with a builder.
  */
-public class MixerInfo {
+public class MixerInfo implements Serializable {
+
+    private static final long serialVersionUID = Serialization.VERSION;
 
     private String name;
     private String description;

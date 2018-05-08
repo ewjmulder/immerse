@@ -1,7 +1,7 @@
 package com.programyourhome.immerse.toolbox.audio.playback;
 
-import java.util.function.Supplier;
-
+import com.programyourhome.immerse.domain.Factory;
+import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.audio.playback.Playback;
 
 /**
@@ -9,6 +9,8 @@ import com.programyourhome.immerse.domain.audio.playback.Playback;
  * Will loop if end of stream is reached before the timer runs out.
  */
 public class TimerPlayback implements Playback {
+
+    private static final long serialVersionUID = Serialization.VERSION;
 
     private long startMillis;
     private final long durationInMillis;
@@ -38,7 +40,7 @@ public class TimerPlayback implements Playback {
         return true;
     }
 
-    public static Supplier<Playback> timer(long millis) {
+    public static Factory<Playback> timer(long millis) {
         return () -> new TimerPlayback(millis);
     }
 }

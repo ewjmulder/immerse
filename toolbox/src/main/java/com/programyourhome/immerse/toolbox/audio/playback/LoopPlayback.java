@@ -1,13 +1,15 @@
 package com.programyourhome.immerse.toolbox.audio.playback;
 
-import java.util.function.Supplier;
-
+import com.programyourhome.immerse.domain.Factory;
+import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.audio.playback.Playback;
 
 /**
  * Loops a certain amount of times.
  */
 public class LoopPlayback implements Playback {
+
+    private static final long serialVersionUID = Serialization.VERSION;
 
     private final int times;
     private int loopCount;
@@ -37,11 +39,11 @@ public class LoopPlayback implements Playback {
         return this.loopCount < this.times;
     }
 
-    public static Supplier<Playback> once() {
+    public static Factory<Playback> once() {
         return () -> new LoopPlayback(1);
     }
 
-    public static Supplier<Playback> times(int times) {
+    public static Factory<Playback> times(int times) {
         return () -> new LoopPlayback(times);
     }
 

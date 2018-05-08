@@ -1,5 +1,6 @@
 package com.programyourhome.immerse.toolbox.location.dynamic;
 
+import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.location.Vector3D;
 import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
 
@@ -8,6 +9,8 @@ import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
  * at a certain speed, either clockwise or not.
  */
 public class HorizontalCircleDynamicLocation implements DynamicLocation {
+
+    private static final long serialVersionUID = Serialization.VERSION;
 
     private final double centerX;
     private final double centerY;

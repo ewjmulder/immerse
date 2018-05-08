@@ -1,11 +1,17 @@
 package com.programyourhome.immerse.domain.location;
 
+import java.io.Serializable;
+
 import org.la4j.Vector;
+
+import com.programyourhome.immerse.domain.Serialization;
 
 /**
  * A vector in 3D space.
  */
-public class Vector3D {
+public class Vector3D implements Serializable {
+
+    private static final long serialVersionUID = Serialization.VERSION;
 
     private final double x;
     private final double y;

@@ -1,7 +1,7 @@
 package com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios;
 
-import java.util.function.Supplier;
-
+import com.programyourhome.immerse.domain.Factory;
+import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.Snapshot;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
 import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.VolumeRatiosAlgorithm;
@@ -20,6 +20,8 @@ import one.util.streamex.EntryStream;
  * there can be 'silent spots' in the room, even though the scenario produces sound.
  */
 public class FieldOfHearingVolumeRatiosAlgorithm implements VolumeRatiosAlgorithm {
+
+    private static final long serialVersionUID = Serialization.VERSION;
 
     // The default 'cutoff' angle.
     public static final double DEFAULT_CUTOFF_ANGLE = 45;
@@ -44,11 +46,11 @@ public class FieldOfHearingVolumeRatiosAlgorithm implements VolumeRatiosAlgorith
                 .toMap());
     }
 
-    public static Supplier<VolumeRatiosAlgorithm> fieldOfHearing() {
+    public static Factory<VolumeRatiosAlgorithm> fieldOfHearing() {
         return () -> new FieldOfHearingVolumeRatiosAlgorithm();
     }
 
-    public static Supplier<VolumeRatiosAlgorithm> fieldOfHearing(double cutoffAngle) {
+    public static Factory<VolumeRatiosAlgorithm> fieldOfHearing(double cutoffAngle) {
         return () -> new FieldOfHearingVolumeRatiosAlgorithm(cutoffAngle);
     }
 

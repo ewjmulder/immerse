@@ -1,7 +1,7 @@
 package com.programyourhome.immerse.toolbox.speakers.algorithms.normalize;
 
-import java.util.function.Supplier;
-
+import com.programyourhome.immerse.domain.Factory;
+import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumes;
 import com.programyourhome.immerse.domain.speakers.algorithms.normalize.NormalizeAlgorithm;
@@ -18,6 +18,8 @@ import one.util.streamex.EntryStream;
  */
 public class FractionalNormalizeAlgorithm implements NormalizeAlgorithm {
 
+    private static final long serialVersionUID = Serialization.VERSION;
+
     @Override
     public SpeakerVolumes calculateVolumes(SpeakerVolumeRatios speakerVolumeRatios) {
         double lowestRatio = this.getLowestRatio(speakerVolumeRatios);
@@ -27,7 +29,7 @@ public class FractionalNormalizeAlgorithm implements NormalizeAlgorithm {
                 .toMap());
     }
 
-    public static Supplier<NormalizeAlgorithm> fractional() {
+    public static Factory<NormalizeAlgorithm> fractional() {
         return () -> new FractionalNormalizeAlgorithm();
     }
 

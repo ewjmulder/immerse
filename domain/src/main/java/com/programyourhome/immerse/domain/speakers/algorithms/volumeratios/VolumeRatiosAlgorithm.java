@@ -1,12 +1,14 @@
 package com.programyourhome.immerse.domain.speakers.algorithms.volumeratios;
 
+import java.io.Serializable;
+
 import com.programyourhome.immerse.domain.Snapshot;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
 
 /**
  * Algorithm that can calculate the relative volumes for a scenario snapshot.
  */
-public interface VolumeRatiosAlgorithm {
+public interface VolumeRatiosAlgorithm extends Serializable {
 
     /**
      * Calculate the volume ratios.
