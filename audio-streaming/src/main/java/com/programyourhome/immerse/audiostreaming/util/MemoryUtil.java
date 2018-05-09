@@ -20,9 +20,9 @@ public class MemoryUtil {
     // Statically initialize the memory beans from the ManagementFactory.
     static {
         for (MemoryPoolMXBean mxBean : ManagementFactory.getMemoryPoolMXBeans()) {
-            if (mxBean.getName().equals("PS Eden Space")) {
+            if (mxBean.getName().endsWith("Eden Space")) {
                 edenSpace = mxBean;
-            } else if (mxBean.getName().equals("PS Old Gen")) {
+            } else if (mxBean.getName().endsWith("Old Gen")) {
                 oldSpace = mxBean;
             }
         }
