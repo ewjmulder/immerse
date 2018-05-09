@@ -40,6 +40,14 @@ public class Vector3D implements Serializable {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        return obj instanceof Vector3D
+                && ((Vector3D) obj).x == this.x
+                && ((Vector3D) obj).y == this.y
+                && ((Vector3D) obj).z == this.z;
+    }
+
+    @Override
     public String toString() {
         return "(" + this.x + ", " + this.y + ", " + this.z + ")";
     }

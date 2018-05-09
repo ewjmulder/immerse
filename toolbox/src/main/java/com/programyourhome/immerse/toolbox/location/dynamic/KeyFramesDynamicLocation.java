@@ -11,26 +11,51 @@ import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
 
 /**
  * Dynamic location based on a path, defined by key frames.
- * For a time before the first key frame, use the location of the first key frame.
- * For a time after the last key frame, use the location of the last key frame.
- * For a time in between 2 key frames, use linear interpolation.
+ *
+ * Always true:
+ * - The first key frame time must be 0. (if you want to start moving later, add a second key frame at a later time at the same location)
+ * - For a time in between 2 key frames, linear interpolation in used.
+ *
+ * With loop mode:
+ * - The last key frame location must be equal to the first key frame location.
+ * - The input time is put into the configured times by taking the modulo. (so effectively looping over the key frames)
+ *
+ * Without loop mode:
+ * - For a time before the first key frame, use the location of the first key frame.
+ * - For a time after the last key frame, use the location of the last key frame. (so effectively stopping after one loop)
  */
 public class KeyFramesDynamicLocation implements DynamicLocation {
 
     private static final long serialVersionUID = Serialization.VERSION;
 
     private final SortedMap<Long, Vector3D> keyFrames;
+    private final boolean loop;
 
     public KeyFramesDynamicLocation(SortedMap<Long, Vector3D> keyFrames) {
+        this(keyFrames, false);
+    }
+
+    public KeyFramesDynamicLocation(SortedMap<Long, Vector3D> keyFrames, boolean loop) {
         if (keyFrames.isEmpty()) {
             throw new IllegalArgumentException("At least 1 key frame is required.");
         }
+        if (keyFrames.firstKey() != 0) {
+            throw new IllegalArgumentException("The first key frame must be at time 0.");
+        }
+        if (loop && !keyFrames.get(keyFrames.firstKey()).equals(keyFrames.get(keyFrames.lastKey()))) {
+            throw new IllegalArgumentException("In loop mode the location of the last key frame must be equal to the location of the first key frame");
+        }
         this.keyFrames = keyFrames;
+        this.loop = loop;
     }
 
     @Override
     public Vector3D getLocation(long millisSinceStart) {
         Vector3D location;
+        if (this.loop) {
+            // Calculate the modulo to get a value within the frame times. (use floorMod instead of % to always get a positive value)
+            millisSinceStart = Math.floorMod(millisSinceStart, this.keyFrames.lastKey());
+        }
         if (this.keyFrames.containsKey(millisSinceStart)) {
             // Special case: direct hit.
             location = this.keyFrames.get(millisSinceStart);
@@ -59,6 +84,10 @@ public class KeyFramesDynamicLocation implements DynamicLocation {
 
     public static Factory<DynamicLocation> keyFrames(SortedMap<Long, Vector3D> keyFrames) {
         return () -> new KeyFramesDynamicLocation(keyFrames);
+    }
+
+    public static Factory<DynamicLocation> keyFramesLoop(SortedMap<Long, Vector3D> keyFrames) {
+        return () -> new KeyFramesDynamicLocation(keyFrames, true);
     }
 
 }
