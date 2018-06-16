@@ -2,6 +2,8 @@ package com.programyourhome.immerse.audiostreaming.mixer;
 
 import static com.programyourhome.immerse.audiostreaming.util.AudioUtil.toSigned;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -31,10 +33,14 @@ import com.programyourhome.immerse.audiostreaming.mixer.warmup.CoverAllSettingsW
 import com.programyourhome.immerse.audiostreaming.soundcard.SoundCardDetector;
 import com.programyourhome.immerse.audiostreaming.soundcard.SoundCardStream;
 import com.programyourhome.immerse.audiostreaming.util.AudioUtil;
+import com.programyourhome.immerse.audiostreaming.util.IOUtil;
 import com.programyourhome.immerse.audiostreaming.util.MemoryUtil;
+import com.programyourhome.immerse.domain.Factory;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Scenario;
+import com.programyourhome.immerse.domain.audio.resource.AudioResource;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
+import com.programyourhome.immerse.toolbox.audio.resource.FileAudioResource;
 
 import one.util.streamex.EntryStream;
 import one.util.streamex.StreamEx;
@@ -402,7 +408,7 @@ public class ImmerseMixer {
      * playback, just the next loop.
      */
     private void restartScenario(ActiveScenario activeScenario) {
-        activeScenario.resetForNextStart(this.convertAudioStream(activeScenario.getScenario()));
+        activeScenario.resetForNextStart(this.convertAudioStream(activeScenario.getAudioResourceFactory()));
         this.scenariosToActivate.add(activeScenario);
     }
 
@@ -422,18 +428,37 @@ public class ImmerseMixer {
             throw new IllegalArgumentException("The room id should be identical. This mixer is configured for room: " + this.room.getId() + ", "
                     + "while the provided scenario is for room: " + scenario.getRoom().getId());
         }
-        ActiveScenario activeScenario = new ActiveScenario(scenario, this.convertAudioStream(scenario));
+        Factory<AudioResource> cachedAudioResource = this.cacheLocally(scenario.getSettings().getAudioResourceFactory().create().getAudioInputStream());
+        ActiveScenario activeScenario = new ActiveScenario(scenario, cachedAudioResource);
+        activeScenario.resetForNextStart(this.convertAudioStream(cachedAudioResource));
         this.scenariosInPlayback.add(activeScenario);
         this.scenariosToActivate.add(activeScenario);
         return activeScenario.getId();
     }
 
     /**
+     * Cache the audio input stream locally, so we can always read fast from disk and not keep
+     * any network connections open while playing.
+     */
+    private Factory<AudioResource> cacheLocally(AudioInputStream inputStream) {
+        try {
+            File cacheFile = File.createTempFile("adventure-room-", ".wav");
+            FileOutputStream outputStream = new FileOutputStream(cacheFile);
+            IOUtil.copy(inputStream, outputStream);
+            outputStream.close();
+            // Since the audio input stream headers are already read, we must supply them explicitly in the factory.
+            return FileAudioResource.fileWithoutHeaders(cacheFile, inputStream.getFormat(), inputStream.getFrameLength());
+        } catch (IOException e) {
+            throw new IllegalStateException("IOException during local caching", e);
+        }
+    }
+
+    /**
      * Convert the audio input stream of a scenario to the desired audio format.
      * This method uses the build-in AudioSystem converters to perform the actual conversion.
      */
-    private AudioInputStream convertAudioStream(Scenario scenario) {
-        AudioInputStream originalStream = scenario.getSettings().getAudioResourceFactory().create().getAudioInputStream();
+    private AudioInputStream convertAudioStream(Factory<AudioResource> factory) {
+        AudioInputStream originalStream = factory.create().getAudioInputStream();
         // Workaround for a JDK bug: https://bugs.java.com/bugdatabase/view_bug.do?bug_id=8146338
         // See the documentation of this project for more information.
         AudioInputStream signedStream = AudioUtil.convert(originalStream, toSigned(originalStream.getFormat()));

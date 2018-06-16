@@ -1,8 +1,10 @@
 package com.programyourhome.immerse.toolbox.audio.resource;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 
+import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
@@ -21,19 +23,32 @@ public class FileAudioResource implements AudioResource {
 
     private final AudioInputStream audioInputStream;
 
+    private interface ExceptionalFunction<Input, Output> {
+        public Output apply(Input input) throws IOException, UnsupportedAudioFileException;
+    }
+
     public FileAudioResource(String path) {
         this(new File(path));
     }
 
     public FileAudioResource(File file) {
+        this.audioInputStream = this.loadFile(file, inputFile -> AudioSystem.getAudioInputStream(inputFile));
+    }
+
+    public FileAudioResource(File file, AudioFormat format, long length) {
+        this.audioInputStream = this.loadFile(file, inputFile -> new AudioInputStream(new FileInputStream(inputFile), format, length));
+    }
+
+    private AudioInputStream loadFile(File file, ExceptionalFunction<File, AudioInputStream> consumer) {
         if (!file.exists()) {
             throw new IllegalArgumentException("File: '" + file + "' does not exist.");
         }
         try {
-            this.audioInputStream = AudioSystem.getAudioInputStream(file);
+            return consumer.apply(file);
         } catch (IOException | UnsupportedAudioFileException e) {
             throw new IllegalStateException("Exception while getting audio input stream", e);
         }
+
     }
 
     @Override
@@ -52,6 +67,17 @@ public class FileAudioResource implements AudioResource {
             @Override
             public AudioResource create() {
                 return new FileAudioResource(file);
+            }
+        };
+    }
+
+    public static Factory<AudioResource> fileWithoutHeaders(File file, AudioFormat format, long length) {
+        return new Factory<AudioResource>() {
+            private static final long serialVersionUID = Serialization.VERSION;
+
+            @Override
+            public AudioResource create() {
+                return new FileAudioResource(file, format, length);
             }
         };
     }
