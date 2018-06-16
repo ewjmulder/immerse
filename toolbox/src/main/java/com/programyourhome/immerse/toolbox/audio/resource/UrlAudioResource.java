@@ -47,7 +47,7 @@ public class UrlAudioResource implements AudioResource {
         return this.audioInputStream;
     }
 
-    public static Factory<AudioResource> urlString(String urlString) {
+    public static Factory<AudioResource> url(String urlString) {
         return () -> new UrlAudioResource(urlString);
     }
 

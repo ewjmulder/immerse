@@ -83,13 +83,13 @@ public class TesterLocalLaptop {
         mixer.initialize();
         mixer.start();
 
-        // for (int i = 0; i < 1; i++) {
-        // try {
-        // Thread.sleep(100);
-        // } catch (InterruptedException e) {}
-        //
-        // mixer.playScenario(scenario);
-        // }
+        for (int i = 0; i < 3; i++) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {}
+
+            mixer.playScenario(scenario);
+        }
 
     }
 
