@@ -1,12 +1,9 @@
 package com.programyourhome.immerse.toolbox.audio.resource;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.UnsupportedAudioFileException;
 
 import com.programyourhome.immerse.domain.Factory;
 import com.programyourhome.immerse.domain.Serialization;
@@ -20,7 +17,7 @@ public class UrlAudioResource implements AudioResource {
 
     private static final long serialVersionUID = Serialization.VERSION;
 
-    private AudioInputStream audioInputStream;
+    private InputStream inputStream;
 
     public UrlAudioResource(String urlString) {
         this.setAudioInputStream(toURLNoCheckedException(urlString));
@@ -32,15 +29,15 @@ public class UrlAudioResource implements AudioResource {
 
     private void setAudioInputStream(URL url) {
         try {
-            this.audioInputStream = AudioSystem.getAudioInputStream(url);
-        } catch (IOException | UnsupportedAudioFileException e) {
+            this.inputStream = url.openStream();
+        } catch (IOException e) {
             throw new IllegalStateException("Exception while getting audio input stream", e);
         }
     }
 
     @Override
-    public AudioInputStream getAudioInputStream() {
-        return this.audioInputStream;
+    public InputStream getInputStream() {
+        return this.inputStream;
     }
 
     public static URL toURLNoCheckedException(String urlString) {
@@ -49,7 +46,6 @@ public class UrlAudioResource implements AudioResource {
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException("URL is not valid", e);
         }
-
     }
 
     public static Factory<AudioResource> url(String urlString) {

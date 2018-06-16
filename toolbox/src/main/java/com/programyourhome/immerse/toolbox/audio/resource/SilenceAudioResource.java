@@ -17,10 +17,10 @@ public class SilenceAudioResource implements AudioResource {
 
     private static final long serialVersionUID = Serialization.VERSION;
 
-    private final AudioInputStream audioInputStream;
+    private final InputStream inputStream;
 
     public SilenceAudioResource() {
-        this.audioInputStream = new AudioInputStream(new InputStream() {
+        this.inputStream = new AudioInputStream(new InputStream() {
             @Override
             public int read() throws IOException {
                 return 0;
@@ -29,8 +29,8 @@ public class SilenceAudioResource implements AudioResource {
     }
 
     @Override
-    public AudioInputStream getAudioInputStream() {
-        return this.audioInputStream;
+    public InputStream getInputStream() {
+        return this.inputStream;
     }
 
     public static Factory<AudioResource> silence() {

@@ -5,6 +5,7 @@ import static com.programyourhome.immerse.audiostreaming.util.AudioUtil.toSigned
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -22,6 +23,7 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.Mixer;
 import javax.sound.sampled.SourceDataLine;
+import javax.sound.sampled.UnsupportedAudioFileException;
 
 import org.pmw.tinylog.Logger;
 
@@ -35,12 +37,9 @@ import com.programyourhome.immerse.audiostreaming.soundcard.SoundCardStream;
 import com.programyourhome.immerse.audiostreaming.util.AudioUtil;
 import com.programyourhome.immerse.audiostreaming.util.IOUtil;
 import com.programyourhome.immerse.audiostreaming.util.MemoryUtil;
-import com.programyourhome.immerse.domain.Factory;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Scenario;
-import com.programyourhome.immerse.domain.audio.resource.AudioResource;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
-import com.programyourhome.immerse.toolbox.audio.resource.FileAudioResource;
 
 import one.util.streamex.EntryStream;
 import one.util.streamex.StreamEx;
@@ -408,7 +407,9 @@ public class ImmerseMixer {
      * playback, just the next loop.
      */
     private void restartScenario(ActiveScenario activeScenario) {
-        activeScenario.resetForNextStart(this.convertAudioStream(activeScenario.getAudioResourceFactory()));
+        AudioInputStream cachedAudioInputStream = this.cacheLocally(
+                activeScenario.getScenario().getSettings().getAudioResourceFactory().create().getInputStream());
+        activeScenario.resetForNextStart(this.convertAudioStream(cachedAudioInputStream));
         this.scenariosToActivate.add(activeScenario);
     }
 
@@ -428,9 +429,8 @@ public class ImmerseMixer {
             throw new IllegalArgumentException("The room id should be identical. This mixer is configured for room: " + this.room.getId() + ", "
                     + "while the provided scenario is for room: " + scenario.getRoom().getId());
         }
-        Factory<AudioResource> cachedAudioResource = this.cacheLocally(scenario.getSettings().getAudioResourceFactory().create().getAudioInputStream());
-        ActiveScenario activeScenario = new ActiveScenario(scenario, cachedAudioResource);
-        activeScenario.resetForNextStart(this.convertAudioStream(cachedAudioResource));
+        AudioInputStream cachedAudioInputStream = this.cacheLocally(scenario.getSettings().getAudioResourceFactory().create().getInputStream());
+        ActiveScenario activeScenario = new ActiveScenario(scenario, this.convertAudioStream(cachedAudioInputStream));
         this.scenariosInPlayback.add(activeScenario);
         this.scenariosToActivate.add(activeScenario);
         return activeScenario.getId();
@@ -440,16 +440,20 @@ public class ImmerseMixer {
      * Cache the audio input stream locally, so we can always read fast from disk and not keep
      * any network connections open while playing.
      */
-    private Factory<AudioResource> cacheLocally(AudioInputStream inputStream) {
+    private AudioInputStream cacheLocally(InputStream inputStream) {
+        // Special case: if the input stream is already an AudioInputStream, return it directly.
+        // Otherwise we'll miss the audio headers.
+        if (inputStream instanceof AudioInputStream) {
+            return (AudioInputStream) inputStream;
+        }
         try {
             File cacheFile = File.createTempFile("adventure-room-", ".wav");
             FileOutputStream outputStream = new FileOutputStream(cacheFile);
             IOUtil.copy(inputStream, outputStream);
             inputStream.close();
             outputStream.close();
-            // Since the audio input stream headers are already read, we must supply them explicitly in the factory.
-            return FileAudioResource.fileWithoutHeaders(cacheFile, inputStream.getFormat(), inputStream.getFrameLength());
-        } catch (IOException e) {
+            return AudioSystem.getAudioInputStream(cacheFile);
+        } catch (IOException | UnsupportedAudioFileException e) {
             throw new IllegalStateException("IOException during local caching", e);
         }
     }
@@ -458,8 +462,7 @@ public class ImmerseMixer {
      * Convert the audio input stream of a scenario to the desired audio format.
      * This method uses the build-in AudioSystem converters to perform the actual conversion.
      */
-    private AudioInputStream convertAudioStream(Factory<AudioResource> factory) {
-        AudioInputStream originalStream = factory.create().getAudioInputStream();
+    private AudioInputStream convertAudioStream(AudioInputStream originalStream) {
         // Workaround for a JDK bug: https://bugs.java.com/bugdatabase/view_bug.do?bug_id=8146338
         // See the documentation of this project for more information.
         AudioInputStream signedStream = AudioUtil.convert(originalStream, toSigned(originalStream.getFormat()));

@@ -1,5 +1,6 @@
 package com.programyourhome.immerse.toolbox.audio.resource;
 
+import java.io.InputStream;
 import java.util.function.Supplier;
 
 import javax.sound.sampled.AudioInputStream;
@@ -9,7 +10,7 @@ import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.audio.resource.AudioResource;
 
 /**
- * An audio resource that uses a Supplier to get an AudioInputStream.
+ * An audio resource that uses a Supplier to get an InputStream.
  * The provided supplier should always return a 'fresh' audio input stream (with the same contents)
  * that can be played individually.
  */
@@ -24,7 +25,7 @@ public class SuppliedAudioResource implements AudioResource {
     }
 
     @Override
-    public AudioInputStream getAudioInputStream() {
+    public InputStream getInputStream() {
         return this.audioInputStreamSupplier.get();
     }
 

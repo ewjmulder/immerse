@@ -4,10 +4,8 @@ import java.util.UUID;
 
 import javax.sound.sampled.AudioInputStream;
 
-import com.programyourhome.immerse.domain.Factory;
 import com.programyourhome.immerse.domain.Scenario;
 import com.programyourhome.immerse.domain.audio.playback.Playback;
-import com.programyourhome.immerse.domain.audio.resource.AudioResource;
 import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
 import com.programyourhome.immerse.domain.speakers.algorithms.normalize.NormalizeAlgorithm;
 import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.VolumeRatiosAlgorithm;
@@ -27,15 +25,15 @@ public class ActiveScenario {
     private VolumeRatiosAlgorithm volumeRatiosAlgorithm;
     private NormalizeAlgorithm normalizeAlgorithm;
     private final Playback playback;
-    private final Factory<AudioResource> audioResourceFactory;
     private AudioInputStream inputStream;
     private long startMillis;
 
-    public ActiveScenario(Scenario scenario, Factory<AudioResource> audioResourceFactory) {
+    public ActiveScenario(Scenario scenario, AudioInputStream inputStream) {
         this.id = UUID.randomUUID();
         this.scenario = scenario;
         this.playback = this.scenario.getSettings().getPlaybackFactory().create();
-        this.audioResourceFactory = audioResourceFactory;
+        this.inputStream = inputStream;
+        this.resetForNextStart(this.inputStream);
     }
 
     /**
@@ -67,10 +65,6 @@ public class ActiveScenario {
 
     public Playback getPlayback() {
         return this.playback;
-    }
-
-    public Factory<AudioResource> getAudioResourceFactory() {
-        return this.audioResourceFactory;
     }
 
     public AudioInputStream getInputStream() {
