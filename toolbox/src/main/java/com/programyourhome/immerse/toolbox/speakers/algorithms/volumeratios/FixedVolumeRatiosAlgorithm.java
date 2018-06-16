@@ -29,7 +29,14 @@ public class FixedVolumeRatiosAlgorithm implements VolumeRatiosAlgorithm {
     }
 
     public static Factory<VolumeRatiosAlgorithm> fixed(SpeakerVolumeRatios speakerVolumeRatios) {
-        return () -> new FixedVolumeRatiosAlgorithm(speakerVolumeRatios);
+        return new Factory<VolumeRatiosAlgorithm>() {
+            private static final long serialVersionUID = Serialization.VERSION;
+
+            @Override
+            public VolumeRatiosAlgorithm create() {
+                return new FixedVolumeRatiosAlgorithm(speakerVolumeRatios);
+            }
+        };
     }
 
     /**
