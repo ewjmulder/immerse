@@ -28,7 +28,14 @@ public class FixedDynamicLocation implements DynamicLocation {
     }
 
     public static Factory<DynamicLocation> fixed(Vector3D location) {
-        return () -> new FixedDynamicLocation(location);
+        return new Factory<DynamicLocation>() {
+            private static final long serialVersionUID = Serialization.VERSION;
+
+            @Override
+            public DynamicLocation create() {
+                return new FixedDynamicLocation(location);
+            }
+        };
     }
 
 }

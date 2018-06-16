@@ -29,7 +29,14 @@ public class ForeverPlayback implements Playback {
     }
 
     public static Factory<Playback> forever() {
-        return () -> new ForeverPlayback();
+        return new Factory<Playback>() {
+            private static final long serialVersionUID = Serialization.VERSION;
+
+            @Override
+            public Playback create() {
+                return new ForeverPlayback();
+            }
+        };
     }
 
 }

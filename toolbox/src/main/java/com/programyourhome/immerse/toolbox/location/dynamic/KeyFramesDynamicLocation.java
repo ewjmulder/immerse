@@ -83,7 +83,14 @@ public class KeyFramesDynamicLocation implements DynamicLocation {
     }
 
     public static Factory<DynamicLocation> keyFrames(SortedMap<Long, Vector3D> keyFrames) {
-        return () -> new KeyFramesDynamicLocation(keyFrames);
+        return new Factory<DynamicLocation>() {
+            private static final long serialVersionUID = Serialization.VERSION;
+
+            @Override
+            public DynamicLocation create() {
+                return new KeyFramesDynamicLocation(keyFrames);
+            }
+        };
     }
 
     public static Factory<DynamicLocation> keyFramesLoop(SortedMap<Long, Vector3D> keyFrames) {

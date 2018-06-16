@@ -48,7 +48,14 @@ public class UrlAudioResource implements AudioResource {
     }
 
     public static Factory<AudioResource> url(String urlString) {
-        return () -> new UrlAudioResource(urlString);
+        return new Factory<AudioResource>() {
+            private static final long serialVersionUID = Serialization.VERSION;
+
+            @Override
+            public AudioResource create() {
+                return new UrlAudioResource(urlString);
+            }
+        };
     }
 
     public static Factory<AudioResource> url(URL url) {

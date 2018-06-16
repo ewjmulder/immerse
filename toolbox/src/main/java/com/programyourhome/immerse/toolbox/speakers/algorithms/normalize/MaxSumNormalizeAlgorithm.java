@@ -35,7 +35,14 @@ public class MaxSumNormalizeAlgorithm implements NormalizeAlgorithm {
     }
 
     public static Factory<NormalizeAlgorithm> maxSum(double maxSum) {
-        return () -> new MaxSumNormalizeAlgorithm(maxSum);
+        return new Factory<NormalizeAlgorithm>() {
+            private static final long serialVersionUID = Serialization.VERSION;
+
+            @Override
+            public NormalizeAlgorithm create() {
+                return new MaxSumNormalizeAlgorithm(maxSum);
+            }
+        };
     }
 
 }

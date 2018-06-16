@@ -42,7 +42,7 @@ public class TestNetworkClientLocalLaptop {
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
                 room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0)));
         Scenario scenario = scenario(room,
-                settings(FileAudioResource.file(new File("/home/emulder/Downloads/ChillingMusic.wav")), fixed(5, 10, 10), fixed(5, 5, 5),
+                settings(FileAudioResource.file(new File("/home/emulder/Downloads/audio/ChillingMusic.wav")), fixed(5, 10, 10), fixed(5, 5, 5),
                         fixed(fixedSpeakerVolumeRatios), fractional(), forever()));
 
         ImmerseClient client = new ImmerseClient("localhost", 51515);
