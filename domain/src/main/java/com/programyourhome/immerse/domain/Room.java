@@ -18,7 +18,7 @@ public class Room implements Serializable {
 
     private static final long serialVersionUID = Serialization.VERSION;
 
-    private final UUID id;
+    private UUID id;
     private String name;
     private String description;
     private Vector3D dimensions;
@@ -66,6 +66,11 @@ public class Room implements Serializable {
 
         public Builder() {
             this.room = new Room();
+        }
+
+        public Builder id(UUID id) {
+            this.room.id = id;
+            return this;
         }
 
         public Builder name(String name) {

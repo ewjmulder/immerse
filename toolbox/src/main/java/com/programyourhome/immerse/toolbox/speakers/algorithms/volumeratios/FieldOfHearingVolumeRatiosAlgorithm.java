@@ -47,11 +47,18 @@ public class FieldOfHearingVolumeRatiosAlgorithm implements VolumeRatiosAlgorith
     }
 
     public static Factory<VolumeRatiosAlgorithm> fieldOfHearing() {
-        return () -> new FieldOfHearingVolumeRatiosAlgorithm();
+        return fieldOfHearing(DEFAULT_CUTOFF_ANGLE);
     }
 
     public static Factory<VolumeRatiosAlgorithm> fieldOfHearing(double cutoffAngle) {
-        return () -> new FieldOfHearingVolumeRatiosAlgorithm(cutoffAngle);
+        return new Factory<VolumeRatiosAlgorithm>() {
+            private static final long serialVersionUID = Serialization.VERSION;
+
+            @Override
+            public VolumeRatiosAlgorithm create() {
+                return new FieldOfHearingVolumeRatiosAlgorithm(cutoffAngle);
+            }
+        };
     }
 
 }

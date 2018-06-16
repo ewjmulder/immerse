@@ -30,7 +30,14 @@ public class FractionalNormalizeAlgorithm implements NormalizeAlgorithm {
     }
 
     public static Factory<NormalizeAlgorithm> fractional() {
-        return () -> new FractionalNormalizeAlgorithm();
+        return new Factory<NormalizeAlgorithm>() {
+            private static final long serialVersionUID = Serialization.VERSION;
+
+            @Override
+            public NormalizeAlgorithm create() {
+                return new FractionalNormalizeAlgorithm();
+            }
+        };
     }
 
 }

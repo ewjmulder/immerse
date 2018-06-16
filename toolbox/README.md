@@ -14,6 +14,9 @@ that returns a factory of that type. This way, it's easy to create an object of 
 in a settings builder for the domain, without having to deal with the `Factory` layer. Also, since these static methods can
 be statically imported (so you can omit the class name), the initialization code stays very concise and readable.
 
+One interesting point about the static initializers is that they have to use inner classes instead of the more convenient lambda's.
+Otherwise serialization is not compatible over different JVM's.
+
 ## Usage
 
 This toolbox module has little use on it's own. It is primarily meant to serve as input objects for the audio-streaming module, although you could use it as a base

@@ -33,7 +33,14 @@ public class OnlyClosestVolumeRatiosAlgorithm implements VolumeRatiosAlgorithm {
     }
 
     public static Factory<VolumeRatiosAlgorithm> onlyClosest() {
-        return () -> new OnlyClosestVolumeRatiosAlgorithm();
+        return new Factory<VolumeRatiosAlgorithm>() {
+            private static final long serialVersionUID = Serialization.VERSION;
+
+            @Override
+            public VolumeRatiosAlgorithm create() {
+                return new OnlyClosestVolumeRatiosAlgorithm();
+            }
+        };
     }
 
 }

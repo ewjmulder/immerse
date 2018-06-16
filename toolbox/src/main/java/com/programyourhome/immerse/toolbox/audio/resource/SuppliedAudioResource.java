@@ -29,7 +29,14 @@ public class SuppliedAudioResource implements AudioResource {
     }
 
     public static Factory<AudioResource> supplied(Supplier<AudioInputStream> audioInputStreamSupplier) {
-        return () -> new SuppliedAudioResource(audioInputStreamSupplier);
+        return new Factory<AudioResource>() {
+            private static final long serialVersionUID = Serialization.VERSION;
+
+            @Override
+            public AudioResource create() {
+                return new SuppliedAudioResource(audioInputStreamSupplier);
+            }
+        };
     }
 
 }

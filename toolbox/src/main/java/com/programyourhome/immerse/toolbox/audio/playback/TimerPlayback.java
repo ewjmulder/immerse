@@ -41,6 +41,13 @@ public class TimerPlayback implements Playback {
     }
 
     public static Factory<Playback> timer(long millis) {
-        return () -> new TimerPlayback(millis);
+        return new Factory<Playback>() {
+            private static final long serialVersionUID = Serialization.VERSION;
+
+            @Override
+            public Playback create() {
+                return new TimerPlayback(millis);
+            }
+        };
     }
 }

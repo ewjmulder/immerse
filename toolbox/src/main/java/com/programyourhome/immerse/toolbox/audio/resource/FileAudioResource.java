@@ -41,12 +41,19 @@ public class FileAudioResource implements AudioResource {
         return this.audioInputStream;
     }
 
-    public static Factory<AudioResource> filePath(String filePath) {
-        return () -> new FileAudioResource(filePath);
+    public static Factory<AudioResource> file(String filePath) {
+        return file(new File(filePath));
     }
 
     public static Factory<AudioResource> file(File file) {
-        return () -> new FileAudioResource(file);
+        return new Factory<AudioResource>() {
+            private static final long serialVersionUID = Serialization.VERSION;
+
+            @Override
+            public AudioResource create() {
+                return new FileAudioResource(file);
+            }
+        };
     }
 
 }

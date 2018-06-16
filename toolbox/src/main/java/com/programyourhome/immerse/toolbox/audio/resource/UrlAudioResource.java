@@ -47,19 +47,19 @@ public class UrlAudioResource implements AudioResource {
         return this.audioInputStream;
     }
 
-    public static Factory<AudioResource> url(String urlString) {
+    public static Factory<AudioResource> url(String urlString) throws MalformedURLException {
+        return url(new URL(urlString));
+    }
+
+    public static Factory<AudioResource> url(URL url) {
         return new Factory<AudioResource>() {
             private static final long serialVersionUID = Serialization.VERSION;
 
             @Override
             public AudioResource create() {
-                return new UrlAudioResource(urlString);
+                return new UrlAudioResource(url);
             }
         };
-    }
-
-    public static Factory<AudioResource> url(URL url) {
-        return () -> new UrlAudioResource(url);
     }
 
 }

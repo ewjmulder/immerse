@@ -45,7 +45,7 @@ public class FixedVolumeRatiosAlgorithm implements VolumeRatiosAlgorithm {
     public static Factory<VolumeRatiosAlgorithm> justSpeaker(Room room, int speakerId) {
         SpeakerVolumeRatios justSpeakerVolumeRatios = new SpeakerVolumeRatios(
                 room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> speaker.getId() == speakerId ? 1.0 : 0.0)));
-        return () -> new FixedVolumeRatiosAlgorithm(justSpeakerVolumeRatios);
+        return fixed(justSpeakerVolumeRatios);
     }
 
 }

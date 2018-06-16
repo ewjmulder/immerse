@@ -34,7 +34,14 @@ public class SilenceAudioResource implements AudioResource {
     }
 
     public static Factory<AudioResource> silence() {
-        return () -> new SilenceAudioResource();
+        return new Factory<AudioResource>() {
+            private static final long serialVersionUID = Serialization.VERSION;
+
+            @Override
+            public AudioResource create() {
+                return new SilenceAudioResource();
+            }
+        };
     }
 
 }

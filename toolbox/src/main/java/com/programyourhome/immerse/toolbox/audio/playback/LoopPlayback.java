@@ -40,11 +40,18 @@ public class LoopPlayback implements Playback {
     }
 
     public static Factory<Playback> once() {
-        return () -> new LoopPlayback(1);
+        return times(1);
     }
 
     public static Factory<Playback> times(int times) {
-        return () -> new LoopPlayback(times);
+        return new Factory<Playback>() {
+            private static final long serialVersionUID = Serialization.VERSION;
+
+            @Override
+            public Playback create() {
+                return new LoopPlayback(times);
+            }
+        };
     }
 
 }

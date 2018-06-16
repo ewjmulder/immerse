@@ -6,9 +6,11 @@ import static com.programyourhome.immerse.toolbox.location.dynamic.FixedDynamicL
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.normalize.FractionalNormalizeAlgorithm.fractional;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios.FieldOfHearingVolumeRatiosAlgorithm.fieldOfHearing;
 
+import java.util.UUID;
+
+import com.programyourhome.immerse.domain.Factory;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Scenario;
-import com.programyourhome.immerse.domain.Factory;
 import com.programyourhome.immerse.domain.Settings;
 import com.programyourhome.immerse.domain.Snapshot;
 import com.programyourhome.immerse.domain.audio.playback.Playback;
@@ -48,7 +50,12 @@ public class TestData {
     }
 
     public static Room room(Speaker... speakers) {
+        return room(UUID.randomUUID(), speakers);
+    }
+
+    public static Room room(UUID id, Speaker... speakers) {
         return Room.builder()
+                .id(id)
                 .name("Room")
                 .description("Description of room")
                 .dimensions(10, 10, 10)
