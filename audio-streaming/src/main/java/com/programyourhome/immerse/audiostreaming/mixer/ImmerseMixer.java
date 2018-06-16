@@ -445,6 +445,7 @@ public class ImmerseMixer {
             File cacheFile = File.createTempFile("adventure-room-", ".wav");
             FileOutputStream outputStream = new FileOutputStream(cacheFile);
             IOUtil.copy(inputStream, outputStream);
+            inputStream.close();
             outputStream.close();
             // Since the audio input stream headers are already read, we must supply them explicitly in the factory.
             return FileAudioResource.fileWithoutHeaders(cacheFile, inputStream.getFormat(), inputStream.getFrameLength());
