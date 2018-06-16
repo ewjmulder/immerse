@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -81,10 +82,12 @@ public class ImmerseMixer {
     private final ImmerseAudioFormat inputFormat;
     // Scenarios that should be activated in the next step.
     private final Set<ActiveScenario> scenariosToActivate;
+    // Scenarios that should be stopped in the next step.
+    private final Set<UUID> scenariosToStop;
     // Scenarios that are being played by this mixer, whether currently active or not (e.g. (re)starting, stopping)
     private final Set<ActiveScenario> scenariosInPlayback;
     // Scenarios that are currently active: their audio should be processed in the next step.
-    private final Set<ActiveScenario> activeScenarios;
+    private final Map<UUID, ActiveScenario> activeScenarios;
     // A sound card detector for getting the right mixer info objects.
     private final SoundCardDetector soundCardDetector;
     // Separate thread that runs the mixer logic.
@@ -109,7 +112,7 @@ public class ImmerseMixer {
         this.outputFormat = outputAudioFormat;
         // For input: just switch from stereo to mono, because an input stream should always consist of 1 channel that will be mixed dynamically.
         this.inputFormat = AudioUtil.toMonoInput(this.outputFormat);
-        this.activeScenarios = new HashSet<>();
+        this.activeScenarios = new HashMap<>();
         this.soundCardDetector = new SoundCardDetector();
         // Prepare the worker thread (but do not start it yet).
         this.workerThread = new Thread(this::run, "Main Mixer Worker");
@@ -122,6 +125,7 @@ public class ImmerseMixer {
         this.stateListeners = Collections.synchronizedSet(new HashSet<>());
         this.playbackListeners = Collections.synchronizedSet(new HashSet<>());
         this.scenariosToActivate = Collections.synchronizedSet(new HashSet<>());
+        this.scenariosToStop = Collections.synchronizedSet(new HashSet<>());
         this.scenariosInPlayback = Collections.synchronizedSet(new HashSet<>());
     }
 
@@ -298,8 +302,8 @@ public class ImmerseMixer {
         while (this.state.isRunning()) {
             long start = System.nanoTime();
 
-            // Activate any 'waiting' scenarios.
-            this.activateScenarios();
+            // Handle any 'waiting' scenarios.
+            this.handleScenarios();
             // Update the audio buffers.
             this.updateBuffers();
 
@@ -338,13 +342,18 @@ public class ImmerseMixer {
     }
 
     /**
-     * Activate all scenarios to activate. This 'detour' is implemented to make sure the activeScenarios collection does not run
+     * Handle all scenarios: activate and stop. This 'detour' is implemented to make sure the activeScenarios collection does not run
      * into concurrent modification exceptions. This method is called before the step logic so we can safely modify the activeScenarios collection.
      */
-    private void activateScenarios() {
+    private void handleScenarios() {
+        // Loop over a copy, to prevent concurrent modification issues. Make the copy in an atomic way by using the synchronized toArray.
+        List<UUID> scenariosToStopCopy = Arrays.asList(this.scenariosToStop.toArray(new UUID[0]));
+        scenariosToStopCopy.forEach(playbackId -> this.activeScenarios.remove(playbackId));
+        // Now remove all activated scenario's from the collection (which might have grown in the mean time).
+        this.scenariosToStop.removeAll(scenariosToStopCopy);
         // Loop over a copy, to prevent concurrent modification issues. Make the copy in an atomic way by using the synchronized toArray.
         List<ActiveScenario> scenariosToActivateCopy = Arrays.asList(this.scenariosToActivate.toArray(new ActiveScenario[0]));
-        this.activeScenarios.addAll(scenariosToActivateCopy);
+        scenariosToActivateCopy.forEach(scenario -> this.activeScenarios.put(scenario.getId(), scenario));
         // Now remove all activated scenario's from the collection (which might have grown in the mean time).
         this.scenariosToActivate.removeAll(scenariosToActivateCopy);
         scenariosToActivateCopy.forEach(scenario -> this.logScenarioEvent(scenario, "started"));
@@ -358,11 +367,11 @@ public class ImmerseMixer {
      */
     private void updateBuffers() {
         // Gather all data to write by running the mixer step algorithm.
-        MixerStep mixerStep = new MixerStep(this.activeScenarios, this.soundCardStreams, this.outputFormat);
+        MixerStep mixerStep = new MixerStep(this.activeScenarios.values(), this.soundCardStreams, this.outputFormat);
         Map<SoundCardStream, byte[]> soundCardBufferData = mixerStep.calculateBufferData();
 
         // Signal scenario start just before adding the audio data to the buffer.
-        this.activeScenarios.forEach(ActiveScenario::startIfNotStarted);
+        this.activeScenarios.values().forEach(ActiveScenario::startIfNotStarted);
 
         // Actually write the buffer data to the sound card stream (asynchronously).
         EntryStream.of(soundCardBufferData).forKeyValue(
@@ -385,7 +394,7 @@ public class ImmerseMixer {
      */
     private void handleScenarioLifecycle(MixerStep mixerStep) {
         for (ActiveScenario activeScenario : mixerStep.getScenariosToRestart()) {
-            this.activeScenarios.remove(activeScenario);
+            this.activeScenarios.remove(activeScenario.getId());
             // Restart asynchronously.
             this.executorService.submit(() -> ImmerseMixer.this.restartScenario(activeScenario));
             this.logScenarioEvent(activeScenario, "restarted");
@@ -393,7 +402,7 @@ public class ImmerseMixer {
             this.getPlaybackListenersCopy().forEach(
                     listener -> this.executorService.submit(() -> listener.scenarioEventNoException(listener::scenarioRestarted, activeScenario.getId())));
         }
-        this.activeScenarios.removeAll(mixerStep.getScenariosToRemove());
+        mixerStep.getScenariosToRemove().forEach(scenarioToRemove -> this.activeScenarios.remove(scenarioToRemove.getId()));
         this.scenariosInPlayback.removeAll(mixerStep.getScenariosToRemove());
         mixerStep.getScenariosToRemove().forEach(scenario -> this.logScenarioEvent(scenario, "stopped"));
         // Notify of stop event asynchronously.
@@ -434,6 +443,10 @@ public class ImmerseMixer {
         this.scenariosInPlayback.add(activeScenario);
         this.scenariosToActivate.add(activeScenario);
         return activeScenario.getId();
+    }
+
+    public void stopScenarioPlayback(UUID playbackId) {
+        this.scenariosToStop.add(playbackId);
     }
 
     /**

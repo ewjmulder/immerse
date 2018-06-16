@@ -15,6 +15,8 @@ public enum ServerAction {
     START_MIXER(new StartMixerAction()),
     /** Play a scenario. */
     PLAY_SCENARIO(new PlayScenarioAction()),
+    /** Play a scenario. */
+    STOP_SCENARIO(new StopScenarioAction()),
     /** Stop the mixer. */
     STOP_MIXER(new StopMixerAction());
 

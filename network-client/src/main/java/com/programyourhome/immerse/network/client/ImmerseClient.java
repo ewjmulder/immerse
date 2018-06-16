@@ -86,6 +86,13 @@ public class ImmerseClient {
     }
 
     /**
+     * Stop a scenario on the mixer.
+     */
+    public ActionResult<Void> stopScenario(UUID playbackId) {
+        return this.callServer(ServerAction.STOP_SCENARIO, playbackId);
+    }
+
+    /**
      * Stop the mixer.
      */
     public ActionResult<Void> stopMixer() {

@@ -4,6 +4,7 @@ import static com.programyourhome.immerse.toolbox.util.StreamUtil.toMapFixedValu
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -41,9 +42,9 @@ public class MixerStep {
     private static final int DEFAULT_BUFFER_MILLIS = 30;
 
     // The scenarios that are currently active (in this step).
-    private final Set<ActiveScenario> stepActiveScenarios;
+    private final Collection<ActiveScenario> stepActiveScenarios;
     // The sound card streams that are configured to receive output.
-    private final Set<SoundCardStream> soundCardStreams;
+    private final Collection<SoundCardStream> soundCardStreams;
     // The output audio format.
     private final ImmerseAudioFormat outputFormat;
     // Keeps track of which scenarios should be removed after this step.
@@ -56,7 +57,7 @@ public class MixerStep {
     /**
      * Create a mixer step with the needed info for the calculations.
      */
-    public MixerStep(Set<ActiveScenario> activeScenarios, Set<SoundCardStream> soundCardStreams, ImmerseAudioFormat outputFormat) {
+    public MixerStep(Collection<ActiveScenario> activeScenarios, Collection<SoundCardStream> soundCardStreams, ImmerseAudioFormat outputFormat) {
         if (!outputFormat.isOutput()) {
             throw new IllegalArgumentException("Output format must be of type 'output'");
         }

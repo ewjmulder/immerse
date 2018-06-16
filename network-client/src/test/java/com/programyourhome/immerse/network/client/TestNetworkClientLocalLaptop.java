@@ -12,6 +12,7 @@ import static com.programyourhome.immerse.toolbox.util.TestData.speaker;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.programyourhome.immerse.audiostreaming.format.ImmerseAudioFormat;
@@ -51,7 +52,15 @@ public class TestNetworkClientLocalLaptop {
 
         System.out.println(client.startMixer());
 
-        System.out.println(client.playScenario(scenario));
+        UUID playbackId = client.playScenario(scenario).getResult();
+
+        System.out.println(playbackId);
+
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {}
+
+        System.out.println(client.stopScenario(playbackId));
     }
 
 }
