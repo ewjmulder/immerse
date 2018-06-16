@@ -23,11 +23,7 @@ public class UrlAudioResource implements AudioResource {
     private AudioInputStream audioInputStream;
 
     public UrlAudioResource(String urlString) {
-        try {
-            this.setAudioInputStream(new URL(urlString));
-        } catch (MalformedURLException e) {
-            throw new IllegalArgumentException("URL is not valid", e);
-        }
+        this.setAudioInputStream(toURLNoCheckedException(urlString));
     }
 
     public UrlAudioResource(URL url) {
@@ -47,8 +43,17 @@ public class UrlAudioResource implements AudioResource {
         return this.audioInputStream;
     }
 
-    public static Factory<AudioResource> url(String urlString) throws MalformedURLException {
-        return url(new URL(urlString));
+    public static URL toURLNoCheckedException(String urlString) {
+        try {
+            return new URL(urlString);
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException("URL is not valid", e);
+        }
+
+    }
+
+    public static Factory<AudioResource> url(String urlString) {
+        return url(toURLNoCheckedException(urlString));
     }
 
     public static Factory<AudioResource> url(URL url) {

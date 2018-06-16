@@ -1,10 +1,9 @@
 package com.programyourhome.immerse.testscripts.scenarios;
 
 import static com.programyourhome.immerse.toolbox.audio.playback.ForeverPlayback.forever;
-import static com.programyourhome.immerse.toolbox.audio.resource.FileAudioResource.filePath;
+import static com.programyourhome.immerse.toolbox.audio.resource.FileAudioResource.file;
 import static com.programyourhome.immerse.toolbox.location.dynamic.FixedDynamicLocation.fixed;
 import static com.programyourhome.immerse.toolbox.location.dynamic.KeyFramesDynamicLocation.keyFrames;
-import static com.programyourhome.immerse.toolbox.speakers.algorithms.normalize.FractionalNormalizeAlgorithm.fractional;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.normalize.MaxSumNormalizeAlgorithm.maxSum;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios.FieldOfHearingVolumeRatiosAlgorithm.fieldOfHearing;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios.FixedVolumeRatiosAlgorithm.fixed;
@@ -68,12 +67,12 @@ public class TesterSparrenBurcht {
 
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
                 room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 0.5))); // speaker.getId() == 11 ? 1.0 : 0.0)));
-        Scenario scenario1 = scenario(room, settings(filePath(CHILL_PINE), keyFrames(keyFrames), fixed(180, 180, 150),
+        Scenario scenario1 = scenario(room, settings(file(CHILL_PINE), keyFrames(keyFrames), fixed(180, 180, 150),
                 fixed(fixedSpeakerVolumeRatios), maxSum(1), forever()));
 
-        Scenario scenario2 = scenario(room, settings(filePath(VOICE_PINE), keyFrames(keyFrames), fixed(180, 180, 150),
+        Scenario scenario2 = scenario(room, settings(file(VOICE_PINE), keyFrames(keyFrames), fixed(180, 180, 150),
                 fieldOfHearing(45), maxSum(1), forever()));
-                //fixed(fixedSpeakerVolumeRatios), fractional(), forever()));
+        // fixed(fixedSpeakerVolumeRatios), fractional(), forever()));
 
         SoundCard soundCard1 = soundCard(1, "platform-1c1a000.ehci0-controller-usb-0:1.2:1.0", speaker1, speaker2);
         SoundCard soundCard2 = soundCard(2, "platform-1c1a000.ehci0-controller-usb-0:1.3:1.0", speaker3, speaker4);
