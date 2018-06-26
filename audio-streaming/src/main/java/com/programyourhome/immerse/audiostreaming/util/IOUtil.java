@@ -35,6 +35,7 @@ public class IOUtil {
      * <p>
      * This method buffers the input internally, so there is no need to use a
      * <code>BufferedInputStream</code>.
+     * Input stream will be closed.
      *
      * @param input the <code>InputStream</code> to read from
      * @return the requested byte array
@@ -43,7 +44,7 @@ public class IOUtil {
      */
     public static byte[] toByteArray(final InputStream input) throws IOException {
         try (final ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-            copy(input, output);
+            copyAndClose(input, output);
             return output.toByteArray();
         }
     }
@@ -59,6 +60,7 @@ public class IOUtil {
      * <code>-1</code> after the copy has completed since the correct
      * number of bytes cannot be returned as an int. For large streams
      * use the <code>copyLarge(InputStream, OutputStream)</code> method.
+     * Input stream and output stream will be closed.
      *
      * @param input the <code>InputStream</code> to read from
      * @param output the <code>OutputStream</code> to write to
@@ -66,11 +68,13 @@ public class IOUtil {
      * @throws NullPointerException if the input or output is null
      * @throws IOException if an I/O error occurs
      */
-    public static int copy(final InputStream input, final OutputStream output) throws IOException {
+    public static int copyAndClose(final InputStream input, final OutputStream output) throws IOException {
         final long count = copyLarge(input, output);
         if (count > Integer.MAX_VALUE) {
             return -1;
         }
+        input.close();
+        output.close();
         return (int) count;
     }
 

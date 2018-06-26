@@ -60,7 +60,7 @@ public class TestNetworkClientLocalLaptop {
             Thread.sleep(2000);
         } catch (InterruptedException e) {}
 
-        System.out.println(client.stopScenario(playbackId));
+        System.out.println(client.stopPlayback(playbackId));
     }
 
 }

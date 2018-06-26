@@ -1,6 +1,6 @@
 package com.programyourhome.immerse.testscripts.scenarios;
 
-import static com.programyourhome.immerse.toolbox.audio.playback.ForeverPlayback.forever;
+import static com.programyourhome.immerse.toolbox.audio.playback.LoopPlayback.once;
 import static com.programyourhome.immerse.toolbox.location.dynamic.FixedDynamicLocation.fixed;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.normalize.FractionalNormalizeAlgorithm.fractional;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios.FixedVolumeRatiosAlgorithm.fixed;
@@ -13,6 +13,7 @@ import static com.programyourhome.immerse.toolbox.util.TestData.speaker;
 import java.io.File;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.sound.sampled.AudioInputStream;
@@ -36,10 +37,10 @@ import com.programyourhome.immerse.toolbox.audio.resource.FileAudioResource;
 
 public class TesterLocalLaptop {
 
-    private static final String CHILL = "/home/emulder/Downloads/ChillingMusic.wav";
-    private static final String BASS = "/home/emulder/Downloads/doublebass.wav";
-    private static final String CLAPPING = "/home/emulder/Downloads/clapping.wav";
-    private static final String VOICE = "/home/emulder/Downloads/voice.wav";
+    private static final String CHILL = "/home/emulder/Downloads/audio/ChillingMusic.wav";
+    private static final String BASS = "/home/emulder/Downloads/audio/doublebass.wav";
+    private static final String CLAPPING = "/home/emulder/Downloads/audio/clapping.wav";
+    private static final String VOICE = "/home/emulder/Downloads/audio/voice.wav";
 
     public static void main(String[] args) throws Exception {
         // -XX:MaxNewSize=10M -XX:+PrintGCDetails -XX:+PrintCommandLineFlags // -XX:+PrintTenuringDistribution
@@ -62,7 +63,7 @@ public class TesterLocalLaptop {
                 .buildForInput();
         // Scenario scenario = scenario(room, settings(SuppliedAudioResource.supplied(() -> generate(format, 500, 10_000)), fixed(5, 10, 10), fixed(5, 5, 5),
         Scenario scenario = scenario(room, settings(FileAudioResource.file(new File(CHILL)), fixed(5, 10, 10), fixed(5, 5, 5),
-                fixed(fixedSpeakerVolumeRatios), fractional(), forever()));
+                fixed(fixedSpeakerVolumeRatios), fractional(), once()));
 
         SoundCard soundCard1 = soundCard(1, "pci-0000:00:1f.3", speaker1, speaker2);
 
@@ -83,13 +84,16 @@ public class TesterLocalLaptop {
         mixer.initialize();
         mixer.start();
 
-        for (int i = 0; i < 3; i++) {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {}
+        // for (int i = 0; i < 3; i++) {
+        // try {
+        // Thread.sleep(100);
+        // } catch (InterruptedException e) {}
+        //
+        UUID playbackId = mixer.playScenario(scenario);
+        mixer.waitForPlayback(playbackId);
+        mixer.stop();
 
-            mixer.playScenario(scenario);
-        }
+        // }
 
     }
 

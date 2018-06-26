@@ -86,10 +86,17 @@ public class ImmerseClient {
     }
 
     /**
-     * Stop a scenario on the mixer.
+     * Wait for completion of a playback on the mixer.
      */
-    public ActionResult<Void> stopScenario(UUID playbackId) {
-        return this.callServer(ServerAction.STOP_SCENARIO, playbackId);
+    public ActionResult<Void> waitForPlayback(UUID playbackId) {
+        return this.callServer(ServerAction.WAIT_FOR_PLAYBACK, playbackId);
+    }
+
+    /**
+     * Stop playback of a scenario on the mixer.
+     */
+    public ActionResult<Void> stopPlayback(UUID playbackId) {
+        return this.callServer(ServerAction.STOP_PLAYBACK, playbackId);
     }
 
     /**
@@ -114,8 +121,8 @@ public class ImmerseClient {
                 objectOutput.writeObject(parameter);
             }
 
-            ObjectInput objectInput = new ObjectInputStream(socket.getInputStream());
             // Receive result from server.
+            ObjectInput objectInput = new ObjectInputStream(socket.getInputStream());
             @SuppressWarnings("unchecked")
             ActionResult<T> actionResult = (ActionResult<T>) objectInput.readObject();
 

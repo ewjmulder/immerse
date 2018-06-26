@@ -445,6 +445,10 @@ public class ImmerseMixer {
         return activeScenario.getId();
     }
 
+    public void waitForPlayback(UUID playbackId) {
+        this.waitFor(() -> !this.isScenarioInPlayback(playbackId));
+    }
+
     public void stopScenarioPlayback(UUID playbackId) {
         this.scenariosToStop.add(playbackId);
     }
@@ -462,9 +466,7 @@ public class ImmerseMixer {
         try {
             File cacheFile = File.createTempFile("adventure-room-", ".wav");
             FileOutputStream outputStream = new FileOutputStream(cacheFile);
-            IOUtil.copy(inputStream, outputStream);
-            inputStream.close();
-            outputStream.close();
+            IOUtil.copyAndClose(inputStream, outputStream);
             return AudioSystem.getAudioInputStream(cacheFile);
         } catch (IOException | UnsupportedAudioFileException e) {
             throw new IllegalStateException("IOException during local caching", e);
