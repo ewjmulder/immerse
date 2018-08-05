@@ -4,8 +4,8 @@ import static com.programyourhome.immerse.toolbox.audio.playback.ForeverPlayback
 import static com.programyourhome.immerse.toolbox.audio.resource.FileAudioResource.file;
 import static com.programyourhome.immerse.toolbox.location.dynamic.FixedDynamicLocation.fixed;
 import static com.programyourhome.immerse.toolbox.location.dynamic.KeyFramesDynamicLocation.keyFrames;
-import static com.programyourhome.immerse.toolbox.speakers.algorithms.normalize.MaxSumNormalizeAlgorithm.maxSum;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.normalize.FractionalNormalizeAlgorithm.fractional;
+import static com.programyourhome.immerse.toolbox.speakers.algorithms.normalize.MaxSumNormalizeAlgorithm.maxSum;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios.FieldOfHearingVolumeRatiosAlgorithm.fieldOfHearing;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios.FixedVolumeRatiosAlgorithm.fixed;
 import static com.programyourhome.immerse.toolbox.util.TestData.room;
@@ -31,7 +31,7 @@ import com.programyourhome.immerse.domain.location.Vector3D;
 import com.programyourhome.immerse.domain.speakers.Speaker;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
 
-public class TesterSparrenBurcht {
+public class TesterZeewolde {
 
     private static final String CHILL_PINE = "/home/ubuntu/sandbox/ChillingMusic_Loud.wav";
     private static final String CLAPPING_PINE = "/home/ubuntu/sandbox/clapping-louder-long.wav";
@@ -43,44 +43,32 @@ public class TesterSparrenBurcht {
     private static final String VOICE = "/home/emulder/Downloads/voice.wav";
 
     public static void main(String[] args) throws Exception {
-        Speaker speaker1 = speaker(1, 0, 366, 250);
-        Speaker speaker2 = speaker(2, 122, 366, 250);
-        Speaker speaker3 = speaker(3, 244, 366, 250);
-        Speaker speaker4 = speaker(4, 366, 366, 250);
-        Speaker speaker5 = speaker(5, 366, 244, 250);
-        Speaker speaker6 = speaker(6, 366, 122, 250);
-        Speaker speaker7 = speaker(7, 366, 0, 250);
-        Speaker speaker8 = speaker(8, 244, 0, 250);
-        Speaker speaker9 = speaker(9, 122, 0, 250);
-        Speaker speaker10 = speaker(10, 0, 0, 250);
-        Speaker speaker11 = speaker(11, 0, 122, 250);
-        Speaker speaker12 = speaker(12, 0, 244, 250);
-        Room room = room(speaker1, speaker2, speaker3, speaker4, speaker5, speaker6, speaker7, speaker8, speaker9, speaker10, speaker11, speaker12);
+        Speaker speaker1 = speaker(1, 0, 0, 80);
+        Speaker speaker2 = speaker(2, 0, 100, 80);
+        Speaker speaker3 = speaker(3, 200, 120, 80);
+        Speaker speaker4 = speaker(4, 200, 50, 80);
+        Room room = room(speaker1, speaker2, speaker3, speaker4);
 
         // TODO: convenience class around key frames?
         // TODO: key frames options loop or once
         SortedMap<Long, Vector3D> keyFrames = new TreeMap<>();
-        keyFrames.put(0L, new Vector3D(0, 0, 250));
-        keyFrames.put(3_000L, new Vector3D(0, 366, 250));
-        keyFrames.put(6_000L, new Vector3D(366, 366, 250));
-        keyFrames.put(9_000L, new Vector3D(366, 0, 250));
-        keyFrames.put(12_000L, new Vector3D(0, 0, 250));
+        keyFrames.put(0L, new Vector3D(0, 0, 80));
+        keyFrames.put(3_000L, new Vector3D(0, 100, 80));
+        keyFrames.put(6_000L, new Vector3D(200, 120, 80));
+        keyFrames.put(9_000L, new Vector3D(200, 50, 80));
+        keyFrames.put(12_000L, new Vector3D(0, 0, 80));
 
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
-                room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0))); //speaker.getId() == 2 ? 1.0 : 0.0)));
-        Scenario scenario1 = scenario(room, settings(file(CHILL_PINE), keyFrames(keyFrames), fixed(180, 180, 150),
-                fixed(fixedSpeakerVolumeRatios), maxSum(0.7), forever()));
+                room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> {System.out.println(speaker); return speaker.getId() == 4 ? 1.0 : 0.0;})));
+        Scenario scenario1 = scenario(room, settings(file(CHILL_PINE), keyFrames(keyFrames), fixed(100, 60, 80),
+                fieldOfHearing(60), maxSum(1), forever()));
 
-        Scenario scenario2 = scenario(room, settings(file(VOICE_PINE), keyFrames(keyFrames), fixed(180, 180, 150),
-                fieldOfHearing(45), maxSum(1), forever()));
-//         fixed(fixedSpeakerVolumeRatios), fractional(), forever()));
+//        Scenario scenario2 = scenario(room, settings(filePath(VOICE_PINE), keyFrames(keyFrames), fixed(180, 180, 150),
+//                fieldOfHearing(45), maxSum(1), forever()));
+                //fixed(fixedSpeakerVolumeRatios), fractional(), forever()));
 
-        SoundCard soundCard1 = soundCard(1, "platform-1c1b000.ehci1-controller-usb-0:1.2:1.0", speaker9, speaker6);
-        SoundCard soundCard2 = soundCard(2, "platform-1c1b000.ehci1-controller-usb-0:1.3:1.0", speaker10, speaker11);
-        SoundCard soundCard3 = soundCard(3, "platform-1c1b000.ehci1-controller-usb-0:1.4:1.0", speaker7, speaker4);
-        SoundCard soundCard4 = soundCard(4, "platform-1c1b000.ehci1-controller-usb-0:1.1.2:1.0", speaker1, speaker12);
-        SoundCard soundCard5 = soundCard(5, "platform-1c1b000.ehci1-controller-usb-0:1.1.3:1.0", speaker8, speaker5);
-        SoundCard soundCard6 = soundCard(6, "platform-1c1b000.ehci1-controller-usb-0:1.1.4:1.0", speaker2, speaker3);
+        SoundCard soundCard1 = soundCard(1, "platform-1c1b000.ehci1-controller-usb-0:1.2:1.0", speaker2, speaker1);
+        SoundCard soundCard2 = soundCard(2, "platform-1c1b000.ehci1-controller-usb-0:1.4:1.0", speaker3, speaker4);
 
         ImmerseAudioFormat outputFormat = ImmerseAudioFormat.builder()
                 .sampleRate(SampleRate.RATE_44K)
@@ -88,7 +76,7 @@ public class TesterSparrenBurcht {
                 .buildForOutput();
 
         ImmerseMixer mixer = new ImmerseMixer(room,
-                new HashSet<>(Arrays.asList(soundCard1, soundCard2, soundCard3, soundCard4, soundCard5, soundCard6)), outputFormat);
+                new HashSet<>(Arrays.asList(soundCard1, soundCard2)), outputFormat);
 
         mixer.initialize();
         mixer.start();
@@ -98,10 +86,10 @@ public class TesterSparrenBurcht {
         } catch (InterruptedException e) {}
         mixer.playScenario(scenario1);
 
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {}
-        mixer.playScenario(scenario2);
+//        try {
+//            Thread.sleep(2000);
+//        } catch (InterruptedException e) {}
+//        mixer.playScenario(scenario2);
 
         // for (int i = 0; i < 1; i++) {
         // try {
