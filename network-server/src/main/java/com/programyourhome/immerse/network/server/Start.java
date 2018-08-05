@@ -9,7 +9,7 @@ import org.pmw.tinylog.writers.ConsoleWriter;
  */
 public class Start {
 
-    public static final int DEFAULT_PORT = 19161;
+    public static final int DEFAULT_PORT = 51515;
 
     public static void main(String[] args) {
         // TODO: print usage if --help
