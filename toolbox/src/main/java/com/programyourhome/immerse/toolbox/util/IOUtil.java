@@ -1,4 +1,4 @@
-package com.programyourhome.immerse.audiostreaming.util;
+package com.programyourhome.immerse.toolbox.util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

@@ -20,13 +20,13 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import com.programyourhome.immerse.audiostreaming.format.ImmerseAudioFormat;
-import com.programyourhome.immerse.audiostreaming.format.SampleRate;
-import com.programyourhome.immerse.audiostreaming.format.SampleSize;
 import com.programyourhome.immerse.audiostreaming.mixer.ImmerseMixer;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Scenario;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
+import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
+import com.programyourhome.immerse.domain.format.SampleRate;
+import com.programyourhome.immerse.domain.format.SampleSize;
 import com.programyourhome.immerse.domain.location.Vector3D;
 import com.programyourhome.immerse.domain.speakers.Speaker;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;

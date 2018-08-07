@@ -1,6 +1,5 @@
 package com.programyourhome.immerse.toolbox.audio.resource;
 
-import java.io.InputStream;
 import java.util.function.Supplier;
 
 import javax.sound.sampled.AudioInputStream;
@@ -11,31 +10,37 @@ import com.programyourhome.immerse.domain.audio.resource.AudioResource;
 
 /**
  * An audio resource that uses a Supplier to get an InputStream.
- * The provided supplier should always return a 'fresh' audio input stream (with the same contents)
- * that can be played individually.
+ * The provided supplier is used to request an audio input stream exactly once.
  */
 public class SuppliedAudioResource implements AudioResource {
 
     private static final long serialVersionUID = Serialization.VERSION;
 
-    private final Supplier<AudioInputStream> audioInputStreamSupplier;
+    private final AudioInputStream audioInputStream;
+    private final boolean dynamic;
 
-    public SuppliedAudioResource(Supplier<AudioInputStream> audioInputStreamSupplier) {
-        this.audioInputStreamSupplier = audioInputStreamSupplier;
+    public SuppliedAudioResource(Supplier<AudioInputStream> audioInputStreamSupplier, boolean dynamic) {
+        this.audioInputStream = audioInputStreamSupplier.get();
+        this.dynamic = dynamic;
     }
 
     @Override
-    public InputStream getInputStream() {
-        return this.audioInputStreamSupplier.get();
+    public AudioInputStream getAudioInputStream() {
+        return this.audioInputStream;
     }
 
-    public static Factory<AudioResource> supplied(Supplier<AudioInputStream> audioInputStreamSupplier) {
+    @Override
+    public boolean isDynamic() {
+        return this.dynamic;
+    }
+
+    public static Factory<AudioResource> supplied(Supplier<AudioInputStream> audioInputStreamSupplier, boolean dynamic) {
         return new Factory<AudioResource>() {
             private static final long serialVersionUID = Serialization.VERSION;
 
             @Override
             public AudioResource create() {
-                return new SuppliedAudioResource(audioInputStreamSupplier);
+                return new SuppliedAudioResource(audioInputStreamSupplier, dynamic);
             }
         };
     }

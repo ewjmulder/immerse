@@ -1,9 +1,11 @@
 package com.programyourhome.immerse.toolbox.audio.resource;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.UnsupportedAudioFileException;
 
 import com.programyourhome.immerse.domain.Factory;
 import com.programyourhome.immerse.domain.Serialization;
@@ -17,7 +19,7 @@ public class FileAudioResource implements AudioResource {
 
     private static final long serialVersionUID = Serialization.VERSION;
 
-    private final InputStream inputStream;
+    private final AudioInputStream audioInputStream;
 
     public FileAudioResource(String path) {
         this(new File(path));
@@ -28,15 +30,15 @@ public class FileAudioResource implements AudioResource {
             throw new IllegalArgumentException("File: '" + file + "' does not exist.");
         }
         try {
-            this.inputStream = new FileInputStream(file);
-        } catch (IOException e) {
+            this.audioInputStream = AudioSystem.getAudioInputStream(file);
+        } catch (IOException | UnsupportedAudioFileException e) {
             throw new IllegalStateException("Exception while getting input stream", e);
         }
     }
 
     @Override
-    public InputStream getInputStream() {
-        return this.inputStream;
+    public AudioInputStream getAudioInputStream() {
+        return this.audioInputStream;
     }
 
     public static Factory<AudioResource> file(String filePath) {

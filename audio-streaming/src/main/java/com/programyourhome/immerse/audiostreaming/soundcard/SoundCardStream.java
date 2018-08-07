@@ -3,10 +3,10 @@ package com.programyourhome.immerse.audiostreaming.soundcard;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 
-import com.programyourhome.immerse.audiostreaming.format.ImmerseAudioFormat;
-import com.programyourhome.immerse.audiostreaming.format.RecordingMode;
-import com.programyourhome.immerse.audiostreaming.format.SampleSize;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
+import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
+import com.programyourhome.immerse.domain.format.RecordingMode;
+import com.programyourhome.immerse.domain.format.SampleSize;
 
 /**
  * This class represents an open stream from the mixer to the actual sound card hardware (through the Java Sound API).

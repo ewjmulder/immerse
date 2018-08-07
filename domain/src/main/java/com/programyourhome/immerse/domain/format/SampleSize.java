@@ -1,4 +1,4 @@
-package com.programyourhome.immerse.audiostreaming.format;
+package com.programyourhome.immerse.domain.format;
 
 import java.util.Arrays;
 

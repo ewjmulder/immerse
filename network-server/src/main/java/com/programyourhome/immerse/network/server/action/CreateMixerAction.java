@@ -5,10 +5,10 @@ import java.io.ObjectInput;
 import java.util.Collection;
 import java.util.HashSet;
 
-import com.programyourhome.immerse.audiostreaming.format.ImmerseAudioFormat;
 import com.programyourhome.immerse.audiostreaming.mixer.ImmerseMixer;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
+import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
 import com.programyourhome.immerse.network.server.ImmerseServer;
 
 /**

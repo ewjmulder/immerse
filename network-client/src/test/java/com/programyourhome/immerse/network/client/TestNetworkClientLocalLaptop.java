@@ -15,12 +15,12 @@ import java.util.Arrays;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import com.programyourhome.immerse.audiostreaming.format.ImmerseAudioFormat;
-import com.programyourhome.immerse.audiostreaming.format.SampleRate;
-import com.programyourhome.immerse.audiostreaming.format.SampleSize;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Scenario;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
+import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
+import com.programyourhome.immerse.domain.format.SampleRate;
+import com.programyourhome.immerse.domain.format.SampleSize;
 import com.programyourhome.immerse.domain.speakers.Speaker;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
 import com.programyourhome.immerse.toolbox.audio.resource.FileAudioResource;
@@ -43,7 +43,7 @@ public class TestNetworkClientLocalLaptop {
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
                 room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0)));
         Scenario scenario = scenario(room,
-                settings(FileAudioResource.file(new File("/home/emulder/Downloads/audio/ChillingMusic.wav")), fixed(5, 10, 10), fixed(5, 5, 5),
+                settings(FileAudioResource.file(new File("/home/emulder/Downloads/audio/clapping.wav")), fixed(5, 10, 10), fixed(5, 5, 5),
                         fixed(fixedSpeakerVolumeRatios), fractional(), forever()));
 
         ImmerseClient client = new ImmerseClient("localhost", 51515);
@@ -57,7 +57,7 @@ public class TestNetworkClientLocalLaptop {
         System.out.println(playbackId);
 
         try {
-            Thread.sleep(2000);
+            Thread.sleep(10000);
         } catch (InterruptedException e) {}
 
         System.out.println(client.stopPlayback(playbackId));

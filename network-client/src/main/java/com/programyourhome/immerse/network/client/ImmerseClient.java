@@ -8,10 +8,10 @@ import java.net.Socket;
 import java.util.Collection;
 import java.util.UUID;
 
-import com.programyourhome.immerse.audiostreaming.format.ImmerseAudioFormat;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Scenario;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
+import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
 import com.programyourhome.immerse.network.server.action.ActionResult;
 import com.programyourhome.immerse.network.server.action.ServerAction;
 

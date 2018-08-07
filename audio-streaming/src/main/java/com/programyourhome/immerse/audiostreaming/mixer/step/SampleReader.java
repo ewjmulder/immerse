@@ -5,9 +5,9 @@ import java.util.Arrays;
 
 import javax.sound.sampled.AudioInputStream;
 
-import com.programyourhome.immerse.audiostreaming.format.ImmerseAudioFormat;
-import com.programyourhome.immerse.audiostreaming.format.SampleSize;
 import com.programyourhome.immerse.audiostreaming.util.AudioUtil;
+import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
+import com.programyourhome.immerse.domain.format.SampleSize;
 
 /**
  * Reads sample values from an audio stream.
@@ -36,6 +36,7 @@ public class SampleReader {
                 bytesRead = 0;
             }
             endOfStream = true;
+            stream.close();
             // Pad the rest of the array with 0's to create silence.
             Arrays.fill(byteBuffer, bytesRead, byteBuffer.length, (byte) 0);
         }

@@ -1,8 +1,8 @@
 package com.programyourhome.immerse.audiostreaming.mixer.step;
 
-import com.programyourhome.immerse.audiostreaming.format.ImmerseAudioFormat;
-import com.programyourhome.immerse.audiostreaming.format.SampleSize;
 import com.programyourhome.immerse.audiostreaming.util.AudioUtil;
+import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
+import com.programyourhome.immerse.domain.format.SampleSize;
 
 /**
  * Write sample values from a samples array to a byte array.

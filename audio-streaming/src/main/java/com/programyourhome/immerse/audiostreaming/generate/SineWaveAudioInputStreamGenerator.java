@@ -4,9 +4,9 @@ import java.io.ByteArrayInputStream;
 
 import javax.sound.sampled.AudioInputStream;
 
-import com.programyourhome.immerse.audiostreaming.format.ImmerseAudioFormat;
-import com.programyourhome.immerse.audiostreaming.format.RecordingMode;
-import com.programyourhome.immerse.audiostreaming.format.SampleSize;
+import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
+import com.programyourhome.immerse.domain.format.RecordingMode;
+import com.programyourhome.immerse.domain.format.SampleSize;
 import com.programyourhome.immerse.toolbox.util.MathUtil;
 
 /**

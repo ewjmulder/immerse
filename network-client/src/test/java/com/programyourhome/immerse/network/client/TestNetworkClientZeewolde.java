@@ -1,7 +1,7 @@
 package com.programyourhome.immerse.network.client;
 
 import static com.programyourhome.immerse.toolbox.audio.playback.ForeverPlayback.forever;
-import static com.programyourhome.immerse.toolbox.audio.resource.UrlAudioResource.url;
+import static com.programyourhome.immerse.toolbox.audio.resource.UrlAudioResource.urlWithType;
 import static com.programyourhome.immerse.toolbox.location.dynamic.FixedDynamicLocation.fixed;
 import static com.programyourhome.immerse.toolbox.location.dynamic.KeyFramesDynamicLocation.keyFrames;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.normalize.MaxSumNormalizeAlgorithm.maxSum;
@@ -18,12 +18,13 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import com.programyourhome.immerse.audiostreaming.format.ImmerseAudioFormat;
-import com.programyourhome.immerse.audiostreaming.format.SampleRate;
-import com.programyourhome.immerse.audiostreaming.format.SampleSize;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Scenario;
+import com.programyourhome.immerse.domain.audio.resource.AudioFileType;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
+import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
+import com.programyourhome.immerse.domain.format.SampleRate;
+import com.programyourhome.immerse.domain.format.SampleSize;
 import com.programyourhome.immerse.domain.location.Vector3D;
 import com.programyourhome.immerse.domain.speakers.Speaker;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
@@ -63,7 +64,7 @@ public class TestNetworkClientZeewolde {
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
                 room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0)));
         Scenario scenario = scenario(room,
-                settings(url("http://10.42.0.1:19161/audio/chill"), keyFrames(keyFrames), fixed(100, 60, 80),
+                settings(urlWithType("http://10.42.0.1:19161/audio/chill", AudioFileType.WAVE, false), keyFrames(keyFrames), fixed(100, 60, 80),
                         fixed(fixedSpeakerVolumeRatios), maxSum(1), forever()));
         // fieldOfHearing(60), maxSum(1), forever()));
 

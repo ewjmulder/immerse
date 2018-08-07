@@ -14,11 +14,11 @@ import java.util.Set;
 
 import org.pmw.tinylog.Logger;
 
-import com.programyourhome.immerse.audiostreaming.format.ImmerseAudioFormat;
-import com.programyourhome.immerse.audiostreaming.format.SampleSize;
 import com.programyourhome.immerse.audiostreaming.mixer.scenario.ActiveScenario;
 import com.programyourhome.immerse.audiostreaming.soundcard.SoundCardStream;
 import com.programyourhome.immerse.domain.Snapshot;
+import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
+import com.programyourhome.immerse.domain.format.SampleSize;
 import com.programyourhome.immerse.domain.location.Vector3D;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumes;
@@ -47,8 +47,8 @@ public class MixerStep {
     private final Collection<SoundCardStream> soundCardStreams;
     // The output audio format.
     private final ImmerseAudioFormat outputFormat;
-    // Keeps track of which scenarios should be removed after this step.
-    private final Set<ActiveScenario> scenariosToRemove;
+    // Keeps track of which scenarios should be stopped after this step.
+    private final Set<ActiveScenario> scenariosToStop;
     // Keeps track of which scenarios should be restarted after this step.
     private final Set<ActiveScenario> scenariosToRestart;
     // The amount of frames we need to add to the buffer in this step.
@@ -63,19 +63,19 @@ public class MixerStep {
         }
         this.soundCardStreams = soundCardStreams;
         this.outputFormat = outputFormat;
-        this.scenariosToRemove = new HashSet<>();
+        this.scenariosToStop = new HashSet<>();
         this.scenariosToRestart = new HashSet<>();
         this.amountOfFramesNeeded = this.calculateAmountOfFramesNeeded();
 
-        // First, check if there are any scenarios that should be stopped. If so, add them to the scenarios to remove collection.
-        // They will be stopped by the mixer and removed at the next step.
+        // First, check if there are any scenarios that should be stopped. If so, add them to the scenarios to stop collection.
+        // They will be stopped by the mixer and stopped at the next step.
         StreamEx.of(activeScenarios)
                 .filter(activeScenarino -> activeScenarino.getPlayback().shouldStop())
-                .forEach(this.scenariosToRemove::add);
+                .forEach(this.scenariosToStop::add);
         // Make a copy of the provided active scenarios, so we can safely change the collection.
         this.stepActiveScenarios = new HashSet<>(activeScenarios);
-        // Remove all scenarios to remove, so they will not be taken into account anymore in this step.
-        this.stepActiveScenarios.removeAll(this.scenariosToRemove);
+        // Remove all scenarios to stop, so they will not be taken into account anymore in this step.
+        this.stepActiveScenarios.removeAll(this.scenariosToStop);
     }
 
     /**
@@ -98,8 +98,8 @@ public class MixerStep {
         return (int) amountOfFramesNeeded;
     }
 
-    public Set<ActiveScenario> getScenariosToRemove() {
-        return this.scenariosToRemove;
+    public Set<ActiveScenario> getScenariosToStop() {
+        return this.scenariosToStop;
     }
 
     public Set<ActiveScenario> getScenariosToRestart() {
@@ -176,16 +176,16 @@ public class MixerStep {
                     // Continue with the next playback loop, so restart scenario.
                     this.scenariosToRestart.add(activeScenario);
                 } else {
-                    // No more playback, remove scenario.
-                    this.scenariosToRemove.add(activeScenario);
+                    // No more playback, stop scenario.
+                    this.scenariosToStop.add(activeScenario);
                 }
             }
             // Return the samples as 'successful' optional.
             return Optional.of(samples);
         } catch (IOException e) {
-            // Instead of crashing upon an IOException in reading, we just log it and remove that scenario.
+            // Instead of crashing upon an IOException in reading, we just log it and stop that scenario.
             Logger.error(e, "Exception while reading from audio input stream");
-            this.scenariosToRemove.add(activeScenario);
+            this.scenariosToStop.add(activeScenario);
             // Return an empty optional to signal failure.
             return Optional.empty();
         }

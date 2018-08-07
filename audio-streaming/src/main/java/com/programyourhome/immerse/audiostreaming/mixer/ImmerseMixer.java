@@ -2,16 +2,15 @@ package com.programyourhome.immerse.audiostreaming.mixer;
 
 import static com.programyourhome.immerse.audiostreaming.util.AudioUtil.toSigned;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -24,11 +23,9 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.Mixer;
 import javax.sound.sampled.SourceDataLine;
-import javax.sound.sampled.UnsupportedAudioFileException;
 
 import org.pmw.tinylog.Logger;
 
-import com.programyourhome.immerse.audiostreaming.format.ImmerseAudioFormat;
 import com.programyourhome.immerse.audiostreaming.mixer.scenario.ActiveScenario;
 import com.programyourhome.immerse.audiostreaming.mixer.scenario.ScenarioPlaybackListener;
 import com.programyourhome.immerse.audiostreaming.mixer.step.MixerStep;
@@ -36,11 +33,13 @@ import com.programyourhome.immerse.audiostreaming.mixer.warmup.CoverAllSettingsW
 import com.programyourhome.immerse.audiostreaming.soundcard.SoundCardDetector;
 import com.programyourhome.immerse.audiostreaming.soundcard.SoundCardStream;
 import com.programyourhome.immerse.audiostreaming.util.AudioUtil;
-import com.programyourhome.immerse.audiostreaming.util.IOUtil;
 import com.programyourhome.immerse.audiostreaming.util.MemoryUtil;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Scenario;
+import com.programyourhome.immerse.domain.audio.resource.AudioResource;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
+import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
+import com.programyourhome.immerse.toolbox.util.StreamUtil;
 
 import one.util.streamex.EntryStream;
 import one.util.streamex.StreamEx;
@@ -115,7 +114,7 @@ public class ImmerseMixer {
         this.activeScenarios = new HashMap<>();
         this.soundCardDetector = new SoundCardDetector();
         // Prepare the worker thread (but do not start it yet).
-        this.workerThread = new Thread(this::run, "Main Mixer Worker");
+        this.workerThread = new Thread(() -> this.logExceptions(this::run), "Main Mixer Worker");
         this.state = MixerState.NEW;
         // Default to 'standard' mixer. Property is only settable from inside this class, since warmup is no 'external feature'.
         this.warmupMixer = false;
@@ -186,6 +185,11 @@ public class ImmerseMixer {
         return Arrays.asList(this.playbackListeners.toArray(new ScenarioPlaybackListener[0]));
     }
 
+    private Optional<ActiveScenario> optionalGetActiveScenario(UUID playbackId) {
+        return StreamEx.of(this.scenariosInPlayback)
+                .findFirst(scenario -> scenario.getId().equals(playbackId));
+    }
+
     /**
      * Perform the initialization logic of the mixer.
      * That means initializing the sound card streams and performing warmup as configured.
@@ -209,7 +213,7 @@ public class ImmerseMixer {
             this.updateState(MixerState.INITIALIZED);
         } else {
             // If we are not the warmup mixer (so the main mixer), we should initiate warmup (asynchronously).
-            new Thread(() -> this.warmup(), "Warmup Mixer Executor").start();
+            new Thread(() -> this.logExceptions(() -> this.warmup()), "Warmup Mixer Executor").start();
         }
     }
 
@@ -331,13 +335,16 @@ public class ImmerseMixer {
                 }
             }
         }
-        // When the while loop above has broken, we should stop this mixer, so stop all sound card streams.
+        // When the while loop above has broken, we should stop this mixer.
+        // Signal the scenario's they have stopped.
+        this.scenariosInPlayback.forEach(ActiveScenario::stop);
+        // Stop the sound card streams.
         this.soundCardStreams.forEach(SoundCardStream::stop);
         // Clear the scenario collections for proper state cleanup.
         this.scenariosToActivate.clear();
         this.activeScenarios.clear();
         this.scenariosInPlayback.clear();
-        // Signal that we have fully stopped.
+        // Update the state to signal that we have fully stopped.
         this.updateState(MixerState.STOPPED);
     }
 
@@ -348,13 +355,17 @@ public class ImmerseMixer {
     private void handleScenarios() {
         // Loop over a copy, to prevent concurrent modification issues. Make the copy in an atomic way by using the synchronized toArray.
         List<UUID> scenariosToStopCopy = Arrays.asList(this.scenariosToStop.toArray(new UUID[0]));
-        scenariosToStopCopy.forEach(playbackId -> this.activeScenarios.remove(playbackId));
-        // Now remove all activated scenario's from the collection (which might have grown in the mean time).
+        // Stop all scenario's that could be found by UUID.
+        this.stopScenarios(StreamEx.of(scenariosToStopCopy)
+                .map(this::optionalGetActiveScenario)
+                .flatMap(StreamUtil::optionalToStream)
+                .toList());
+        // Now remove the scenario's from the collection (which might have grown in the mean time).
         this.scenariosToStop.removeAll(scenariosToStopCopy);
         // Loop over a copy, to prevent concurrent modification issues. Make the copy in an atomic way by using the synchronized toArray.
         List<ActiveScenario> scenariosToActivateCopy = Arrays.asList(this.scenariosToActivate.toArray(new ActiveScenario[0]));
         scenariosToActivateCopy.forEach(scenario -> this.activeScenarios.put(scenario.getId(), scenario));
-        // Now remove all activated scenario's from the collection (which might have grown in the mean time).
+        // Now remove the scenario's from the collection (which might have grown in the mean time).
         this.scenariosToActivate.removeAll(scenariosToActivateCopy);
         scenariosToActivateCopy.forEach(scenario -> this.logScenarioEvent(scenario, "started"));
         // Notify of start event asynchronously.
@@ -375,7 +386,7 @@ public class ImmerseMixer {
 
         // Actually write the buffer data to the sound card stream (asynchronously).
         EntryStream.of(soundCardBufferData).forKeyValue(
-                (soundCardStream, bufferData) -> this.executorService.submit(() -> soundCardStream.writeToLine(bufferData)));
+                (soundCardStream, bufferData) -> this.executorService.submit(() -> this.logExceptions(() -> soundCardStream.writeToLine(bufferData))));
 
         // If not started, do start the streams after the initial buffer fill, to be in sync as much as possible.
         if (this.state == MixerState.INITIALIZED) {
@@ -396,29 +407,37 @@ public class ImmerseMixer {
         for (ActiveScenario activeScenario : mixerStep.getScenariosToRestart()) {
             this.activeScenarios.remove(activeScenario.getId());
             // Restart asynchronously.
-            this.executorService.submit(() -> ImmerseMixer.this.restartScenario(activeScenario));
+            this.executorService.submit(() -> this.logExceptions(() -> ImmerseMixer.this.restartScenario(activeScenario)));
             this.logScenarioEvent(activeScenario, "restarted");
             // Notify of restart event asynchronously.
             this.getPlaybackListenersCopy().forEach(
                     listener -> this.executorService.submit(() -> listener.scenarioEventNoException(listener::scenarioRestarted, activeScenario.getId())));
         }
-        mixerStep.getScenariosToRemove().forEach(scenarioToRemove -> this.activeScenarios.remove(scenarioToRemove.getId()));
-        this.scenariosInPlayback.removeAll(mixerStep.getScenariosToRemove());
-        mixerStep.getScenariosToRemove().forEach(scenario -> this.logScenarioEvent(scenario, "stopped"));
+        this.stopScenarios(mixerStep.getScenariosToStop());
+    }
+
+    private void stopScenarios(Collection<ActiveScenario> scenariosToStop) {
+        // Signal the scenario's to remove they are stopping.
+        scenariosToStop.forEach(ActiveScenario::stop);
+        // Remove them from the active sceario's collection (if present).
+        scenariosToStop.forEach(scenarioToRemove -> this.activeScenarios.remove(scenarioToRemove.getId()));
+        // Remove them from the scenario's to activate collection (if just in the process of (re)starting).
+        this.scenariosToActivate.removeAll(scenariosToStop);
+        // Remove them from the scenario's in playback collection.
+        this.scenariosInPlayback.removeAll(scenariosToStop);
+        // Log the stop event.
+        scenariosToStop.forEach(scenario -> this.logScenarioEvent(scenario, "stopped"));
         // Notify of stop event asynchronously.
-        mixerStep.getScenariosToRemove().forEach(scenario -> this.getPlaybackListenersCopy()
+        scenariosToStop.forEach(scenario -> this.getPlaybackListenersCopy()
                 .forEach(listener -> this.executorService.submit(() -> listener.scenarioEventNoException(listener::scenarioStopped, scenario.getId()))));
     }
 
     /**
      * Restart a scenario for another loop.
-     * This means all state is reset, except the Playback. This still counts as the same
-     * playback, just the next loop.
+     * This means all state is reset, except the Playback. This still counts as the same playback, just the next loop.
      */
     private void restartScenario(ActiveScenario activeScenario) {
-        AudioInputStream cachedAudioInputStream = this.cacheLocally(
-                activeScenario.getScenario().getSettings().getAudioResourceFactory().create().getInputStream());
-        activeScenario.resetForNextStart(this.convertAudioStream(cachedAudioInputStream));
+        activeScenario.resetForNextStart();
         this.scenariosToActivate.add(activeScenario);
     }
 
@@ -438,8 +457,8 @@ public class ImmerseMixer {
             throw new IllegalArgumentException("The room id should be identical. This mixer is configured for room: " + this.room.getId() + ", "
                     + "while the provided scenario is for room: " + scenario.getRoom().getId());
         }
-        AudioInputStream cachedAudioInputStream = this.cacheLocally(scenario.getSettings().getAudioResourceFactory().create().getInputStream());
-        ActiveScenario activeScenario = new ActiveScenario(scenario, this.convertAudioStream(cachedAudioInputStream));
+        AudioResource audioResource = scenario.getSettings().getAudioResourceFactory().create();
+        ActiveScenario activeScenario = new ActiveScenario(scenario, this.convertAudioStream(audioResource.getAudioInputStream()), audioResource.isDynamic());
         this.scenariosInPlayback.add(activeScenario);
         this.scenariosToActivate.add(activeScenario);
         return activeScenario.getId();
@@ -451,26 +470,6 @@ public class ImmerseMixer {
 
     public void stopScenarioPlayback(UUID playbackId) {
         this.scenariosToStop.add(playbackId);
-    }
-
-    /**
-     * Cache the audio input stream locally, so we can always read fast from disk and not keep
-     * any network connections open while playing.
-     */
-    private AudioInputStream cacheLocally(InputStream inputStream) {
-        // Special case: if the input stream is already an AudioInputStream, return it directly.
-        // Otherwise we'll miss the audio headers.
-        if (inputStream instanceof AudioInputStream) {
-            return (AudioInputStream) inputStream;
-        }
-        try {
-            File cacheFile = File.createTempFile("adventure-room-", ".wav");
-            FileOutputStream outputStream = new FileOutputStream(cacheFile);
-            IOUtil.copyAndClose(inputStream, outputStream);
-            return AudioSystem.getAudioInputStream(cacheFile);
-        } catch (IOException | UnsupportedAudioFileException e) {
-            throw new IllegalStateException("IOException during local caching", e);
-        }
     }
 
     /**
@@ -534,6 +533,14 @@ public class ImmerseMixer {
      */
     private BiConsumer<String, Object[]> getEventLogMethod() {
         return this.warmupMixer ? Logger::trace : Logger::info;
+    }
+
+    private void logExceptions(Runnable runnable) {
+        try {
+            runnable.run();
+        } catch (Exception e) {
+            Logger.error(e, "Exception during asynchronous task");
+        }
     }
 
     /**

@@ -17,10 +17,10 @@ public class SilenceAudioResource implements AudioResource {
 
     private static final long serialVersionUID = Serialization.VERSION;
 
-    private final InputStream inputStream;
+    private final AudioInputStream audioInputStream;
 
     public SilenceAudioResource() {
-        this.inputStream = new AudioInputStream(new InputStream() {
+        this.audioInputStream = new AudioInputStream(new InputStream() {
             @Override
             public int read() throws IOException {
                 return 0;
@@ -29,8 +29,13 @@ public class SilenceAudioResource implements AudioResource {
     }
 
     @Override
-    public InputStream getInputStream() {
-        return this.inputStream;
+    public AudioInputStream getAudioInputStream() {
+        return this.audioInputStream;
+    }
+
+    @Override
+    public boolean isDynamic() {
+        return true;
     }
 
     public static Factory<AudioResource> silence() {
