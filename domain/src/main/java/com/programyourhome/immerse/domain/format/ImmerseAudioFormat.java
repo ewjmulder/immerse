@@ -1,11 +1,9 @@
 package com.programyourhome.immerse.domain.format;
 
-import java.io.File;
 import java.io.Serializable;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioFormat.Encoding;
-import javax.sound.sampled.AudioSystem;
 
 import com.programyourhome.immerse.domain.Serialization;
 
@@ -14,10 +12,6 @@ import com.programyourhome.immerse.domain.Serialization;
  * Is equivalent to the Java Sound AudioFormat class, but more type safe and more tailored to Immerse.
  */
 public class ImmerseAudioFormat implements Serializable {
-
-    public static void main(String[] args) throws Exception {
-        AudioSystem.getAudioInputStream(new File(""));
-    }
 
     private static final long serialVersionUID = Serialization.VERSION;
 
