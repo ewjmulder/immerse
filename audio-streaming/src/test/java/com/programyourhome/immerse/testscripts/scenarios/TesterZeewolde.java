@@ -4,10 +4,8 @@ import static com.programyourhome.immerse.toolbox.audio.playback.ForeverPlayback
 import static com.programyourhome.immerse.toolbox.audio.resource.FileAudioResource.file;
 import static com.programyourhome.immerse.toolbox.location.dynamic.FixedDynamicLocation.fixed;
 import static com.programyourhome.immerse.toolbox.location.dynamic.KeyFramesDynamicLocation.keyFrames;
-import static com.programyourhome.immerse.toolbox.speakers.algorithms.normalize.FractionalNormalizeAlgorithm.fractional;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.normalize.MaxSumNormalizeAlgorithm.maxSum;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios.FieldOfHearingVolumeRatiosAlgorithm.fieldOfHearing;
-import static com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios.FixedVolumeRatiosAlgorithm.fixed;
 import static com.programyourhome.immerse.toolbox.util.TestData.room;
 import static com.programyourhome.immerse.toolbox.util.TestData.scenario;
 import static com.programyourhome.immerse.toolbox.util.TestData.settings;
