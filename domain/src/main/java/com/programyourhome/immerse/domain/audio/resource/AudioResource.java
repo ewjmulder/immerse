@@ -17,11 +17,21 @@ public interface AudioResource extends Serializable {
     public AudioInputStream getAudioInputStream();
 
     /**
-     * Whether the input stream is dynamic or not.
-     * In this context dynamic means it is generated 'on the fly' and non-repeatable,
-     * like live microphone input, some kind of (broadcasted) stream or non-repeatable algorithmically generated audio.
+     * Whether the input stream is live or not.
+     * In this context live means it is generated 'on the fly' and non-repeatable,
+     * like microphone input, some kind of (broadcasted) stream or dynamically generated audio.
+     * This also indicates that the input is only available at the 'live time rate', meaning that
+     * the stream supplies as many bytes per second as a player will play. Normally,
+     * that means some fair amount of buffer should be in place, but for Immerse, we want to
+     * keep this buffer as small as possible for the best 'live' experience.
+     * Therefore, Immerse will handle live audio resources somewhat different than non-live ones.
+     * 
+     * Also, the recommendation for live streams is to keep the buffer size at the sending side
+     * as small as possible, both with writing to the stream as in consuming any underlying source input stream.
+     * It might even be beneficial to skip some bytes to get closer to 'live' if some hickup
+     * on the Immerse side caused an extra buffer buildup.
      */
-    public default boolean isDynamic() {
+    public default boolean isLive() {
         return false;
     }
 

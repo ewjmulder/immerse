@@ -27,7 +27,7 @@ public class UrlAudioResource implements AudioResource {
     private static final long serialVersionUID = Serialization.VERSION;
 
     private AudioInputStream audioInputStream;
-    private final boolean dynamic;
+    private final boolean live;
 
     /**
      * Option 1 (see class Javadoc).
@@ -45,7 +45,7 @@ public class UrlAudioResource implements AudioResource {
         } catch (IOException | UnsupportedAudioFileException e) {
             throw new IllegalStateException("Exception while creating audio input stream", e);
         }
-        this.dynamic = dynamic;
+        this.live = dynamic;
     }
 
     /**
@@ -58,13 +58,13 @@ public class UrlAudioResource implements AudioResource {
     /**
      * Option 2 (see class Javadoc).
      */
-    public UrlAudioResource(URL url, ImmerseAudioFormat audioFormat, boolean dynamic) {
+    public UrlAudioResource(URL url, ImmerseAudioFormat audioFormat, boolean live) {
         try {
             this.audioInputStream = new AudioInputStream(url.openStream(), audioFormat.toJavaAudioFormat(), AudioSystem.NOT_SPECIFIED);
         } catch (IOException e) {
             throw new IllegalStateException("Exception while creating audio input stream", e);
         }
-        this.dynamic = dynamic;
+        this.live = live;
     }
 
     @Override
@@ -73,8 +73,8 @@ public class UrlAudioResource implements AudioResource {
     }
 
     @Override
-    public boolean isDynamic() {
-        return this.dynamic;
+    public boolean isLive() {
+        return this.live;
     }
 
     private static URL toURLNoCheckedException(String urlString) {

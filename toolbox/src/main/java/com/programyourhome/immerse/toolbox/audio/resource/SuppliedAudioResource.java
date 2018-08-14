@@ -17,11 +17,11 @@ public class SuppliedAudioResource implements AudioResource {
     private static final long serialVersionUID = Serialization.VERSION;
 
     private final AudioInputStream audioInputStream;
-    private final boolean dynamic;
+    private final boolean live;
 
-    public SuppliedAudioResource(Supplier<AudioInputStream> audioInputStreamSupplier, boolean dynamic) {
+    public SuppliedAudioResource(Supplier<AudioInputStream> audioInputStreamSupplier, boolean live) {
         this.audioInputStream = audioInputStreamSupplier.get();
-        this.dynamic = dynamic;
+        this.live = live;
     }
 
     @Override
@@ -30,8 +30,8 @@ public class SuppliedAudioResource implements AudioResource {
     }
 
     @Override
-    public boolean isDynamic() {
-        return this.dynamic;
+    public boolean isLive() {
+        return this.live;
     }
 
     public static Factory<AudioResource> supplied(Supplier<AudioInputStream> audioInputStreamSupplier, boolean dynamic) {

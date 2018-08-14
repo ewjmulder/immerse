@@ -1,5 +1,8 @@
 package com.programyourhome.immerse.audiostreaming.mixer.scenario;
 
+import static com.programyourhome.immerse.audiostreaming.mixer.SystemSettings.calculateScenarioInputBufferSize;
+import static com.programyourhome.immerse.domain.format.ImmerseAudioFormat.fromJavaAudioFormat;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -36,16 +39,17 @@ public class ActiveScenario {
     private NormalizeAlgorithm normalizeAlgorithm;
     private final Playback playback;
     private AudioInputStream inputStream;
+    private AudioInputBuffer inputBuffer;
     private final File cachedStreamFile;
-    private final boolean dynamic;
+    private final boolean live;
     private long startMillis;
 
-    public ActiveScenario(Scenario scenario, AudioInputStream audioInputStream, boolean dynamic) {
+    public ActiveScenario(Scenario scenario, AudioInputStream audioInputStream, boolean live) {
         this.id = UUID.randomUUID();
         this.scenario = scenario;
         this.playback = this.scenario.getSettings().getPlaybackFactory().create();
-        this.dynamic = dynamic;
-        if (this.dynamic) {
+        this.live = live;
+        if (this.live) {
             this.inputStream = audioInputStream;
             this.cachedStreamFile = null;
         } else {
@@ -56,6 +60,7 @@ public class ActiveScenario {
                 throw new IllegalStateException("Exception during stream caching init", e);
             }
         }
+        this.inputBuffer = this.createAndFillInputBuffer();
         this.resetFromSettings();
     }
 
@@ -94,6 +99,10 @@ public class ActiveScenario {
         return this.inputStream;
     }
 
+    public AudioInputBuffer getInputBuffer() {
+        return this.inputBuffer;
+    }
+
     public long getStartMillis() {
         return this.startMillis;
     }
@@ -118,17 +127,26 @@ public class ActiveScenario {
      * Get the input stream from the created cache file and reset the settings.
      */
     public void resetForNextStart() {
-        if (this.dynamic) {
-            throw new IllegalStateException("Dynamic audio resources cannot be restarted.");
+        if (this.live) {
+            throw new IllegalStateException("Live audio resources cannot be restarted.");
         }
         AudioFormat format = this.inputStream.getFormat();
         long length = this.inputStream.getFrameLength();
         try {
             this.inputStream = new AudioInputStream(new FileInputStream(this.cachedStreamFile), format, length);
+            this.inputBuffer = this.createAndFillInputBuffer();
         } catch (IOException e) {
             throw new IllegalStateException("Exception during stream reset from cache", e);
         }
         this.resetFromSettings();
+    }
+
+    private AudioInputBuffer createAndFillInputBuffer() {
+        AudioInputBuffer audioInputBuffer = new AudioInputBuffer(this.inputStream,
+                calculateScenarioInputBufferSize(fromJavaAudioFormat(this.inputStream.getFormat()), this.live));
+        // Perform the initial fill synchronously, so the input buffer is ready to go.
+        audioInputBuffer.fill();
+        return audioInputBuffer;
     }
 
     /**

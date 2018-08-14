@@ -1,6 +1,10 @@
 package com.programyourhome.immerse.audiostreaming.mixer;
 
+import static com.programyourhome.immerse.audiostreaming.mixer.SystemSettings.STEP_PACE_MILLIS;
+import static com.programyourhome.immerse.audiostreaming.mixer.SystemSettings.TRIGGER_MINOR_GC_THRESHOLD_KB;
+import static com.programyourhome.immerse.audiostreaming.mixer.SystemSettings.WAIT_FOR_PREDICATE;
 import static com.programyourhome.immerse.audiostreaming.util.AudioUtil.toSigned;
+import static com.programyourhome.immerse.audiostreaming.util.LogUtil.logExceptions;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -57,10 +61,6 @@ import one.util.streamex.StreamEx;
  */
 public class ImmerseMixer {
 
-    private static final int STEP_PACE_MILLIS = 5;
-    private static final int WAIT_FOR_PREDICATE = 5;
-    private static final int TRIGGER_MINOR_GC_THRESHOLD_KB = 1000;
-
     // A name to differentiate the main and warmup mixer in the logs.
     private String name;
     // The executor service for all asynchronous tasks.
@@ -114,7 +114,7 @@ public class ImmerseMixer {
         this.activeScenarios = new HashMap<>();
         this.soundCardDetector = new SoundCardDetector();
         // Prepare the worker thread (but do not start it yet).
-        this.workerThread = new Thread(() -> this.logExceptions(this::run), "Main Mixer Worker");
+        this.workerThread = new Thread(() -> logExceptions(this::run), "Main Mixer Worker");
         this.state = MixerState.NEW;
         // Default to 'standard' mixer. Property is only settable from inside this class, since warmup is no 'external feature'.
         this.warmupMixer = false;
@@ -213,7 +213,7 @@ public class ImmerseMixer {
             this.updateState(MixerState.INITIALIZED);
         } else {
             // If we are not the warmup mixer (so the main mixer), we should initiate warmup (asynchronously).
-            new Thread(() -> this.logExceptions(() -> this.warmup()), "Warmup Mixer Executor").start();
+            new Thread(() -> logExceptions(() -> this.warmup()), "Warmup Mixer Executor").start();
         }
     }
 
@@ -378,20 +378,21 @@ public class ImmerseMixer {
      */
     private void updateBuffers() {
         // Gather all data to write by running the mixer step algorithm.
-        MixerStep mixerStep = new MixerStep(this.activeScenarios.values(), this.soundCardStreams, this.outputFormat);
+        MixerStep mixerStep = new MixerStep(this.activeScenarios.values(), this.soundCardStreams, this.outputFormat, this.executorService);
         Map<SoundCardStream, byte[]> soundCardBufferData = mixerStep.calculateBufferData();
 
         // Signal scenario start just before adding the audio data to the buffer.
         this.activeScenarios.values().forEach(ActiveScenario::startIfNotStarted);
 
-        // Actually write the buffer data to the sound card stream (asynchronously).
-        EntryStream.of(soundCardBufferData).forKeyValue(
-                (soundCardStream, bufferData) -> this.executorService.submit(() -> this.logExceptions(() -> soundCardStream.writeToLine(bufferData))));
-
-        // If not started, do start the streams after the initial buffer fill, to be in sync as much as possible.
         if (this.state == MixerState.INITIALIZED) {
+            // If not started yet, do start the streams after the initial synchronized buffer fill, to be in sync as much as possible.
+            EntryStream.of(soundCardBufferData).forKeyValue((soundCardStream, bufferData) -> soundCardStream.writeToLine(bufferData));
             this.soundCardStreams.forEach(SoundCardStream::start);
             this.updateState(MixerState.STARTED);
+        } else {
+            // If already started, write the buffer data to the sound card streams asynchronously.
+            EntryStream.of(soundCardBufferData).forKeyValue(
+                    (soundCardStream, bufferData) -> this.executorService.submit(() -> logExceptions(() -> soundCardStream.writeToLine(bufferData))));
         }
 
         // Now handle the scenario life cycle actions that were gathered during the mixer step.
@@ -407,7 +408,7 @@ public class ImmerseMixer {
         for (ActiveScenario activeScenario : mixerStep.getScenariosToRestart()) {
             this.activeScenarios.remove(activeScenario.getId());
             // Restart asynchronously.
-            this.executorService.submit(() -> this.logExceptions(() -> ImmerseMixer.this.restartScenario(activeScenario)));
+            this.executorService.submit(() -> logExceptions(() -> ImmerseMixer.this.restartScenario(activeScenario)));
             this.logScenarioEvent(activeScenario, "restarted");
             // Notify of restart event asynchronously.
             this.getPlaybackListenersCopy().forEach(
@@ -458,7 +459,7 @@ public class ImmerseMixer {
                     + "while the provided scenario is for room: " + scenario.getRoom().getId());
         }
         AudioResource audioResource = scenario.getSettings().getAudioResourceFactory().create();
-        ActiveScenario activeScenario = new ActiveScenario(scenario, this.convertAudioStream(audioResource.getAudioInputStream()), audioResource.isDynamic());
+        ActiveScenario activeScenario = new ActiveScenario(scenario, this.convertAudioStream(audioResource.getAudioInputStream()), audioResource.isLive());
         this.scenariosInPlayback.add(activeScenario);
         this.scenariosToActivate.add(activeScenario);
         return activeScenario.getId();
@@ -504,7 +505,7 @@ public class ImmerseMixer {
      */
     private void updateState(MixerState newState) {
         if (!this.state.isAllowedNextState(newState)) {
-            throw new IllegalStateException("Invalid state transition from: " + this.state + " to " + newState);
+            throw new IllegalStateException("Invalid state transition from " + this.state + " to " + newState);
         }
         MixerState oldState = this.state;
         this.state = newState;
@@ -533,14 +534,6 @@ public class ImmerseMixer {
      */
     private BiConsumer<String, Object[]> getEventLogMethod() {
         return this.warmupMixer ? Logger::trace : Logger::info;
-    }
-
-    private void logExceptions(Runnable runnable) {
-        try {
-            runnable.run();
-        } catch (Exception e) {
-            Logger.error(e, "Exception during asynchronous task");
-        }
     }
 
     /**

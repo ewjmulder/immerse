@@ -33,11 +33,6 @@ public class SilenceAudioResource implements AudioResource {
         return this.audioInputStream;
     }
 
-    @Override
-    public boolean isDynamic() {
-        return true;
-    }
-
     public static Factory<AudioResource> silence() {
         return new Factory<AudioResource>() {
             private static final long serialVersionUID = Serialization.VERSION;

@@ -92,6 +92,10 @@ public class ImmerseAudioFormat implements Serializable {
         return this.sampleRate.getNumberOfSamplesPerSecond() * this.getNumberOfBytesPerFrame();
     }
 
+    public double getNumberOfBytesPerMilli() {
+        return this.getNumberOfBytesPerSecond() / 1000.0;
+    }
+
     public AudioFormat toJavaAudioFormat() {
         return new AudioFormat(this.sampleRate.getNumberOfSamplesPerSecond(), this.sampleSize.getNumberOfBits(),
                 this.recordingMode.getNumberOfChannels(), this.signed, this.byteOrder.isBigEndian());

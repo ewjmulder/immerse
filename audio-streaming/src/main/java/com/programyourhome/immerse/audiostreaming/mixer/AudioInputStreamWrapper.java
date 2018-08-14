@@ -48,7 +48,7 @@ public class AudioInputStreamWrapper extends AudioInputStream {
     public int read(byte[] b, int off, int len) throws IOException {
         int bytesRead = this.wrapped.read(b, off, len);
         if (bytesRead != -1) {
-            this.outputStream.write(b, off, off + bytesRead);
+            this.outputStream.write(b, off, bytesRead);
         }
         return bytesRead;
     }
