@@ -63,28 +63,27 @@ public class CoverAllSettingsWarmupScenarioGenerator implements WarmupScenarioGe
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
                 mixer.getRoom().getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0)));
 
-        // Use various random combinations of settings, where each option of each setting is used at least once
-        // and with (almost) equal ratio.
+        // Use various random combinations of settings, where each option of each setting is used at least once and with (almost) equal ratio.
         warmupScenarios.put(scenario(room, settings(supplied(() -> this.generate(
-                this.format(RecordingMode.MONO, SampleRate.RATE_8K, SampleSize.ONE_BYTE, true, ByteOrder.BIG_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS), false),
+                this.format(RecordingMode.MONO, SampleRate.RATE_8K, SampleSize.ONE_BYTE, true, ByteOrder.BIG_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS)),
                 fixed(betweenTwoSpakers), fixed(0, 0, 0), fieldOfHearing(), fractional(), times(REPETITIONS))), LENGTH_IN_MILLIS * REPETITIONS);
         warmupScenarios.put(scenario(room, settings(supplied(() -> this.generate(
-                this.format(RecordingMode.MONO, SampleRate.RATE_11K, SampleSize.ONE_BYTE, true, ByteOrder.BIG_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS), false),
+                this.format(RecordingMode.MONO, SampleRate.RATE_11K, SampleSize.ONE_BYTE, true, ByteOrder.BIG_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS)),
                 keyFrames(keyFrames), fixed(0, 0, 0), fixed(fixedSpeakerVolumeRatios), fractional(), times(REPETITIONS))), LENGTH_IN_MILLIS * REPETITIONS);
         warmupScenarios.put(scenario(room, settings(supplied(() -> this.generate(
-                this.format(RecordingMode.MONO, SampleRate.RATE_16K, SampleSize.ONE_BYTE, true, ByteOrder.LITTLE_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS), false),
+                this.format(RecordingMode.MONO, SampleRate.RATE_16K, SampleSize.ONE_BYTE, true, ByteOrder.LITTLE_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS)),
                 fixed(betweenTwoSpakers), fixed(0, 0, 0), onlyClosest(), maxSum(1), timer(LENGTH_IN_MILLIS * REPETITIONS))), LENGTH_IN_MILLIS * REPETITIONS);
         warmupScenarios.put(scenario(room, settings(supplied(() -> this.generate(
-                this.format(RecordingMode.MONO, SampleRate.RATE_22K, SampleSize.ONE_BYTE, true, ByteOrder.LITTLE_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS), false),
+                this.format(RecordingMode.MONO, SampleRate.RATE_22K, SampleSize.ONE_BYTE, true, ByteOrder.LITTLE_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS)),
                 keyFrames(keyFrames), fixed(0, 0, 0), fieldOfHearing(), maxSum(1), timer(LENGTH_IN_MILLIS * REPETITIONS))), LENGTH_IN_MILLIS * REPETITIONS);
         warmupScenarios.put(scenario(room, settings(supplied(() -> this.generate(
-                this.format(RecordingMode.MONO, SampleRate.RATE_32K, SampleSize.ONE_BYTE, true, ByteOrder.BIG_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS), false),
+                this.format(RecordingMode.MONO, SampleRate.RATE_32K, SampleSize.ONE_BYTE, true, ByteOrder.BIG_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS)),
                 fixed(betweenTwoSpakers), fixed(0, 0, 0), fixed(fixedSpeakerVolumeRatios), maxSum(1), times(REPETITIONS))), LENGTH_IN_MILLIS * REPETITIONS);
         warmupScenarios.put(scenario(room, settings(supplied(() -> this.generate(
-                this.format(RecordingMode.MONO, SampleRate.RATE_44K, SampleSize.ONE_BYTE, true, ByteOrder.BIG_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS), false),
+                this.format(RecordingMode.MONO, SampleRate.RATE_44K, SampleSize.ONE_BYTE, true, ByteOrder.BIG_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS)),
                 keyFrames(keyFrames), fixed(0, 0, 0), onlyClosest(), fractional(), times(REPETITIONS))), LENGTH_IN_MILLIS * REPETITIONS);
         warmupScenarios.put(scenario(room, settings(supplied(() -> this.generate(
-                this.format(RecordingMode.MONO, SampleRate.RATE_48K, SampleSize.ONE_BYTE, true, ByteOrder.LITTLE_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS), false),
+                this.format(RecordingMode.MONO, SampleRate.RATE_48K, SampleSize.ONE_BYTE, true, ByteOrder.LITTLE_ENDIAN), FREQUENCY, LENGTH_IN_MILLIS)),
                 fixed(betweenTwoSpakers), fixed(0, 0, 0), fieldOfHearing(), maxSum(1), timer(LENGTH_IN_MILLIS * REPETITIONS))), LENGTH_IN_MILLIS * REPETITIONS);
 
         return warmupScenarios;

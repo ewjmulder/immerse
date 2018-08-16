@@ -34,13 +34,20 @@ public class SuppliedAudioResource implements AudioResource {
         return this.live;
     }
 
-    public static Factory<AudioResource> supplied(Supplier<AudioInputStream> audioInputStreamSupplier, boolean dynamic) {
+    /**
+     * Default not live.
+     */
+    public static Factory<AudioResource> supplied(Supplier<AudioInputStream> audioInputStreamSupplier) {
+    	return supplied(audioInputStreamSupplier, false);
+    }
+
+    public static Factory<AudioResource> supplied(Supplier<AudioInputStream> audioInputStreamSupplier, boolean live) {
         return new Factory<AudioResource>() {
             private static final long serialVersionUID = Serialization.VERSION;
 
             @Override
             public AudioResource create() {
-                return new SuppliedAudioResource(audioInputStreamSupplier, dynamic);
+                return new SuppliedAudioResource(audioInputStreamSupplier, live);
             }
         };
     }
