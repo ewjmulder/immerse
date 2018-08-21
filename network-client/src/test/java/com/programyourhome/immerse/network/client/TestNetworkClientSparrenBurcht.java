@@ -1,10 +1,9 @@
-package com.programyourhome.immerse.testscripts.scenarios;
+package com.programyourhome.immerse.network.client;
 
 import static com.programyourhome.immerse.toolbox.audio.playback.ForeverPlayback.forever;
 import static com.programyourhome.immerse.toolbox.audio.resource.FileAudioResource.file;
 import static com.programyourhome.immerse.toolbox.location.dynamic.FixedDynamicLocation.fixed;
 import static com.programyourhome.immerse.toolbox.location.dynamic.KeyFramesDynamicLocation.keyFrames;
-import static com.programyourhome.immerse.toolbox.speakers.algorithms.normalize.MaxSumNormalizeAlgorithm.maxSum;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios.FixedVolumeRatiosAlgorithm.fixed;
 import static com.programyourhome.immerse.toolbox.util.TestData.room;
 import static com.programyourhome.immerse.toolbox.util.TestData.scenario;
@@ -16,9 +15,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
-import com.programyourhome.immerse.audiostreaming.mixer.ImmerseMixer;
 import com.programyourhome.immerse.audiostreaming.mixer.ImmerseSettings;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Scenario;
@@ -29,17 +28,9 @@ import com.programyourhome.immerse.domain.format.SampleSize;
 import com.programyourhome.immerse.domain.location.Vector3D;
 import com.programyourhome.immerse.domain.speakers.Speaker;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
+import com.programyourhome.immerse.toolbox.speakers.algorithms.normalize.FractionalNormalizeAlgorithm;
 
-public class TesterSparrenBurcht {
-
-    // private static final String CHILL_PINE = "/home/ubuntu/sandbox/ChillingMusic_Loud.wav";
-    // private static final String CLAPPING_PINE = "/home/ubuntu/sandbox/clapping-louder-long.wav";
-    // private static final String VOICE_PINE = "/home/ubuntu/sandbox/voice-12-sec.wav";
-    // private static final String CHILL = "/home/emulder/Downloads/ChillingMusic.wav";
-    // private static final String BASS = "/home/emulder/Downloads/doublebass.wav";
-    // // TODO: find out why clapping has a tick but clapping-saved (load+save by Audacity) does not.
-    // private static final String CLAPPING = "/home/emulder/Downloads/clapping.wav";
-    // private static final String VOICE = "/home/emulder/Downloads/voice.wav";
+public class TestNetworkClientSparrenBurcht {
 
     private static final String SPIRAL = "/home/ubuntu/audio/spiral.wav";
 
@@ -70,7 +61,7 @@ public class TesterSparrenBurcht {
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
                 room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0))); // speaker.getId() == 2 ? 1.0 : 0.0)));
         Scenario scenario1 = scenario(room, settings(file(SPIRAL), keyFrames(keyFrames), fixed(180, 180, 150),
-                fixed(fixedSpeakerVolumeRatios), maxSum(1), forever()));
+                fixed(fixedSpeakerVolumeRatios), FractionalNormalizeAlgorithm.fractional(), forever()));
 
         // Scenario scenario2 = scenario(room, settings(file(VOICE_PINE), keyFrames(keyFrames), fixed(180, 180, 150),
         // fieldOfHearing(45), maxSum(1), forever()));
@@ -89,27 +80,21 @@ public class TesterSparrenBurcht {
                 .sampleSize(SampleSize.TWO_BYTES)
                 .buildForOutput();
 
+        ImmerseClient client = new ImmerseClient("192.168.0.106", 51515);
+
         ImmerseSettings settings = ImmerseSettings.builder()
                 .room(room)
                 .soundCards(new HashSet<>(Arrays.asList(soundCard1, soundCard2, soundCard3, soundCard4, soundCard5, soundCard6)))
                 .outputFormat(outputFormat)
                 .build();
 
-        ImmerseMixer mixer = new ImmerseMixer(settings);
+        System.out.println(client.createMixer(settings));
 
-        mixer.initialize();
-        mixer.start();
+        System.out.println(client.startMixer());
 
-        mixer.playScenario(scenario1);
+        UUID playbackId = client.playScenario(scenario1).getResult();
 
-        // for (int i = 0; i < 1; i++) {
-        // try {
-        // Thread.sleep(500);
-        // } catch (InterruptedException e) {}
-        //
-        // mixer.playScenario(scenario2);
-        // }
-
+        System.out.println(playbackId);
     }
 
 }

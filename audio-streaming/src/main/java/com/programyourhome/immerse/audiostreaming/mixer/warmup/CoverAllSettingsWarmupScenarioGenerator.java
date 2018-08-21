@@ -50,7 +50,7 @@ public class CoverAllSettingsWarmupScenarioGenerator implements WarmupScenarioGe
 
         // Get the first 2 speakers from the room (should always have at least 2) and use those
         // to define a position in between and a very basic key frames dynamic location.
-        Room room = mixer.getRoom();
+        Room room = mixer.getSettings().getRoom();
         Iterator<Speaker> speakerIter = room.getSpeakers().values().iterator();
         Speaker speaker1 = speakerIter.next();
         Speaker speaker2 = speakerIter.next();
@@ -61,7 +61,7 @@ public class CoverAllSettingsWarmupScenarioGenerator implements WarmupScenarioGe
         keyFrames.put(LENGTH_IN_MILLIS, speaker2.getPosition());
 
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
-                mixer.getRoom().getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0)));
+                mixer.getSettings().getRoom().getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0)));
 
         // Use various random combinations of settings, where each option of each setting is used at least once and with (almost) equal ratio.
         warmupScenarios.put(scenario(room, settings(supplied(() -> this.generate(

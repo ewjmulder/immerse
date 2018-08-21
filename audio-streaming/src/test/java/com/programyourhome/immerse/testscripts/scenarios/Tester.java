@@ -21,6 +21,7 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import com.programyourhome.immerse.audiostreaming.mixer.ImmerseMixer;
+import com.programyourhome.immerse.audiostreaming.mixer.ImmerseSettings;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Scenario;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
@@ -73,7 +74,13 @@ public class Tester {
                 .sampleSize(SampleSize.TWO_BYTES)
                 .buildForOutput();
 
-        ImmerseMixer mixer = new ImmerseMixer(room, new HashSet<>(Arrays.asList(soundCard1, soundCard2, soundCard3)), outputFormat);
+        ImmerseSettings settings = ImmerseSettings.builder()
+                .room(room)
+                .soundCards(new HashSet<>(Arrays.asList(soundCard1, soundCard2, soundCard3)))
+                .outputFormat(outputFormat)
+                .build();
+
+        ImmerseMixer mixer = new ImmerseMixer(settings);
 
         mixer.initialize();
         mixer.start();

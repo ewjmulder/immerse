@@ -32,17 +32,28 @@ public class AudioInputBuffer {
     private final AudioInputStream inputStream;
     private final int frameSize;
     private final int bufferSize;
+    private final boolean live;
+    private final int stepSize;
     private final byte[] buffer;
     private int startPosition;
     private int endPosition;
     private boolean streamClosed;
 
     public AudioInputBuffer(AudioInputStream inputStream, int bufferSize) {
+        this(inputStream, bufferSize, false, -1);
+    }
+
+    public AudioInputBuffer(AudioInputStream inputStream, int bufferSize, boolean live, int stepSize) {
         this.inputStream = inputStream;
         this.frameSize = inputStream.getFormat().getFrameSize();
         if (bufferSize % this.frameSize != 0) {
             throw new IllegalArgumentException("Buffer size must be a multitude of frame size");
         }
+        if (live && stepSize < 1) {
+            throw new IllegalArgumentException("A live audio stream must have a positive step size");
+        }
+        this.live = live;
+        this.stepSize = stepSize;
         this.bufferSize = bufferSize;
         this.buffer = new byte[bufferSize];
         this.streamClosed = false;
@@ -54,6 +65,10 @@ public class AudioInputBuffer {
 
     public ImmerseAudioFormat getAudioFormat() {
         return ImmerseAudioFormat.fromJavaAudioFormat(this.inputStream.getFormat());
+    }
+
+    public boolean isLive() {
+        return this.live;
     }
 
     private int getActiveSize() {
@@ -69,9 +84,11 @@ public class AudioInputBuffer {
      * Furthermore, the alignment must be done or the stream must be closed, to not be in the way of a refill.
      */
     public boolean canRead(int numberOfBytes) {
-        synchronized (this.READ_ALIGN_LOCK) {
-            return (this.startPosition == 0 || this.streamClosed) && this.getActiveSize() >= numberOfBytes;
+        // Re-align if needed.
+        if (this.startPosition > 0) {
+            this.align();
         }
+        return (this.startPosition == 0 || this.streamClosed) && this.getActiveSize() >= numberOfBytes;
     }
 
     /**
@@ -79,18 +96,18 @@ public class AudioInputBuffer {
      * Guaranteed to return all bytes non-blocking or throw an exception.
      */
     public byte[] read(int numberOfBytes) {
+        if (!this.canRead(numberOfBytes)) {
+            throw new IllegalStateException("Cannot read " + numberOfBytes + " bytes");
+        }
+        if (numberOfBytes % this.frameSize != 0) {
+            throw new IllegalStateException("Cannot read a fraction of a frame");
+        }
+        byte[] toBuffer = new byte[numberOfBytes];
         synchronized (this.READ_ALIGN_LOCK) {
-            if (!this.canRead(numberOfBytes)) {
-                throw new IllegalStateException("Cannot read " + numberOfBytes + " bytes");
-            }
-            if (numberOfBytes % this.frameSize != 0) {
-                throw new IllegalStateException("Cannot read a fraction of a frame");
-            }
-            byte[] toBuffer = new byte[numberOfBytes];
             System.arraycopy(this.buffer, this.startPosition, toBuffer, 0, numberOfBytes);
             this.startPosition += numberOfBytes;
-            return toBuffer;
         }
+        return toBuffer;
     }
 
     /**
@@ -117,18 +134,47 @@ public class AudioInputBuffer {
      * or the end of the stream has been reached.
      */
     public int fill() {
-        synchronized (this.FILL_ALIGN_LOCK) {
-            try {
-                // Can happen if a call to fill() is scheduled while the last one is not done yet and that one will close the stream.
-                if (this.streamClosed) {
-                    return 0;
+        // Re-align if needed.
+        if (this.startPosition > 0) {
+            this.align();
+        }
+        try {
+            int amountNeeded;
+            if (this.live) {
+                // For live streams: just read one step at a time, independent of the current position.
+                amountNeeded = this.stepSize;
+            } else {
+                // Non-live streams: we need the amount of bytes to fill the whole buffer.
+                amountNeeded = this.bufferSize - this.endPosition;
+            }
+            int totalAmountRead = 0;
+            // Use a loop here, because the contract of InputStream.read() does not force the implementation to return a full buffer, even when the stream
+            // is still open. So we have to loop until either the stream is closed or the buffer is full.
+            while (!this.streamClosed && totalAmountRead < amountNeeded) {
+                int amountRead;
+                if (this.live) {
+                    // For live streams: read into a separate buffer.
+                    byte[] stepBuffer = new byte[this.stepSize];
+                    amountRead = this.inputStream.read(stepBuffer);
+                    if (amountRead > 0) {
+                        if (amountRead <= this.bufferSize - this.endPosition) {
+                            // If there is enough room in the main buffer, append the bytes there.
+                            synchronized (this.FILL_ALIGN_LOCK) {
+                                System.arraycopy(stepBuffer, 0, this.buffer, this.endPosition, amountRead);
+                            }
+                        } else {
+                            // If the step bytes do not fit, just discard them by pretending nothing was read.
+                            // This will make the live stream stay as close to 'live' as possible.
+                            amountRead = 0;
+                        }
+                    }
+                } else {
+                    // Non-live streams: read directly into the main buffer.
+                    synchronized (this.FILL_ALIGN_LOCK) {
+                        amountRead = this.inputStream.read(this.buffer, this.endPosition, amountNeeded - totalAmountRead);
+                    }
                 }
-                int amountNeeded = this.bufferSize - this.endPosition;
-                int totalAmountRead = 0;
-                // Use a loop here, because the contract of read() does not force the implementation to return a full buffer, even when the stream
-                // is still open. So we have to loop until either the buffer is full or end of stream has been reached.
-                do {
-                    int amountRead = this.inputStream.read(this.buffer, this.endPosition, amountNeeded - totalAmountRead);
+                synchronized (this.FILL_ALIGN_LOCK) {
                     if (amountRead == -1) {
                         this.streamClosed = true;
                         this.inputStream.close();
@@ -136,11 +182,11 @@ public class AudioInputBuffer {
                         totalAmountRead += amountRead;
                         this.endPosition += amountRead;
                     }
-                } while (!this.streamClosed && totalAmountRead < amountNeeded);
-                return totalAmountRead;
-            } catch (IOException e) {
-                throw new IllegalStateException("IOException during fill", e);
+                }
             }
+            return totalAmountRead;
+        } catch (IOException e) {
+            throw new IllegalStateException("IOException during fill", e);
         }
     }
 
@@ -148,7 +194,7 @@ public class AudioInputBuffer {
      * Align the buffer, that is: move all 'active' bytes to the front of the buffer.
      * This allows the next cycle of read & fill to take place simultaneously without having to resort to complicated wrapping of indices.
      */
-    public int align() {
+    private int align() {
         synchronized (this.READ_ALIGN_LOCK) {
             synchronized (this.FILL_ALIGN_LOCK) {
                 int amount = this.getActiveSize();

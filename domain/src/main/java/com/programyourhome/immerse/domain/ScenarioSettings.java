@@ -13,7 +13,7 @@ import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.Volum
  * Since all these classes are interfaces of which the implementation could keep state,
  * they are all defined as Factory's of the actual object, so this settings object can be re-used.
  */
-public class Settings implements Serializable {
+public class ScenarioSettings implements Serializable {
 
     private static final long serialVersionUID = Serialization.VERSION;
 
@@ -24,7 +24,7 @@ public class Settings implements Serializable {
     private Factory<NormalizeAlgorithm> normalizeAlgorithmFactory;
     private Factory<Playback> playbackFactory;
 
-    private Settings() {
+    private ScenarioSettings() {
     }
 
     public Factory<AudioResource> getAudioResourceFactory() {
@@ -56,10 +56,10 @@ public class Settings implements Serializable {
     }
 
     public static class Builder {
-        private final Settings settings;
+        private final ScenarioSettings settings;
 
         public Builder() {
-            this.settings = new Settings();
+            this.settings = new ScenarioSettings();
         }
 
         public Builder audioResource(Factory<AudioResource> audioResourceFactory) {
@@ -92,7 +92,7 @@ public class Settings implements Serializable {
             return this;
         }
 
-        public Settings build() {
+        public ScenarioSettings build() {
             return this.settings;
         }
 

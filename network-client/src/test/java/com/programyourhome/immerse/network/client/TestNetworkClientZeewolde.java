@@ -13,11 +13,13 @@ import static com.programyourhome.immerse.toolbox.util.TestData.soundCard;
 import static com.programyourhome.immerse.toolbox.util.TestData.speaker;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.programyourhome.immerse.audiostreaming.mixer.ImmerseSettings;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Scenario;
 import com.programyourhome.immerse.domain.audio.resource.AudioFileType;
@@ -48,7 +50,13 @@ public class TestNetworkClientZeewolde {
 
         ImmerseClient client = new ImmerseClient("10.42.0.211", 51515);
 
-        System.out.println(client.createMixer(room, Arrays.asList(soundCard1, soundCard2), outputFormat));
+        ImmerseSettings settings = ImmerseSettings.builder()
+                .room(room)
+                .soundCards(new HashSet<>(Arrays.asList(soundCard1, soundCard2)))
+                .outputFormat(outputFormat)
+                .build();
+
+        System.out.println(client.createMixer(settings));
 
         System.out.println(client.startMixer());
 

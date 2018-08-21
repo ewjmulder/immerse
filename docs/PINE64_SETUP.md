@@ -38,7 +38,28 @@ sudo reboot -h now
 
 NB: after the reboot command your ssh session might hang: just ctrl-c (or kill the process) and reconnect after the boot has completed.
 
-## Step 3: Install the software needed for Immerse
+## Step 3: Configure the system for proper use
+
+```
+# Give the ubuntu user access to the audio devices
+sudo usermod -a -G audio ubuntu
+
+# Turn up the volume of the sound cards (TODO: generic solution)
+# Select USB sound cards one by one with F6 and turn volume to your prefered max level (prob. 80% - 100%)
+alsamixer 
+
+# Install any more command line tools you might need (optional).
+# The following lines are suggestions for things that might come in handy.
+
+# Simple mode-less text editor (much easier than vi)
+sudo apt-get install nano
+
+# Package to easily test play audio files on the command line (command: play)
+sudo apt-get install sox
+```
+
+
+## Step 4: Install the software needed for Immerse
 
 For now, we will buid and run Immerse directly from the git repo. In the future it might be available from Maven central.
 
@@ -54,7 +75,7 @@ sudo apt-get update
 sudo apt-get install -y openjdk-8-jdk
 ```
 
-## Step 4: Clone, build and run Immerse
+## Step 5: Clone, build and run Immerse
 
 ```
 # Go to the desired location on the disk.
@@ -74,7 +95,6 @@ cd immerse
 # so better do it like this.
 //TODO: command line for running
 ```
-
 
 
 Example output of running resize_rootfs

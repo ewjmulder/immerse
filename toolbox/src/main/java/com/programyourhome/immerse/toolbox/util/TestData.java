@@ -11,7 +11,7 @@ import java.util.UUID;
 import com.programyourhome.immerse.domain.Factory;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Scenario;
-import com.programyourhome.immerse.domain.Settings;
+import com.programyourhome.immerse.domain.ScenarioSettings;
 import com.programyourhome.immerse.domain.Snapshot;
 import com.programyourhome.immerse.domain.audio.playback.Playback;
 import com.programyourhome.immerse.domain.audio.resource.AudioResource;
@@ -63,7 +63,7 @@ public class TestData {
                 .build();
     }
 
-    public static Scenario scenario(Room room, Settings settings) {
+    public static Scenario scenario(Room room, ScenarioSettings settings) {
         return Scenario.builder()
                 .name("Scenario")
                 .description("Description of scenario")
@@ -75,7 +75,7 @@ public class TestData {
     /**
      * Just create a snapshot, without any interest in the dynamic part of the scenario.
      */
-    public static Snapshot snapshot(Room room, Vector3D source, Vector3D listener, Settings settings) {
+    public static Snapshot snapshot(Room room, Vector3D source, Vector3D listener, ScenarioSettings settings) {
         return Snapshot.builder()
                 .scenario(scenario(room, settings))
                 .source(source)
@@ -83,14 +83,14 @@ public class TestData {
                 .build();
     }
 
-    public static Settings settings() {
+    public static ScenarioSettings settings() {
         return settings(silence(), fixed(0, 0, 0), fixed(0, 0, 0), fieldOfHearing(), fractional(), forever());
     }
 
-    public static Settings settings(Factory<AudioResource> audioResource, Factory<DynamicLocation> sourceLocation,
+    public static ScenarioSettings settings(Factory<AudioResource> audioResource, Factory<DynamicLocation> sourceLocation,
             Factory<DynamicLocation> listenerLocation, Factory<VolumeRatiosAlgorithm> volumeRatiosAlgorithm,
             Factory<NormalizeAlgorithm> normalizeAlgorithm, Factory<Playback> playback) {
-        return Settings.builder()
+        return ScenarioSettings.builder()
                 .audioResource(audioResource)
                 .sourceLocation(sourceLocation)
                 .listenerLocation(listenerLocation)

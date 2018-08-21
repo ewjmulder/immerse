@@ -1,5 +1,6 @@
 package com.programyourhome.immerse.audiostreaming.mixer.step;
 
+import static com.programyourhome.immerse.audiostreaming.mixer.ActiveImmerseSettings.getSettings;
 import static com.programyourhome.immerse.toolbox.util.StreamUtil.toMapFixedValue;
 
 import java.io.IOException;
@@ -11,15 +12,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
 
 import org.pmw.tinylog.Logger;
 
-import com.programyourhome.immerse.audiostreaming.mixer.SystemSettings;
 import com.programyourhome.immerse.audiostreaming.mixer.scenario.ActiveScenario;
 import com.programyourhome.immerse.audiostreaming.mixer.scenario.AudioInputBuffer;
 import com.programyourhome.immerse.audiostreaming.soundcard.SoundCardStream;
-import com.programyourhome.immerse.audiostreaming.util.AudioUtil;
 import com.programyourhome.immerse.domain.Snapshot;
 import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
 import com.programyourhome.immerse.domain.format.SampleSize;
@@ -47,28 +45,18 @@ public class MixerStep {
     private final Collection<ActiveScenario> stepActiveScenarios;
     // The sound card streams that are configured to receive output.
     private final Collection<SoundCardStream> soundCardStreams;
-    // The output audio format.
-    private final ImmerseAudioFormat outputFormat;
     // Keeps track of which scenarios should be stopped after this step.
     private final Set<ActiveScenario> scenariosToStop;
     // Keeps track of which scenarios should be restarted after this step.
     private final Set<ActiveScenario> scenariosToRestart;
     // The amount of frames we need to add to the buffer in this step.
     private final int amountOfFramesNeeded;
-    // Executor service to run async tasks.
-    private final ExecutorService executorService;
 
     /**
      * Create a mixer step with the needed info for the calculations.
      */
-    public MixerStep(Collection<ActiveScenario> activeScenarios, Collection<SoundCardStream> soundCardStreams,
-            ImmerseAudioFormat outputFormat, ExecutorService executorService) {
-        if (!outputFormat.isOutput()) {
-            throw new IllegalArgumentException("Output format must be of type 'output'");
-        }
+    public MixerStep(Collection<ActiveScenario> activeScenarios, Collection<SoundCardStream> soundCardStreams) {
         this.soundCardStreams = soundCardStreams;
-        this.outputFormat = outputFormat;
-        this.executorService = executorService;
         this.scenariosToStop = new HashSet<>();
         this.scenariosToRestart = new HashSet<>();
 
@@ -93,7 +81,7 @@ public class MixerStep {
     private int calculateAmountOfFramesNeeded() {
         // Gather the amount of frames needed for all sound card streams.
         List<Long> allFramesNeededAmounts = StreamEx.of(this.soundCardStreams)
-                .map(stream -> stream.getAmountOfFramesNeeded(SystemSettings.SOUND_CARD_BUFFER_MILLIS))
+                .map(stream -> stream.getAmountOfFramesNeeded(getSettings().getSoundCardBufferMillis()))
                 .toList();
         // Calculate the min and max frames needed.
         long minFramesNeeded = Collections.min(allFramesNeededAmounts);
@@ -106,12 +94,13 @@ public class MixerStep {
         if (!this.stepActiveScenarios.isEmpty()) {
             int smallestInputBufferSize = StreamEx.of(this.stepActiveScenarios)
                     .map(ActiveScenario::getInputBuffer)
-                    .mapToInt(AudioInputBuffer::getBufferSize).min().getAsInt();
-            ImmerseAudioFormat inputFormat = AudioUtil.toMonoInput(this.outputFormat);
+                    .mapToInt(AudioInputBuffer::getBufferSize)
+                    .min().getAsInt();
+            ImmerseAudioFormat inputFormat = getSettings().getInputFormat();
             // If the amount of frames needed does not fit in the smallest scenario input buffer,
             // cut to that size, cause we can never read more in one step.
             if (amountOfFramesNeeded * inputFormat.getNumberOfBytesPerFrame() > smallestInputBufferSize) {
-                Logger.warn("More bytes needed (" + amountOfFramesNeeded * inputFormat.getNumberOfBytesPerFrame() + ") "
+                Logger.debug("More bytes needed (" + amountOfFramesNeeded * inputFormat.getNumberOfBytesPerFrame() + ") "
                         + "than smallest input buffer size (" + smallestInputBufferSize + ") "
                         + "Refill of sound card buffers sub-optimal");
                 amountOfFramesNeeded = smallestInputBufferSize / inputFormat.getNumberOfBytesPerFrame();
@@ -144,7 +133,7 @@ public class MixerStep {
 
     private Map<SoundCardStream, byte[]> createSilence() {
         // Create an output array of the right size.
-        byte[] silenceBuffer = new byte[this.amountOfFramesNeeded * this.outputFormat.getNumberOfBytesPerFrame()];
+        byte[] silenceBuffer = new byte[this.amountOfFramesNeeded * getSettings().getOutputFormat().getNumberOfBytesPerFrame()];
         // Fill the array with just 0's (meaning no amplitudes, so silence).
         Arrays.fill(silenceBuffer, (byte) 0);
         // Map all sound cards streams to the same silence buffer.
@@ -192,7 +181,7 @@ public class MixerStep {
             // Create a samples array of the right size (samples needed = frames needed, because the input must be mono).
             short[] samples = new short[this.amountOfFramesNeeded];
             // Read the actual samples into the array and record if there was an end of stream reached while doing so.
-            boolean endOfStream = SampleReader.readSamples(activeScenario.getInputBuffer(), samples, this.executorService);
+            boolean endOfStream = SampleReader.readSamples(activeScenario.getInputBuffer(), samples);
             if (endOfStream) {
                 // End of stream reached, check playback for next action.
                 if (activeScenario.getPlayback().endOfStream()) {
@@ -309,7 +298,7 @@ public class MixerStep {
             }
             short sanitizedAmplitude;
             // Keep amplitude within the boundaries of the sample size.
-            if (this.outputFormat.getSampleSize() == SampleSize.ONE_BYTE) {
+            if (getSettings().getOutputFormat().getSampleSize() == SampleSize.ONE_BYTE) {
                 sanitizedAmplitude = this.sanitizeAsByte(totalAmplitude);
             } else {
                 sanitizedAmplitude = this.sanitizeAsShort(totalAmplitude);
@@ -324,7 +313,7 @@ public class MixerStep {
      * Write the samples into a byte buffer according to the output format.
      */
     private byte[] writeSamplesToBuffer(short[] streamAmplitudes) {
-        return SampleWriter.writeSamples(streamAmplitudes, this.outputFormat);
+        return SampleWriter.writeSamples(streamAmplitudes, getSettings().getOutputFormat());
     }
 
     /**

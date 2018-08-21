@@ -19,6 +19,7 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import com.programyourhome.immerse.audiostreaming.mixer.ImmerseMixer;
+import com.programyourhome.immerse.audiostreaming.mixer.ImmerseSettings;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Scenario;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
@@ -57,13 +58,16 @@ public class TesterZeewolde {
         keyFrames.put(12_000L, new Vector3D(0, 0, 80));
 
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
-                room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> {System.out.println(speaker); return speaker.getId() == 4 ? 1.0 : 0.0;})));
+                room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> {
+                    System.out.println(speaker);
+                    return speaker.getId() == 4 ? 1.0 : 0.0;
+                })));
         Scenario scenario1 = scenario(room, settings(file(CHILL_PINE), keyFrames(keyFrames), fixed(100, 60, 80),
                 fieldOfHearing(60), maxSum(1), forever()));
 
-//        Scenario scenario2 = scenario(room, settings(filePath(VOICE_PINE), keyFrames(keyFrames), fixed(180, 180, 150),
-//                fieldOfHearing(45), maxSum(1), forever()));
-                //fixed(fixedSpeakerVolumeRatios), fractional(), forever()));
+        // Scenario scenario2 = scenario(room, settings(filePath(VOICE_PINE), keyFrames(keyFrames), fixed(180, 180, 150),
+        // fieldOfHearing(45), maxSum(1), forever()));
+        // fixed(fixedSpeakerVolumeRatios), fractional(), forever()));
 
         SoundCard soundCard1 = soundCard(1, "platform-1c1b000.ehci1-controller-usb-0:1.2:1.0", speaker2, speaker1);
         SoundCard soundCard2 = soundCard(2, "platform-1c1b000.ehci1-controller-usb-0:1.4:1.0", speaker3, speaker4);
@@ -73,8 +77,13 @@ public class TesterZeewolde {
                 .sampleSize(SampleSize.TWO_BYTES)
                 .buildForOutput();
 
-        ImmerseMixer mixer = new ImmerseMixer(room,
-                new HashSet<>(Arrays.asList(soundCard1, soundCard2)), outputFormat);
+        ImmerseSettings settings = ImmerseSettings.builder()
+                .room(room)
+                .soundCards(new HashSet<>(Arrays.asList(soundCard1, soundCard2)))
+                .outputFormat(outputFormat)
+                .build();
+
+        ImmerseMixer mixer = new ImmerseMixer(settings);
 
         mixer.initialize();
         mixer.start();
@@ -84,10 +93,10 @@ public class TesterZeewolde {
         } catch (InterruptedException e) {}
         mixer.playScenario(scenario1);
 
-//        try {
-//            Thread.sleep(2000);
-//        } catch (InterruptedException e) {}
-//        mixer.playScenario(scenario2);
+        // try {
+        // Thread.sleep(2000);
+        // } catch (InterruptedException e) {}
+        // mixer.playScenario(scenario2);
 
         // for (int i = 0; i < 1; i++) {
         // try {

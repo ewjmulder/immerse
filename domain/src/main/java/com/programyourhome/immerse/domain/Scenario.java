@@ -14,7 +14,7 @@ public class Scenario implements Serializable {
     private String name;
     private String description;
     private Room room;
-    private Settings settings;
+    private ScenarioSettings settings;
 
     private Scenario() {
     }
@@ -31,7 +31,7 @@ public class Scenario implements Serializable {
         return this.room;
     }
 
-    public Settings getSettings() {
+    public ScenarioSettings getSettings() {
         return this.settings;
     }
 
@@ -61,7 +61,7 @@ public class Scenario implements Serializable {
             return this;
         }
 
-        public Builder settings(Settings settings) {
+        public Builder settings(ScenarioSettings settings) {
             this.scenario.settings = settings;
             return this;
         }

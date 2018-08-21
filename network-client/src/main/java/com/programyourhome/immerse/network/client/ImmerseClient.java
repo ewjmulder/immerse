@@ -5,13 +5,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.Collection;
 import java.util.UUID;
 
-import com.programyourhome.immerse.domain.Room;
+import com.programyourhome.immerse.audiostreaming.mixer.ImmerseSettings;
 import com.programyourhome.immerse.domain.Scenario;
-import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
-import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
 import com.programyourhome.immerse.network.server.action.ActionResult;
 import com.programyourhome.immerse.network.server.action.ServerAction;
 
@@ -67,8 +64,8 @@ public class ImmerseClient {
     /**
      * Create a new mixer.
      */
-    public ActionResult<Void> createMixer(Room room, Collection<SoundCard> soundCards, ImmerseAudioFormat outputFormat) {
-        return this.callServer(ServerAction.CREATE_MIXER, room, soundCards, outputFormat);
+    public ActionResult<Void> createMixer(ImmerseSettings settings) {
+        return this.callServer(ServerAction.CREATE_MIXER, settings);
     }
 
     /**

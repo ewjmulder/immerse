@@ -47,7 +47,7 @@ public class SoundCardDetector {
 
     /**
      * Perform the detection algorithm that can map a physical port description to a Java Sound mixer info object.
-     * NB: Only supported for linux. Running on any other OS will throw an exception.
+     * NB: Only supported for Linux. Running on any other OS will throw an exception.
      */
     public void detectSoundCards() throws IOException {
         if (!OSUtil.isLinux()) {

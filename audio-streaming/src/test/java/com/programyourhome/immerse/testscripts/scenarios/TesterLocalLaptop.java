@@ -24,6 +24,7 @@ import org.pmw.tinylog.writers.ConsoleWriter;
 
 import com.programyourhome.immerse.audiostreaming.generate.SineWaveAudioInputStreamGenerator;
 import com.programyourhome.immerse.audiostreaming.mixer.ImmerseMixer;
+import com.programyourhome.immerse.audiostreaming.mixer.ImmerseSettings;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Scenario;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
@@ -41,6 +42,7 @@ public class TesterLocalLaptop {
     private static final String BASS = "/home/emulder/Downloads/audio/doublebass.wav";
     private static final String CLAPPING = "/home/emulder/Downloads/audio/clapping.wav";
     private static final String VOICE = "/home/emulder/Downloads/audio/voice.wav";
+    private static final String SPIRAL = "/home/emulder/Downloads/audio/spiral.wav";
 
     public static void main(String[] args) throws Exception {
         // -XX:MaxNewSize=10M -XX:+PrintGCDetails -XX:+PrintCommandLineFlags // -XX:+PrintTenuringDistribution
@@ -62,17 +64,24 @@ public class TesterLocalLaptop {
                 .signed()
                 .buildForInput();
         // Scenario scenario = scenario(room, settings(SuppliedAudioResource.supplied(() -> generate(format, 500, 10_000)), fixed(5, 10, 10), fixed(5, 5, 5),
-        Scenario scenario = scenario(room, settings(FileAudioResource.file(new File(CHILL)), fixed(5, 10, 10), fixed(5, 5, 5),
+        Scenario scenario = scenario(room, settings(FileAudioResource.file(new File(SPIRAL)), fixed(5, 10, 10), fixed(5, 5, 5),
                 fixed(fixedSpeakerVolumeRatios), fractional(), once()));
 
         SoundCard soundCard1 = soundCard(1, "pci-0000:00:1f.3", speaker1, speaker2);
+        // SoundCard soundCard1 = soundCard(1, "pci-0000:00:14.0-usb-0:1:1.0", speaker1, speaker2);
 
         ImmerseAudioFormat outputFormat = ImmerseAudioFormat.builder()
                 .sampleRate(SampleRate.RATE_44K)
                 .sampleSize(SampleSize.TWO_BYTES)
                 .buildForOutput();
 
-        ImmerseMixer mixer = new ImmerseMixer(room, new HashSet<>(Arrays.asList(soundCard1)), outputFormat);
+        ImmerseSettings settings = ImmerseSettings.builder()
+                .room(room)
+                .soundCards(new HashSet<>(Arrays.asList(soundCard1)))
+                .outputFormat(outputFormat)
+                .build();
+
+        ImmerseMixer mixer = new ImmerseMixer(settings);
 
         // Configure logging
         Configurator.defaultConfig()
