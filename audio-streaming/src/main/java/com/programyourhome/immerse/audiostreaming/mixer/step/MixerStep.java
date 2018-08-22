@@ -1,6 +1,7 @@
 package com.programyourhome.immerse.audiostreaming.mixer.step;
 
 import static com.programyourhome.immerse.audiostreaming.mixer.ActiveImmerseSettings.getSettings;
+import static com.programyourhome.immerse.audiostreaming.mixer.ActiveImmerseSettings.getTechnicalSettings;
 import static com.programyourhome.immerse.toolbox.util.StreamUtil.toMapFixedValue;
 
 import java.io.IOException;
@@ -81,7 +82,7 @@ public class MixerStep {
     private int calculateAmountOfFramesNeeded() {
         // Gather the amount of frames needed for all sound card streams.
         List<Long> allFramesNeededAmounts = StreamEx.of(this.soundCardStreams)
-                .map(stream -> stream.getAmountOfFramesNeeded(getSettings().getSoundCardBufferMillis()))
+                .map(stream -> stream.getAmountOfFramesNeeded(getTechnicalSettings().getSoundCardBufferMillis()))
                 .toList();
         // Calculate the min and max frames needed.
         long minFramesNeeded = Collections.min(allFramesNeededAmounts);

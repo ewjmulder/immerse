@@ -1,5 +1,6 @@
 package com.programyourhome.immerse.audiostreaming.mixer;
 
+import static com.programyourhome.immerse.audiostreaming.mixer.ActiveImmerseSettings.getTechnicalSettings;
 import static com.programyourhome.immerse.audiostreaming.util.AudioUtil.toSigned;
 import static com.programyourhome.immerse.audiostreaming.util.LogUtil.logExceptions;
 
@@ -197,7 +198,7 @@ public class ImmerseMixer {
             this.updateState(MixerState.INITIALIZED);
         } else {
             // As main mixer, we should initialize the active immerse settings, for all code to have static access to the settings.
-            this.settingsResetCode = ActiveImmerseSettings.init(this);
+            this.settingsResetCode = ActiveImmerseSettings.init(this.settings);
             // If we are not the warmup mixer (so the main mixer), we should initiate warmup (asynchronously).
             new Thread(() -> logExceptions(() -> this.warmup()), "Warmup Mixer Executor").start();
         }
@@ -300,7 +301,7 @@ public class ImmerseMixer {
             long end = System.nanoTime();
 
             double stepMillis = (end - start) / 1_000_000.0;
-            int stepPaceMillis = this.settings.getStepPaceMillis();
+            int stepPaceMillis = getTechnicalSettings().getStepPaceMillis();
             if (stepMillis > stepPaceMillis) {
                 // Some large step times are to be expected in warmup mode, so only log a warning if we are not the warmup mixer.
                 if (!this.warmupMixer) {
@@ -310,9 +311,9 @@ public class ImmerseMixer {
                 // If we are almost running out of Eden space, trigger a minor GC in a controlled manner.
                 // Otherwise, sleep for however long is left of the step pace.
                 // NB: only do this if the current step was not slower than the pace, to not trigger an extra delay on an already slow step.
-                if (MemoryUtil.getFreeEdenSpaceInKB() < this.settings.getTriggerMinorGcThresholdKb()) {
+                if (MemoryUtil.getFreeEdenSpaceInKB() < getTechnicalSettings().getTriggerMinorGcThresholdKb()) {
                     // Allocate the right amount of bytes to just go over the limit, so a minor GC is triggered.
-                    byte[] triggerBuffer = new byte[this.settings.getTriggerMinorGcThresholdKb() * 1024];
+                    byte[] triggerBuffer = new byte[getTechnicalSettings().getTriggerMinorGcThresholdKb() * 1024];
                     // Do 'something' with the array or the JIT might just 'optimize it away'.
                     // In fact, that 'something' is just printing an empty String, but hopefully enough to forever fool JIT ;).
                     System.out.print(triggerBuffer.length > 0 ? "" : "0");
@@ -542,7 +543,7 @@ public class ImmerseMixer {
      */
     private void waitFor(Supplier<Boolean> predicate) {
         while (!predicate.get()) {
-            this.sleep(this.settings.getWaitForPredicateMillis());
+            this.sleep(getTechnicalSettings().getWaitForPredicateMillis());
         }
     }
 

@@ -16,90 +16,69 @@ import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
 
 /**
  * This class holds all Immerse system wide settings.
- * It's design is not really according to any nice pattern, but is very pragmatic
- * statically accessible, so it will be easy to get settings from any piece of code
- * without having to pass a reference to it all over the place.
- *
- * TODO: make configurable, document usage (should be set before mixer starts and stay the same for 1 mixer 'lifetime').
- * TODO: refine this further, see #74
- * TODO: update and move things to ActiveImmerseSettings
+ * It's values are tied to a mixer and all related classes.
+ * There is a distinction between the functional settings and technical settings, also in the builder.
  */
 public class ImmerseSettings implements Serializable {
 
     private static final long serialVersionUID = Serialization.VERSION;
 
-    public static int DEFAULT_SOUND_CARD_BUFFER_MILLIS = 30;
-    public static int DEFAULT_STEP_PACE_MILLIS = 5;
-    public static int DEFAULT_AUDIO_INPUT_BUFFER_LIVE_MILLIS = 25;
-    public static int DEFAULT_AUDIO_INPUT_BUFFER_NON_LIVE_MILLIS = 50;
-    public static int DEFAULT_WAIT_FOR_PREDICATE_MILLIS = 5;
-    public static int DEFAULT_TRIGGER_MINOR_GC_THRESHOLD_KB = 1000;
-
-    private int soundCardBufferMillis;
-    private int stepPaceMillis;
-    private int audioInputBufferLiveMillis;
-    private int audioInputBufferNonLiveMillis;
-    private int waitForPredicateMillis;
-    private int triggerMinorGcThresholdKb;
-
-    // The room this mixer is active in. One mixer can work in only one room.
+    private TechnicalSettings technicalSettings;
     private Room room;
-    // The collection of sound cards this mixer should use.
     private Set<SoundCard> soundCards;
-    // The output format to use.
     private ImmerseAudioFormat outputFormat;
-    // The input format that this mixer can operate on.
     private ImmerseAudioFormat inputFormat;
-    // The executor service for all asynchronous tasks.
     private ExecutorService executorService;
 
     private ImmerseSettings() {
     }
 
-    public int getSoundCardBufferMillis() {
-        return this.soundCardBufferMillis;
+    /**
+     * The technical settings.
+     */
+    public TechnicalSettings getTechnicalSettings() {
+        return this.technicalSettings;
     }
 
-    public int getStepPaceMillis() {
-        return this.stepPaceMillis;
-    }
-
-    public int getAudioInputBufferLiveMillis() {
-        return this.audioInputBufferLiveMillis;
-    }
-
-    public int getAudioInputBufferNonLiveMillis() {
-        return this.audioInputBufferNonLiveMillis;
-    }
-
-    public int getWaitForPredicateMillis() {
-        return this.waitForPredicateMillis;
-    }
-
-    public int getTriggerMinorGcThresholdKb() {
-        return this.triggerMinorGcThresholdKb;
-    }
-
+    /**
+     * The room Immerse is active in.
+     * Immerse can work in only one room at a time.
+     */
     public Room getRoom() {
         return this.room;
     }
 
+    /**
+     * The collection of sound cards in use.
+     */
     public Set<SoundCard> getSoundCards() {
         return this.soundCards;
     }
 
+    /**
+     * The output format in use (Immerse).
+     */
     public ImmerseAudioFormat getOutputFormat() {
         return this.outputFormat;
     }
 
+    /**
+     * The output format in use (Java).
+     */
     public AudioFormat getOutputFormatJava() {
         return this.outputFormat.toJavaAudioFormat();
     }
 
+    /**
+     * The input format in use (Immerse).
+     */
     public ImmerseAudioFormat getInputFormat() {
         return this.inputFormat;
     }
 
+    /**
+     * The input format in use (Java).
+     */
     public AudioFormat getInputFormatJava() {
         return this.inputFormat.toJavaAudioFormat();
     }
@@ -115,41 +94,81 @@ public class ImmerseSettings implements Serializable {
         this.executorService.submit(() -> LogUtil.logExceptions(task));
     }
 
+    public class TechnicalSettings implements Serializable {
+
+        private static final long serialVersionUID = Serialization.VERSION;
+
+        public static final int DEFAULT_SOUND_CARD_BUFFER_MILLIS = 30;
+        public static final int DEFAULT_STEP_PACE_MILLIS = 5;
+        public static final int DEFAULT_AUDIO_INPUT_BUFFER_LIVE_MILLIS = 25;
+        public static final int DEFAULT_AUDIO_INPUT_BUFFER_NON_LIVE_MILLIS = 50;
+        public static final int DEFAULT_WAIT_FOR_PREDICATE_MILLIS = 5;
+        public static final int DEFAULT_TRIGGER_MINOR_GC_THRESHOLD_KB = 1000;
+
+        private int soundCardBufferMillis;
+        private int stepPaceMillis;
+        private int audioInputBufferLiveMillis;
+        private int audioInputBufferNonLiveMillis;
+        private int waitForPredicateMillis;
+        private int triggerMinorGcThresholdKb;
+
+        /**
+         * Amount of millis of audio data to keep in each sound card stream.
+         */
+        public int getSoundCardBufferMillis() {
+            return this.soundCardBufferMillis;
+        }
+
+        /**
+         * Amount of millis per mixer step.
+         * Will sleep to match up if the step took shorter.
+         * Step can also take longer, than the next one will not try to 'catch up'.
+         */
+        public int getStepPaceMillis() {
+            return this.stepPaceMillis;
+        }
+
+        /**
+         * Amount of millis to keep in audio input buffer in case of live audio stream.
+         */
+        public int getAudioInputBufferLiveMillis() {
+            return this.audioInputBufferLiveMillis;
+        }
+
+        /**
+         * Amount of millis to keep in audio input buffer in case of non live audio stream.
+         */
+        public int getAudioInputBufferNonLiveMillis() {
+            return this.audioInputBufferNonLiveMillis;
+        }
+
+        /**
+         * Amount of millis to sleep between each check for predicate waiting.
+         */
+        public int getWaitForPredicateMillis() {
+            return this.waitForPredicateMillis;
+        }
+
+        /**
+         * Amount of KB or less that should be left to trigger next minor GC.
+         */
+        public int getTriggerMinorGcThresholdKb() {
+            return this.triggerMinorGcThresholdKb;
+        }
+
+    }
+
     public static Builder builder() {
         return new Builder();
     }
 
     public static class Builder {
         private final ImmerseSettings settings;
+        private final TechnicalBuilder technicalBuilder;
 
         public Builder() {
             this.settings = new ImmerseSettings();
-            this.settings.soundCardBufferMillis = DEFAULT_SOUND_CARD_BUFFER_MILLIS;
-            this.settings.stepPaceMillis = DEFAULT_STEP_PACE_MILLIS;
-            this.settings.audioInputBufferLiveMillis = DEFAULT_AUDIO_INPUT_BUFFER_LIVE_MILLIS;
-            this.settings.audioInputBufferNonLiveMillis = DEFAULT_AUDIO_INPUT_BUFFER_NON_LIVE_MILLIS;
-            this.settings.waitForPredicateMillis = DEFAULT_WAIT_FOR_PREDICATE_MILLIS;
-            this.settings.triggerMinorGcThresholdKb = DEFAULT_TRIGGER_MINOR_GC_THRESHOLD_KB;
-        }
-
-        public Builder soundCardBufferMillis(int soundCardBufferMillis) {
-            this.settings.soundCardBufferMillis = soundCardBufferMillis;
-            return this;
-        }
-
-        public Builder stepPaceMillis(int stepPaceMillis) {
-            this.settings.stepPaceMillis = stepPaceMillis;
-            return this;
-        }
-
-        public Builder audioInputBufferLiveMillis(int audioInputBufferLiveMillis) {
-            this.settings.audioInputBufferLiveMillis = audioInputBufferLiveMillis;
-            return this;
-        }
-
-        public Builder audioInputBufferNonLiveMillis(int audioInputBufferNonLiveMillis) {
-            this.settings.audioInputBufferNonLiveMillis = audioInputBufferNonLiveMillis;
-            return this;
+            this.technicalBuilder = new TechnicalBuilder();
         }
 
         public Builder room(Room room) {
@@ -169,8 +188,57 @@ public class ImmerseSettings implements Serializable {
             return this;
         }
 
+        public TechnicalBuilder technical() {
+            return this.technicalBuilder;
+        }
+
         public ImmerseSettings build() {
             return this.settings;
+        }
+
+        public class TechnicalBuilder {
+
+            private final TechnicalSettings technicalSettings;
+
+            public TechnicalBuilder() {
+                this.technicalSettings = Builder.this.settings.new TechnicalSettings();
+                this.technicalSettings.soundCardBufferMillis = TechnicalSettings.DEFAULT_SOUND_CARD_BUFFER_MILLIS;
+                this.technicalSettings.stepPaceMillis = TechnicalSettings.DEFAULT_STEP_PACE_MILLIS;
+                this.technicalSettings.audioInputBufferLiveMillis = TechnicalSettings.DEFAULT_AUDIO_INPUT_BUFFER_LIVE_MILLIS;
+                this.technicalSettings.audioInputBufferNonLiveMillis = TechnicalSettings.DEFAULT_AUDIO_INPUT_BUFFER_NON_LIVE_MILLIS;
+                this.technicalSettings.waitForPredicateMillis = TechnicalSettings.DEFAULT_WAIT_FOR_PREDICATE_MILLIS;
+                this.technicalSettings.triggerMinorGcThresholdKb = TechnicalSettings.DEFAULT_TRIGGER_MINOR_GC_THRESHOLD_KB;
+                Builder.this.settings.technicalSettings = this.technicalSettings;
+            }
+
+            public TechnicalBuilder soundCardBufferMillis(int soundCardBufferMillis) {
+                this.technicalSettings.soundCardBufferMillis = soundCardBufferMillis;
+                return this;
+            }
+
+            public TechnicalBuilder stepPaceMillis(int stepPaceMillis) {
+                this.technicalSettings.stepPaceMillis = stepPaceMillis;
+                return this;
+            }
+
+            public TechnicalBuilder audioInputBufferLiveMillis(int audioInputBufferLiveMillis) {
+                this.technicalSettings.audioInputBufferLiveMillis = audioInputBufferLiveMillis;
+                return this;
+            }
+
+            public TechnicalBuilder audioInputBufferNonLiveMillis(int audioInputBufferNonLiveMillis) {
+                this.technicalSettings.audioInputBufferNonLiveMillis = audioInputBufferNonLiveMillis;
+                return this;
+            }
+
+            public Builder functional() {
+                return Builder.this;
+            }
+
+            public ImmerseSettings build() {
+                return Builder.this.settings;
+            }
+
         }
     }
 

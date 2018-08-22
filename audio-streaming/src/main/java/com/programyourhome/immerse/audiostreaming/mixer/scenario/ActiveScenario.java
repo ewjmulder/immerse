@@ -1,6 +1,6 @@
 package com.programyourhome.immerse.audiostreaming.mixer.scenario;
 
-import static com.programyourhome.immerse.audiostreaming.mixer.ActiveImmerseSettings.getSettings;
+import static com.programyourhome.immerse.audiostreaming.mixer.ActiveImmerseSettings.getTechnicalSettings;
 import static com.programyourhome.immerse.domain.format.ImmerseAudioFormat.fromJavaAudioFormat;
 
 import java.io.File;
@@ -171,7 +171,7 @@ public class ActiveScenario {
     }
 
     private int calculateScenarioInputBufferSize(ImmerseAudioFormat format, boolean live) {
-        int bufferSizeMillis = live ? getSettings().getAudioInputBufferLiveMillis() : getSettings().getAudioInputBufferNonLiveMillis();
+        int bufferSizeMillis = live ? getTechnicalSettings().getAudioInputBufferLiveMillis() : getTechnicalSettings().getAudioInputBufferNonLiveMillis();
         // Take an (approximate) buffer size for the amount of millis we want to buffer.
         int bufferSizeBytes = bufferSizeMillis * (int) format.getNumberOfBytesPerMilli();
         // Cut the buffer size off at an exact amount of frames to avoid issues when reading from the underlying AudioInputStream.
