@@ -12,6 +12,7 @@ import com.programyourhome.immerse.domain.Factory;
 import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.audio.resource.AudioFileType;
 import com.programyourhome.immerse.domain.audio.resource.AudioResource;
+import com.programyourhome.immerse.domain.audio.resource.ResourceConfig;
 import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
 
 /**
@@ -23,31 +24,38 @@ public class UrlAudioResource implements AudioResource {
 
     private static final long serialVersionUID = Serialization.VERSION;
 
-    private AudioInputStream audioInputStream;
-    private final boolean live;
+    private final AudioInputStream audioInputStream;
+    private ResourceConfig config;
 
     /**
      * Option 1 (see class Javadoc).
      */
-    public UrlAudioResource(URL url, AudioFileType fileType, boolean live) {
+    public UrlAudioResource(URL url, AudioFileType fileType, ResourceConfig config) {
         try {
             this.audioInputStream = fileType.getReaderInstance().getAudioInputStream(url.openStream());
         } catch (IOException | UnsupportedAudioFileException e) {
             throw new IllegalStateException("Exception while creating audio input stream", e);
         }
-        this.live = live;
+        this.setConfigOrDefault(config);
     }
 
     /**
      * Option 2 (see class Javadoc).
      */
-    public UrlAudioResource(URL url, ImmerseAudioFormat audioFormat, boolean live) {
+    public UrlAudioResource(URL url, ImmerseAudioFormat audioFormat, ResourceConfig config) {
         try {
             this.audioInputStream = new AudioInputStream(url.openStream(), audioFormat.toJavaAudioFormat(), AudioSystem.NOT_SPECIFIED);
         } catch (IOException e) {
             throw new IllegalStateException("Exception while creating audio input stream", e);
         }
-        this.live = live;
+        this.setConfigOrDefault(config);
+    }
+
+    private void setConfigOrDefault(ResourceConfig config) {
+        this.config = config;
+        if (config == null) {
+            config = ResourceConfig.defaultNonLive(this.getFormat());
+        }
     }
 
     @Override
@@ -56,54 +64,54 @@ public class UrlAudioResource implements AudioResource {
     }
 
     @Override
-    public boolean isLive() {
-        return this.live;
+    public ResourceConfig getConfig() {
+        return this.config;
     }
 
     /**
-     * Default not live.
+     * Default config.
      */
     public static Factory<AudioResource> urlWithType(String urlString, AudioFileType audioFileType) {
-        return urlWithType(toURLNoCheckedException(urlString), audioFileType, false);
+        return urlWithType(toURLNoCheckedException(urlString), audioFileType, null);
     }
 
-    public static Factory<AudioResource> urlWithType(String urlString, AudioFileType audioFileType, boolean live) {
-        return urlWithType(toURLNoCheckedException(urlString), audioFileType, live);
+    public static Factory<AudioResource> urlWithType(String urlString, AudioFileType audioFileType, ResourceConfig config) {
+        return urlWithType(toURLNoCheckedException(urlString), audioFileType, config);
     }
 
-    public static Factory<AudioResource> urlWithType(URL url, AudioFileType audioFileType, boolean live) {
+    public static Factory<AudioResource> urlWithType(URL url, AudioFileType audioFileType, ResourceConfig config) {
         return new Factory<AudioResource>() {
             private static final long serialVersionUID = Serialization.VERSION;
 
             @Override
             public AudioResource create() {
-                return new UrlAudioResource(url, audioFileType, live);
+                return new UrlAudioResource(url, audioFileType, config);
             }
         };
     }
 
     /**
-     * Default not live.
+     * Default config.
      */
     public static Factory<AudioResource> urlWithFormat(String urlString, ImmerseAudioFormat audioFormat) {
-        return urlWithFormat(toURLNoCheckedException(urlString), audioFormat, false);
+        return urlWithFormat(toURLNoCheckedException(urlString), audioFormat, null);
     }
 
-    public static Factory<AudioResource> urlWithFormat(String urlString, ImmerseAudioFormat audioFormat, boolean live) {
-        return urlWithFormat(toURLNoCheckedException(urlString), audioFormat, live);
+    public static Factory<AudioResource> urlWithFormat(String urlString, ImmerseAudioFormat audioFormat, ResourceConfig config) {
+        return urlWithFormat(toURLNoCheckedException(urlString), audioFormat, config);
     }
 
-    public static Factory<AudioResource> urlWithFormat(URL url, ImmerseAudioFormat audioFormat, boolean live) {
+    public static Factory<AudioResource> urlWithFormat(URL url, ImmerseAudioFormat audioFormat, ResourceConfig config) {
         return new Factory<AudioResource>() {
             private static final long serialVersionUID = Serialization.VERSION;
 
             @Override
             public AudioResource create() {
-                return new UrlAudioResource(url, audioFormat, live);
+                return new UrlAudioResource(url, audioFormat, config);
             }
         };
     }
-    
+
     private static URL toURLNoCheckedException(String urlString) {
         try {
             return new URL(urlString);

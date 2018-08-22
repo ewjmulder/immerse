@@ -100,15 +100,11 @@ public class ImmerseSettings implements Serializable {
 
         public static final int DEFAULT_SOUND_CARD_BUFFER_MILLIS = 30;
         public static final int DEFAULT_STEP_PACE_MILLIS = 5;
-        public static final int DEFAULT_AUDIO_INPUT_BUFFER_LIVE_MILLIS = 25;
-        public static final int DEFAULT_AUDIO_INPUT_BUFFER_NON_LIVE_MILLIS = 50;
         public static final int DEFAULT_WAIT_FOR_PREDICATE_MILLIS = 5;
         public static final int DEFAULT_TRIGGER_MINOR_GC_THRESHOLD_KB = 1000;
 
         private int soundCardBufferMillis;
         private int stepPaceMillis;
-        private int audioInputBufferLiveMillis;
-        private int audioInputBufferNonLiveMillis;
         private int waitForPredicateMillis;
         private int triggerMinorGcThresholdKb;
 
@@ -126,20 +122,6 @@ public class ImmerseSettings implements Serializable {
          */
         public int getStepPaceMillis() {
             return this.stepPaceMillis;
-        }
-
-        /**
-         * Amount of millis to keep in audio input buffer in case of live audio stream.
-         */
-        public int getAudioInputBufferLiveMillis() {
-            return this.audioInputBufferLiveMillis;
-        }
-
-        /**
-         * Amount of millis to keep in audio input buffer in case of non live audio stream.
-         */
-        public int getAudioInputBufferNonLiveMillis() {
-            return this.audioInputBufferNonLiveMillis;
         }
 
         /**
@@ -204,8 +186,6 @@ public class ImmerseSettings implements Serializable {
                 this.technicalSettings = Builder.this.settings.new TechnicalSettings();
                 this.technicalSettings.soundCardBufferMillis = TechnicalSettings.DEFAULT_SOUND_CARD_BUFFER_MILLIS;
                 this.technicalSettings.stepPaceMillis = TechnicalSettings.DEFAULT_STEP_PACE_MILLIS;
-                this.technicalSettings.audioInputBufferLiveMillis = TechnicalSettings.DEFAULT_AUDIO_INPUT_BUFFER_LIVE_MILLIS;
-                this.technicalSettings.audioInputBufferNonLiveMillis = TechnicalSettings.DEFAULT_AUDIO_INPUT_BUFFER_NON_LIVE_MILLIS;
                 this.technicalSettings.waitForPredicateMillis = TechnicalSettings.DEFAULT_WAIT_FOR_PREDICATE_MILLIS;
                 this.technicalSettings.triggerMinorGcThresholdKb = TechnicalSettings.DEFAULT_TRIGGER_MINOR_GC_THRESHOLD_KB;
                 Builder.this.settings.technicalSettings = this.technicalSettings;
@@ -218,16 +198,6 @@ public class ImmerseSettings implements Serializable {
 
             public TechnicalBuilder stepPaceMillis(int stepPaceMillis) {
                 this.technicalSettings.stepPaceMillis = stepPaceMillis;
-                return this;
-            }
-
-            public TechnicalBuilder audioInputBufferLiveMillis(int audioInputBufferLiveMillis) {
-                this.technicalSettings.audioInputBufferLiveMillis = audioInputBufferLiveMillis;
-                return this;
-            }
-
-            public TechnicalBuilder audioInputBufferNonLiveMillis(int audioInputBufferNonLiveMillis) {
-                this.technicalSettings.audioInputBufferNonLiveMillis = audioInputBufferNonLiveMillis;
                 return this;
             }
 

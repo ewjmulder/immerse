@@ -16,6 +16,7 @@ import org.pmw.tinylog.Logger;
 import com.programyourhome.immerse.domain.Factory;
 import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.audio.resource.AudioResource;
+import com.programyourhome.immerse.domain.audio.resource.ResourceConfig;
 import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
 
 /**
@@ -28,8 +29,9 @@ public class UdpAudioResource implements AudioResource {
     private static final long serialVersionUID = Serialization.VERSION;
 
     private final AudioInputStream audioInputStream;
+    private final ResourceConfig config;
 
-    public UdpAudioResource(InetAddress host, int port, int packetSize, ImmerseAudioFormat audioFormat, String startMessage) {
+    public UdpAudioResource(InetAddress host, int port, int chunkSize, int packetSize, ImmerseAudioFormat audioFormat, String startMessage) {
         if (packetSize % audioFormat.getNumberOfBytesPerFrame() != 0) {
             throw new IllegalArgumentException("Packet size must be a multitude of frame size");
         }
@@ -38,6 +40,12 @@ public class UdpAudioResource implements AudioResource {
         }
         this.audioInputStream = new AudioInputStream(new UdpInputStream(host, port, packetSize, startMessage),
                 audioFormat.toJavaAudioFormat(), AudioSystem.NOT_SPECIFIED);
+        this.config = ResourceConfig.builder(this.getFormat())
+                // UDP resources are always live.
+                .live()
+                .chunkSize(chunkSize)
+                .packetSize(packetSize)
+                .build();
     }
 
     @Override
@@ -46,19 +54,18 @@ public class UdpAudioResource implements AudioResource {
     }
 
     @Override
-    public boolean isLive() {
-        // UDP streams are always live.
-        return true;
+    public ResourceConfig getConfig() {
+        return this.config;
     }
 
     // TODO: address as String
-    public static Factory<AudioResource> udp(InetAddress host, int port, int packetSize, ImmerseAudioFormat audioFormat, String startMessage) {
+    public static Factory<AudioResource> udp(InetAddress host, int port, int chunkSize, int packetSize, ImmerseAudioFormat audioFormat, String startMessage) {
         return new Factory<AudioResource>() {
             private static final long serialVersionUID = Serialization.VERSION;
 
             @Override
             public AudioResource create() {
-                return new UdpAudioResource(host, port, packetSize, audioFormat, startMessage);
+                return new UdpAudioResource(host, port, chunkSize, packetSize, audioFormat, startMessage);
             }
         };
     }
