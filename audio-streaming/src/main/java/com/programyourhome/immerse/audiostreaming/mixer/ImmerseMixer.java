@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 import javax.sound.sampled.AudioInputStream;
@@ -24,6 +23,8 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.Mixer;
 import javax.sound.sampled.SourceDataLine;
 
+import org.pmw.tinylog.Configurator;
+import org.pmw.tinylog.Level;
 import org.pmw.tinylog.Logger;
 
 import com.programyourhome.immerse.audiostreaming.mixer.scenario.ActiveScenario;
@@ -222,10 +223,8 @@ public class ImmerseMixer {
                 // This exception is a 'known issue' of Java Sound when targeting the system default audio device.
                 // As a workaround use the default audio device by setting the mixer info to 'null'.
                 // Will show up in the logs for the main mixer, so do not log again in case of the warmup mixer.
-                if (!this.warmupMixer) {
-                    Logger.info("Exception for mixer info: '" + mixerInfo.getName() + "'. "
-                            + "Known Java Sound API issue, falling back to default audio device.");
-                }
+                Logger.info("Exception for mixer info: '" + mixerInfo.getName() + "'. "
+                        + "Known Java Sound API issue, falling back to default audio device.");
                 outputLine = AudioSystem.getSourceDataLine(this.settings.getOutputFormatJava(), null);
             }
             this.soundCardStreams.add(new SoundCardStream(soundCard, outputLine));
@@ -241,6 +240,9 @@ public class ImmerseMixer {
     private void warmup() {
         long start = System.nanoTime();
 
+        // Temporarily set the logging level to ERROR, so warmup doesn't generate too much logging.
+        Level configuredLoggingLevel = Logger.getLevel();
+        Configurator.currentConfig().level(Level.ERROR).activate();
         // Create a new mixer with the same configuration as this one.
         ImmerseMixer warmupMixer = new ImmerseMixer(this.settings);
         // Set that mixer to be the warmup mixer.
@@ -262,6 +264,8 @@ public class ImmerseMixer {
         this.waitFor(() -> !warmupMixer.hasScenariosInPlayback());
         // Warmup is done, stop the warmup mixer.
         warmupMixer.stop();
+        // Set logging back to it's original level.
+        Configurator.currentConfig().level(configuredLoggingLevel).activate();
         // This mixer, the 'main' mixer is now initialized and ready to play 'real' scenarios.
         this.updateState(MixerState.INITIALIZED);
 
@@ -303,10 +307,7 @@ public class ImmerseMixer {
             double stepMillis = (end - start) / 1_000_000.0;
             int stepPaceMillis = getTechnicalSettings().getStepPaceMillis();
             if (stepMillis > stepPaceMillis) {
-                // Some large step times are to be expected in warmup mode, so only log a warning if we are not the warmup mixer.
-                if (!this.warmupMixer) {
-                    Logger.warn("Risk for hickups in playback: actual step millis {} was bigger than the step pace millis {}.", stepMillis, stepPaceMillis);
-                }
+                Logger.warn("Risk for hickups in playback: actual step millis {} was bigger than the step pace millis {}.", stepMillis, stepPaceMillis);
             } else {
                 // If we are almost running out of Eden space, trigger a minor GC in a controlled manner.
                 // Otherwise, sleep for however long is left of the step pace.
@@ -450,7 +451,7 @@ public class ImmerseMixer {
                     + "while the provided scenario is for room: " + scenario.getRoom().getId());
         }
         AudioResource audioResource = scenario.getSettings().getAudioResourceFactory().create();
-        if (audioResource.isLive()) {
+        if (audioResource.getConfig().isLive()) {
             // Validate that the audio format of the live audio resource is equal to the mixer output format (except from the recording mode).
             // This makes sure the internal buffers used are of the right size.
             ImmerseAudioFormat resourceFormat = ImmerseAudioFormat.fromJavaAudioFormat(audioResource.getAudioInputStream().getFormat());
@@ -461,7 +462,7 @@ public class ImmerseMixer {
                 throw new IllegalArgumentException("The audio format of live streams must be mono and must match the mixer output audio format.");
             }
         }
-        ActiveScenario activeScenario = new ActiveScenario(scenario, this.convertAudioStream(audioResource.getAudioInputStream()), audioResource.isLive());
+        ActiveScenario activeScenario = new ActiveScenario(scenario, this.convertAudioStream(audioResource.getAudioInputStream()), audioResource.getConfig());
         this.scenariosInPlayback.add(activeScenario);
         this.scenariosToActivate.add(activeScenario);
         return activeScenario.getId();
@@ -520,22 +521,14 @@ public class ImmerseMixer {
      * Log a scenario event in a generic way.
      */
     private void logScenarioEvent(ActiveScenario activeScenario, String event) {
-        this.getEventLogMethod().accept("{} {} scenario {}", new Object[] { this.name, event, activeScenario.getScenario().getName() });
+        Logger.info("{} {} scenario {}", new Object[] { this.name, event, activeScenario.getScenario().getName() });
     }
 
     /**
      * Log a state change event in a generic way.
      */
     private void logStateEvent(MixerState oldState, MixerState newState) {
-        this.getEventLogMethod().accept("{} changed from state {} to {}", new Object[] { this.name, oldState, newState });
-    }
-
-    /**
-     * In case of the main mixer, we log events at level info.
-     * But in case of the warmup mixer, use trace to avoid polluting the logs.
-     */
-    private BiConsumer<String, Object[]> getEventLogMethod() {
-        return this.warmupMixer ? Logger::trace : Logger::info;
+        Logger.info("{} changed from state {} to {}", new Object[] { this.name, oldState, newState });
     }
 
     /**

@@ -1,9 +1,12 @@
 package com.programyourhome.immerse.audiostreaming.mixer.scenario;
 
+import static com.programyourhome.immerse.audiostreaming.mixer.ActiveImmerseSettings.getTechnicalSettings;
+
 import java.io.IOException;
 
 import javax.sound.sampled.AudioInputStream;
 
+import com.programyourhome.immerse.domain.audio.resource.StreamConfig;
 import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
 
 /**
@@ -31,32 +34,32 @@ public class AudioInputBuffer {
 
     private final AudioInputStream inputStream;
     private final int frameSize;
-    private final int bufferSize;
-    private final boolean live;
-    private final int stepSize;
+    private final StreamConfig streamConfig;
+    private int bufferSize;
     private final byte[] buffer;
     private int startPosition;
     private int endPosition;
     private boolean streamClosed;
 
-    public AudioInputBuffer(AudioInputStream inputStream, int bufferSize) {
-        this(inputStream, bufferSize, false, -1);
-    }
-
-    public AudioInputBuffer(AudioInputStream inputStream, int bufferSize, boolean live, int stepSize) {
+    public AudioInputBuffer(AudioInputStream inputStream, StreamConfig streamConfig) {
         this.inputStream = inputStream;
         this.frameSize = inputStream.getFormat().getFrameSize();
-        if (bufferSize % this.frameSize != 0) {
-            throw new IllegalArgumentException("Buffer size must be a multitude of frame size");
+        this.streamConfig = streamConfig;
+        this.bufferSize = this.calculateBufferSize();
+        if (this.bufferSize % this.frameSize != 0) {
+            // If the buffer size is no multitude of frame size, 'fill it up' so it is.
+            this.bufferSize += this.frameSize - this.bufferSize % this.frameSize;
         }
-        if (live && stepSize < 1) {
-            throw new IllegalArgumentException("A live audio stream must have a positive step size");
-        }
-        this.live = live;
-        this.stepSize = stepSize;
-        this.bufferSize = bufferSize;
-        this.buffer = new byte[bufferSize];
+        this.buffer = new byte[this.bufferSize];
         this.streamClosed = false;
+    }
+
+    /**
+     * Best practice formula for a small but reliable buffer size.
+     */
+    private int calculateBufferSize() {
+        return this.streamConfig.getChunkSize() + 2 * this.streamConfig.getPacketSize() +
+                2 * (int) (getTechnicalSettings().getStepPaceMillis() * this.getAudioFormat().getNumberOfBytesPerMilli());
     }
 
     public int getBufferSize() {
@@ -65,10 +68,6 @@ public class AudioInputBuffer {
 
     public ImmerseAudioFormat getAudioFormat() {
         return ImmerseAudioFormat.fromJavaAudioFormat(this.inputStream.getFormat());
-    }
-
-    public boolean isLive() {
-        return this.live;
     }
 
     private int getActiveSize() {
@@ -92,40 +91,39 @@ public class AudioInputBuffer {
     }
 
     /**
-     * Will read the amount of bytes requested from the buffer and return them.
+     * Will read the amount of bytes requested (= buffer length) into the supplied buffer.
      * Guaranteed to return all bytes non-blocking or throw an exception.
      */
-    public byte[] read(int numberOfBytes) {
+    public void read(byte[] toBuffer) {
+        int numberOfBytes = toBuffer.length;
         if (!this.canRead(numberOfBytes)) {
             throw new IllegalStateException("Cannot read " + numberOfBytes + " bytes");
         }
         if (numberOfBytes % this.frameSize != 0) {
             throw new IllegalStateException("Cannot read a fraction of a frame");
         }
-        byte[] toBuffer = new byte[numberOfBytes];
         synchronized (this.READ_ALIGN_LOCK) {
             System.arraycopy(this.buffer, this.startPosition, toBuffer, 0, numberOfBytes);
             this.startPosition += numberOfBytes;
         }
-        return toBuffer;
     }
 
     /**
      * Read the remaining bytes out of the buffer after the wrapped stream is closed.
+     * This method can be called multiple times as long as there are still bytes left in the input buffer.
+     * It returns the amount of bytes read and if that is smaller than the toBuffer size, the input buffer will be empty.
      */
     public int readRemaining(byte[] toBuffer) {
-        synchronized (this.READ_ALIGN_LOCK) {
-            if (!this.streamClosed) {
-                throw new IllegalStateException("Read remaining only supported when wrapped stream is closed");
-            }
-            int amount = this.getActiveSize();
-            if (this.buffer.length < amount) {
-                throw new IllegalStateException("Buffer should be big enough for remaining bytes");
-            }
-            System.arraycopy(this.buffer, this.startPosition, toBuffer, 0, amount);
-            this.startPosition += amount;
-            return amount;
+        if (!this.streamClosed) {
+            throw new IllegalStateException("Read remaining only supported when wrapped stream is closed");
         }
+        // Copy either the full toBuffer length or the active size if there are less bytes available.
+        int amountToRead = Math.min(toBuffer.length, this.getActiveSize());
+        synchronized (this.READ_ALIGN_LOCK) {
+            System.arraycopy(this.buffer, this.startPosition, toBuffer, 0, amountToRead);
+            this.startPosition += amountToRead;
+        }
+        return amountToRead;
     }
 
     /**
@@ -140,9 +138,9 @@ public class AudioInputBuffer {
         }
         try {
             int amountNeeded;
-            if (this.live) {
-                // For live streams: just read one step at a time, independent of the current position.
-                amountNeeded = this.stepSize;
+            if (this.streamConfig.isLive()) {
+                // For live streams: just read one packet at a time, independent of the current position.
+                amountNeeded = this.streamConfig.getPacketSize();
             } else {
                 // Non-live streams: we need the amount of bytes to fill the whole buffer.
                 amountNeeded = this.bufferSize - this.endPosition;
@@ -152,18 +150,18 @@ public class AudioInputBuffer {
             // is still open. So we have to loop until either the stream is closed or the buffer is full.
             while (!this.streamClosed && totalAmountRead < amountNeeded) {
                 int amountRead;
-                if (this.live) {
+                if (this.streamConfig.isLive()) {
                     // For live streams: read into a separate buffer.
-                    byte[] stepBuffer = new byte[this.stepSize];
-                    amountRead = this.inputStream.read(stepBuffer);
+                    byte[] packetBuffer = new byte[amountNeeded];
+                    amountRead = this.inputStream.read(packetBuffer);
                     if (amountRead > 0) {
                         if (amountRead <= this.bufferSize - this.endPosition) {
                             // If there is enough room in the main buffer, append the bytes there.
                             synchronized (this.FILL_ALIGN_LOCK) {
-                                System.arraycopy(stepBuffer, 0, this.buffer, this.endPosition, amountRead);
+                                System.arraycopy(packetBuffer, 0, this.buffer, this.endPosition, amountRead);
                             }
                         } else {
-                            // If the step bytes do not fit, just discard them by pretending nothing was read.
+                            // If the packet bytes do not fit, just discard them by pretending nothing was read.
                             // This will make the live stream stay as close to 'live' as possible.
                             amountRead = 0;
                         }

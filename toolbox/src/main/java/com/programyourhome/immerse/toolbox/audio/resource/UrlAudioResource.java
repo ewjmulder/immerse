@@ -12,7 +12,7 @@ import com.programyourhome.immerse.domain.Factory;
 import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.audio.resource.AudioFileType;
 import com.programyourhome.immerse.domain.audio.resource.AudioResource;
-import com.programyourhome.immerse.domain.audio.resource.ResourceConfig;
+import com.programyourhome.immerse.domain.audio.resource.StreamConfig;
 import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
 
 /**
@@ -25,12 +25,12 @@ public class UrlAudioResource implements AudioResource {
     private static final long serialVersionUID = Serialization.VERSION;
 
     private final AudioInputStream audioInputStream;
-    private ResourceConfig config;
+    private StreamConfig config;
 
     /**
      * Option 1 (see class Javadoc).
      */
-    public UrlAudioResource(URL url, AudioFileType fileType, ResourceConfig config) {
+    public UrlAudioResource(URL url, AudioFileType fileType, StreamConfig config) {
         try {
             this.audioInputStream = fileType.getReaderInstance().getAudioInputStream(url.openStream());
         } catch (IOException | UnsupportedAudioFileException e) {
@@ -42,7 +42,7 @@ public class UrlAudioResource implements AudioResource {
     /**
      * Option 2 (see class Javadoc).
      */
-    public UrlAudioResource(URL url, ImmerseAudioFormat audioFormat, ResourceConfig config) {
+    public UrlAudioResource(URL url, ImmerseAudioFormat audioFormat, StreamConfig config) {
         try {
             this.audioInputStream = new AudioInputStream(url.openStream(), audioFormat.toJavaAudioFormat(), AudioSystem.NOT_SPECIFIED);
         } catch (IOException e) {
@@ -51,10 +51,10 @@ public class UrlAudioResource implements AudioResource {
         this.setConfigOrDefault(config);
     }
 
-    private void setConfigOrDefault(ResourceConfig config) {
+    private void setConfigOrDefault(StreamConfig config) {
         this.config = config;
-        if (config == null) {
-            config = ResourceConfig.defaultNonLive(this.getFormat());
+        if (this.config == null) {
+            this.config = StreamConfig.defaultNonLive(this.getFormat());
         }
     }
 
@@ -64,7 +64,7 @@ public class UrlAudioResource implements AudioResource {
     }
 
     @Override
-    public ResourceConfig getConfig() {
+    public StreamConfig getConfig() {
         return this.config;
     }
 
@@ -75,11 +75,11 @@ public class UrlAudioResource implements AudioResource {
         return urlWithType(toURLNoCheckedException(urlString), audioFileType, null);
     }
 
-    public static Factory<AudioResource> urlWithType(String urlString, AudioFileType audioFileType, ResourceConfig config) {
+    public static Factory<AudioResource> urlWithType(String urlString, AudioFileType audioFileType, StreamConfig config) {
         return urlWithType(toURLNoCheckedException(urlString), audioFileType, config);
     }
 
-    public static Factory<AudioResource> urlWithType(URL url, AudioFileType audioFileType, ResourceConfig config) {
+    public static Factory<AudioResource> urlWithType(URL url, AudioFileType audioFileType, StreamConfig config) {
         return new Factory<AudioResource>() {
             private static final long serialVersionUID = Serialization.VERSION;
 
@@ -97,11 +97,11 @@ public class UrlAudioResource implements AudioResource {
         return urlWithFormat(toURLNoCheckedException(urlString), audioFormat, null);
     }
 
-    public static Factory<AudioResource> urlWithFormat(String urlString, ImmerseAudioFormat audioFormat, ResourceConfig config) {
+    public static Factory<AudioResource> urlWithFormat(String urlString, ImmerseAudioFormat audioFormat, StreamConfig config) {
         return urlWithFormat(toURLNoCheckedException(urlString), audioFormat, config);
     }
 
-    public static Factory<AudioResource> urlWithFormat(URL url, ImmerseAudioFormat audioFormat, ResourceConfig config) {
+    public static Factory<AudioResource> urlWithFormat(URL url, ImmerseAudioFormat audioFormat, StreamConfig config) {
         return new Factory<AudioResource>() {
             private static final long serialVersionUID = Serialization.VERSION;
 

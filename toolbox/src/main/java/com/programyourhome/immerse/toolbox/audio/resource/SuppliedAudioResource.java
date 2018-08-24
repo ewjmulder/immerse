@@ -7,7 +7,7 @@ import javax.sound.sampled.AudioInputStream;
 import com.programyourhome.immerse.domain.Factory;
 import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.audio.resource.AudioResource;
-import com.programyourhome.immerse.domain.audio.resource.ResourceConfig;
+import com.programyourhome.immerse.domain.audio.resource.StreamConfig;
 
 /**
  * An audio resource that uses a Supplier to get an InputStream.
@@ -18,17 +18,17 @@ public class SuppliedAudioResource implements AudioResource {
     private static final long serialVersionUID = Serialization.VERSION;
 
     private final AudioInputStream audioInputStream;
-    private final ResourceConfig config;
+    private StreamConfig config;
 
     public SuppliedAudioResource(Supplier<AudioInputStream> audioInputStreamSupplier) {
         this(audioInputStreamSupplier, null);
     }
 
-    public SuppliedAudioResource(Supplier<AudioInputStream> audioInputStreamSupplier, ResourceConfig config) {
+    public SuppliedAudioResource(Supplier<AudioInputStream> audioInputStreamSupplier, StreamConfig config) {
         this.audioInputStream = audioInputStreamSupplier.get();
         this.config = config;
-        if (config == null) {
-            config = ResourceConfig.defaultNonLive(this.getFormat());
+        if (this.config == null) {
+            this.config = StreamConfig.defaultNonLive(this.getFormat());
         }
     }
 
@@ -38,7 +38,7 @@ public class SuppliedAudioResource implements AudioResource {
     }
 
     @Override
-    public ResourceConfig getConfig() {
+    public StreamConfig getConfig() {
         return this.config;
     }
 
@@ -49,7 +49,7 @@ public class SuppliedAudioResource implements AudioResource {
         return supplied(audioInputStreamSupplier, null);
     }
 
-    public static Factory<AudioResource> supplied(Supplier<AudioInputStream> audioInputStreamSupplier, ResourceConfig config) {
+    public static Factory<AudioResource> supplied(Supplier<AudioInputStream> audioInputStreamSupplier, StreamConfig config) {
         return new Factory<AudioResource>() {
             private static final long serialVersionUID = Serialization.VERSION;
 

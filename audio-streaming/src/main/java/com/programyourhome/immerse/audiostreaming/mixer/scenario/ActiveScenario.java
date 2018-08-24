@@ -1,7 +1,6 @@
 package com.programyourhome.immerse.audiostreaming.mixer.scenario;
 
-import static com.programyourhome.immerse.audiostreaming.mixer.ActiveImmerseSettings.getTechnicalSettings;
-import static com.programyourhome.immerse.domain.format.ImmerseAudioFormat.fromJavaAudioFormat;
+import static com.programyourhome.immerse.audiostreaming.mixer.ActiveImmerseSettings.getSettings;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -15,9 +14,9 @@ import javax.sound.sampled.AudioInputStream;
 import org.pmw.tinylog.Logger;
 
 import com.programyourhome.immerse.audiostreaming.mixer.AudioInputStreamWrapper;
-import com.programyourhome.immerse.audiostreaming.util.LogUtil;
 import com.programyourhome.immerse.domain.Scenario;
 import com.programyourhome.immerse.domain.audio.playback.Playback;
+import com.programyourhome.immerse.domain.audio.resource.StreamConfig;
 import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
 import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
 import com.programyourhome.immerse.domain.speakers.algorithms.normalize.NormalizeAlgorithm;
@@ -43,15 +42,15 @@ public class ActiveScenario {
     private AudioInputStream inputStream;
     private AudioInputBuffer inputBuffer;
     private final File cachedStreamFile;
-    private final boolean live;
+    private final StreamConfig streamConfig;
     private long startMillis;
 
-    public ActiveScenario(Scenario scenario, AudioInputStream audioInputStream, boolean live) {
+    public ActiveScenario(Scenario scenario, AudioInputStream audioInputStream, StreamConfig streamConfig) {
         this.id = UUID.randomUUID();
         this.scenario = scenario;
         this.playback = this.scenario.getSettings().getPlaybackFactory().create();
-        this.live = live;
-        if (this.live) {
+        this.streamConfig = streamConfig;
+        if (this.streamConfig.isLive()) {
             this.inputStream = audioInputStream;
             this.cachedStreamFile = null;
         } else {
@@ -101,8 +100,16 @@ public class ActiveScenario {
         return this.inputStream;
     }
 
+    public ImmerseAudioFormat getFormat() {
+        return ImmerseAudioFormat.fromJavaAudioFormat(this.inputStream.getFormat());
+    }
+
     public AudioInputBuffer getInputBuffer() {
         return this.inputBuffer;
+    }
+
+    public StreamConfig getStreamConfig() {
+        return this.streamConfig;
     }
 
     public long getStartMillis() {
@@ -129,7 +136,7 @@ public class ActiveScenario {
      * Get the input stream from the created cache file and reset the settings.
      */
     public void resetForNextStart() {
-        if (this.live) {
+        if (this.streamConfig.isLive()) {
             throw new IllegalStateException("Live audio resources cannot be restarted.");
         }
         AudioFormat format = this.inputStream.getFormat();
@@ -145,38 +152,20 @@ public class ActiveScenario {
 
     private AudioInputBuffer createAndFillInputBuffer() {
         AudioInputBuffer audioInputBuffer;
-        // TODO: Fix this in a proper way (LiveConfig or some other general config?)
-        if (this.live) {
-            audioInputBuffer = new AudioInputBuffer(this.inputStream,
-                    this.calculateScenarioInputBufferSize(fromJavaAudioFormat(this.inputStream.getFormat()), this.live),
-                    this.live, /* FIXME!!! Hard coded */ 100);
-        } else {
-            audioInputBuffer = new AudioInputBuffer(this.inputStream,
-                    this.calculateScenarioInputBufferSize(fromJavaAudioFormat(this.inputStream.getFormat()), this.live));
-        }
-        if (this.live) {
-            // For live streams: just continuously call align and fill to stay as close to 'live' as possible.
+        audioInputBuffer = new AudioInputBuffer(this.inputStream, this.streamConfig);
+        if (this.streamConfig.isLive()) {
+            // For live streams: just continuously call fill to stay as close to 'live' as possible.
             // The thread will block at I/O when there is nothing to read from the live stream.
-            new Thread(() -> LogUtil.logExceptions(() -> {
-                while (true) {
+            getSettings().submitAsyncTask(() -> {
+                while (!audioInputBuffer.isStreamClosed()) {
                     audioInputBuffer.fill();
-                    // TODO: do we need a very small sleep here?
                 }
-            })).start();
+            });
         } else {
             // Non-live streams: perform the initial fill synchronously, so the input buffer is ready to go.
             audioInputBuffer.fill();
         }
         return audioInputBuffer;
-    }
-
-    private int calculateScenarioInputBufferSize(ImmerseAudioFormat format, boolean live) {
-        int bufferSizeMillis = live ? getTechnicalSettings().getAudioInputBufferLiveMillis() : getTechnicalSettings().getAudioInputBufferNonLiveMillis();
-        // Take an (approximate) buffer size for the amount of millis we want to buffer.
-        int bufferSizeBytes = bufferSizeMillis * (int) format.getNumberOfBytesPerMilli();
-        // Cut the buffer size off at an exact amount of frames to avoid issues when reading from the underlying AudioInputStream.
-        bufferSizeBytes -= bufferSizeBytes % format.getNumberOfBytesPerFrame();
-        return bufferSizeBytes;
     }
 
     /**

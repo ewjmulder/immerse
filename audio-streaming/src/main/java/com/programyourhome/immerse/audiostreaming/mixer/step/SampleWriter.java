@@ -16,7 +16,6 @@ public class SampleWriter {
      * Writes as many samples as are present in the sample array into a byte array.
      */
     public static byte[] writeSamples(short[] samples, ImmerseAudioFormat format) {
-        AudioUtil.assertSigned(format);
         byte[] outputBuffer = new byte[samples.length * format.getNumberOfBytesPerSample()];
         for (int i = 0; i < samples.length; i++) {
             writeSample(samples[i], outputBuffer, i, format);

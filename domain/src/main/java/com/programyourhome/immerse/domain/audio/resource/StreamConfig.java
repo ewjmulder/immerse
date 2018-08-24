@@ -6,9 +6,9 @@ import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
 
 /**
- * AudioResource configuration that will be used to determine the right internal buffer size.
+ * Stream configuration for the AudioResource that will be used to determine the right internal buffer size.
  */
-public class ResourceConfig implements Serializable {
+public class StreamConfig implements Serializable {
 
     private static final long serialVersionUID = Serialization.VERSION;
 
@@ -19,7 +19,7 @@ public class ResourceConfig implements Serializable {
     private int chunkSize;
     private int packetSize;
 
-    private ResourceConfig() {
+    private StreamConfig() {
     }
 
     /**
@@ -63,17 +63,17 @@ public class ResourceConfig implements Serializable {
         return new Builder(format);
     }
 
-    public static ResourceConfig defaultNonLive(ImmerseAudioFormat format) {
-        return ResourceConfig.builder(format).build();
+    public static StreamConfig defaultNonLive(ImmerseAudioFormat format) {
+        return StreamConfig.builder(format).build();
     }
 
     public static class Builder {
         private final ImmerseAudioFormat format;
-        private final ResourceConfig config;
+        private final StreamConfig config;
 
         public Builder(ImmerseAudioFormat format) {
             this.format = format;
-            this.config = new ResourceConfig();
+            this.config = new StreamConfig();
             this.config.live = false;
             this.config.chunkSize = this.millisToBytes(DEFAULT_CHUNK_SIZE_IN_MILLIS);
             this.config.packetSize = this.millisToBytes(DEFAULT_PACKET_SIZE_IN_MILLIS);
@@ -113,7 +113,7 @@ public class ResourceConfig implements Serializable {
             return (int) (millis * this.format.getNumberOfBytesPerMilli());
         }
 
-        public ResourceConfig build() {
+        public StreamConfig build() {
             return this.config;
         }
 

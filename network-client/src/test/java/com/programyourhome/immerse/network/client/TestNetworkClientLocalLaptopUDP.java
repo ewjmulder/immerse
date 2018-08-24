@@ -9,6 +9,7 @@ import static com.programyourhome.immerse.toolbox.util.TestData.settings;
 import static com.programyourhome.immerse.toolbox.util.TestData.soundCard;
 import static com.programyourhome.immerse.toolbox.util.TestData.speaker;
 
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.TargetDataLine;
 
 import com.programyourhome.immerse.audiostreaming.mixer.ImmerseSettings;
@@ -31,12 +33,14 @@ import com.programyourhome.immerse.domain.format.SampleRate;
 import com.programyourhome.immerse.domain.format.SampleSize;
 import com.programyourhome.immerse.domain.speakers.Speaker;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
-import com.programyourhome.immerse.toolbox.audio.playback.ForeverPlayback;
+import com.programyourhome.immerse.toolbox.audio.playback.LoopPlayback;
 import com.programyourhome.immerse.toolbox.audio.resource.UdpAudioResource;
 
 public class TestNetworkClientLocalLaptopUDP {
 
     private static final int UDP_PORT = 43512;
+    private static final int INTERNAL_MIC_CHUNK_SIZE = 180 * 45 * 2;
+    private static final int EXTERNAL_MIC_CHUNK_SIZE = 20 * 45 * 2;
     private static final int PACKET_SIZE = 100;
     private static final String START_MESSAGE = "start";
 
@@ -58,8 +62,8 @@ public class TestNetworkClientLocalLaptopUDP {
                 room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0)));
         ImmerseAudioFormat format = ImmerseAudioFormat.fromJavaAudioFormat(new AudioFormat(44100, 16, 1, true, false));
         Scenario scenario = scenario(room,
-                settings(UdpAudioResource.udp(InetAddress.getLocalHost(), UDP_PORT, PACKET_SIZE, format, START_MESSAGE),
-                        fixed(5, 10, 10), fixed(5, 5, 5), fixed(fixedSpeakerVolumeRatios), fractional(), ForeverPlayback.forever()));
+                settings(UdpAudioResource.udp("localhost", UDP_PORT, EXTERNAL_MIC_CHUNK_SIZE, PACKET_SIZE, format, START_MESSAGE),
+                        fixed(5, 10, 10), fixed(5, 5, 5), fixed(fixedSpeakerVolumeRatios), fractional(), LoopPlayback.once()));
 
         ImmerseClient client = new ImmerseClient("localhost", 51515);
 
@@ -78,7 +82,7 @@ public class TestNetworkClientLocalLaptopUDP {
         System.out.println(playbackId);
 
         // try {
-        // Thread.sleep(10000);
+        // Thread.sleep(4000);
         // } catch (InterruptedException e) {}
         //
         // System.out.println(client.stopPlayback(playbackId));
@@ -86,40 +90,6 @@ public class TestNetworkClientLocalLaptopUDP {
 
     private static void openMicUdp() {
         try {
-            {
-                final AudioFormat format = new AudioFormat(44100, 16, 1, true, false);
-                final TargetDataLine line = AudioSystem.getTargetDataLine(format, AudioSystem.getMixerInfo()[7]);
-                // final TargetDataLine line = AudioSystem.getTargetDataLine(format);
-                line.open(format);
-                line.start();
-                final AudioInputStream testMicInputStream = new AudioInputStream(line);
-
-                testMicInputStream.read(new byte[testMicInputStream.available()]);
-                int times = 200;
-                double totalFramesRead = 0;
-                for (int i = 0; i < times; i++) {
-                    byte[] frame = new byte[2];
-                    int framesReadInChunk = 0;
-                    boolean endOfChunk = false;
-                    while (!endOfChunk) {
-                        long start = System.nanoTime();
-                        testMicInputStream.read(frame);
-                        long end = System.nanoTime();
-                        framesReadInChunk++;
-                        // If reading a frame takes more than 1 milli, we've hit a chunk limit (cause it did not come out of a buffer)
-                        if ((end - start) / 1_000_000 > 1) {
-                            endOfChunk = true;
-                        }
-                    }
-                    totalFramesRead += framesReadInChunk;
-                    System.out.println("# frames in chunk: " + framesReadInChunk);
-                    System.out.println("# ms in chunk: " + framesReadInChunk / 44.1);
-                }
-                System.out.println("# frames in " + times + " chunks: " + totalFramesRead);
-                System.out.println("# avg ms in chunk: " + totalFramesRead / times / 44.1);
-            }
-            System.exit(0);
-
             DatagramSocket socket = new DatagramSocket(UDP_PORT);
             byte[] buffer = new byte[PACKET_SIZE];
 
@@ -138,7 +108,6 @@ public class TestNetworkClientLocalLaptopUDP {
 
             final AudioFormat format = new AudioFormat(44100, 16, 1, true, false);
             final TargetDataLine line = AudioSystem.getTargetDataLine(format, AudioSystem.getMixerInfo()[7]);
-            // final TargetDataLine line = AudioSystem.getTargetDataLine(format);
             line.open(format);
             line.start();
             final AudioInputStream micInputStream = new AudioInputStream(line);
@@ -148,10 +117,7 @@ public class TestNetworkClientLocalLaptopUDP {
                 int amountNeeded = PACKET_SIZE;
                 int totalAmountRead = 0;
                 while (totalAmountRead < amountNeeded) {
-                    // System.out.println(System.currentTimeMillis() + " - just before mic read");
-                    // System.out.println(System.currentTimeMillis() + " - line available: " + line.available());
                     int amountRead = micInputStream.read(buffer, totalAmountRead, amountNeeded - totalAmountRead);
-                    // System.out.println(System.currentTimeMillis() + " - just after mic read");
                     if (amountRead == -1) {
                         throw new IllegalArgumentException("Mic stream closed");
                     } else {
@@ -161,11 +127,45 @@ public class TestNetworkClientLocalLaptopUDP {
 
                 packet = new DatagramPacket(buffer, buffer.length, address, port);
                 socket.send(packet);
-                // System.out.println(System.currentTimeMillis() + " - packet sent");
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    // TODO: Move test code somewhere in a util or so
+
+    private static void testMic() throws IOException, LineUnavailableException {
+        final AudioFormat format = new AudioFormat(44100, 16, 1, true, false);
+        final TargetDataLine line = AudioSystem.getTargetDataLine(format, AudioSystem.getMixerInfo()[7]);
+        line.open(format);
+        line.start();
+        final AudioInputStream testMicInputStream = new AudioInputStream(line);
+
+        testMicInputStream.read(new byte[testMicInputStream.available()]);
+        int times = 200;
+        double totalFramesRead = 0;
+        for (int i = 0; i < times; i++) {
+            byte[] frame = new byte[2];
+            int framesReadInChunk = 0;
+            boolean endOfChunk = false;
+            while (!endOfChunk) {
+                long start = System.nanoTime();
+                testMicInputStream.read(frame);
+                long end = System.nanoTime();
+                framesReadInChunk++;
+                // If reading a frame takes more than 1 milli, we've hit a chunk limit (cause it did not come out of a buffer)
+                if ((end - start) / 1_000_000 > 1) {
+                    endOfChunk = true;
+                }
+            }
+            totalFramesRead += framesReadInChunk;
+            System.out.println("# frames in chunk: " + framesReadInChunk);
+            System.out.println("# ms in chunk: " + framesReadInChunk / 44.1);
+        }
+        System.out.println("# frames in " + times + " chunks: " + totalFramesRead);
+        System.out.println("# avg ms in chunk: " + totalFramesRead / times / 44.1);
+        System.exit(0);
     }
 
 }

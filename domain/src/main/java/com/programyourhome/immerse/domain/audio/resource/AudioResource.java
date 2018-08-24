@@ -30,8 +30,8 @@ public interface AudioResource extends Serializable {
     /**
      * Get the config for this resource.
      */
-    public default ResourceConfig getConfig() {
-        return ResourceConfig.defaultNonLive(this.getFormat());
+    public default StreamConfig getConfig() {
+        return StreamConfig.defaultNonLive(this.getFormat());
     }
 
 }

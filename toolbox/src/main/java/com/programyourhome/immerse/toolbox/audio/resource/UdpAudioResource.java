@@ -16,20 +16,20 @@ import org.pmw.tinylog.Logger;
 import com.programyourhome.immerse.domain.Factory;
 import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.audio.resource.AudioResource;
-import com.programyourhome.immerse.domain.audio.resource.ResourceConfig;
+import com.programyourhome.immerse.domain.audio.resource.StreamConfig;
 import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
 
 /**
  * An audio resource getting it's data from an UDP connection.
  * The supplied packet size must be a multitude of the frame size to keep playing consistent upon packet drop.
- * The recommended packet size is quite low, having just a few milliseconds of audio data.
+ * The recommended packet size is quite low, having around one millisecond of audio data.
  */
 public class UdpAudioResource implements AudioResource {
 
     private static final long serialVersionUID = Serialization.VERSION;
 
     private final AudioInputStream audioInputStream;
-    private final ResourceConfig config;
+    private final StreamConfig config;
 
     public UdpAudioResource(InetAddress host, int port, int chunkSize, int packetSize, ImmerseAudioFormat audioFormat, String startMessage) {
         if (packetSize % audioFormat.getNumberOfBytesPerFrame() != 0) {
@@ -38,9 +38,9 @@ public class UdpAudioResource implements AudioResource {
         if (startMessage.getBytes().length > packetSize) {
             throw new IllegalArgumentException("Start message bytes should fit into the packet size");
         }
-        this.audioInputStream = new AudioInputStream(new UdpInputStream(host, port, packetSize, startMessage),
+        this.audioInputStream = new AudioInputStream(new UdpInputStream(host, port, packetSize, audioFormat, startMessage),
                 audioFormat.toJavaAudioFormat(), AudioSystem.NOT_SPECIFIED);
-        this.config = ResourceConfig.builder(this.getFormat())
+        this.config = StreamConfig.builder(this.getFormat())
                 // UDP resources are always live.
                 .live()
                 .chunkSize(chunkSize)
@@ -54,42 +54,61 @@ public class UdpAudioResource implements AudioResource {
     }
 
     @Override
-    public ResourceConfig getConfig() {
+    public StreamConfig getConfig() {
         return this.config;
     }
 
-    // TODO: address as String
-    public static Factory<AudioResource> udp(InetAddress host, int port, int chunkSize, int packetSize, ImmerseAudioFormat audioFormat, String startMessage) {
+    public static Factory<AudioResource> udp(String host, int port, int chunkSize, int packetSize, ImmerseAudioFormat audioFormat, String startMessage) {
         return new Factory<AudioResource>() {
             private static final long serialVersionUID = Serialization.VERSION;
 
             @Override
             public AudioResource create() {
-                return new UdpAudioResource(host, port, chunkSize, packetSize, audioFormat, startMessage);
+                try {
+                    return new UdpAudioResource(InetAddress.getByName(host), port, chunkSize, packetSize, audioFormat, startMessage);
+                } catch (UnknownHostException e) {
+                    throw new IllegalArgumentException("Host not found", e);
+                }
             }
         };
     }
 
     public class UdpInputStream extends InputStream {
+        // Timeout in millis before a receive fails and the stream is assumed to have stopped.
+        public static final int UDP_SOCKET_TIMEOUT_MILLIS = 1000;
 
         private final InetAddress host;
         private final int port;
         private final int packetSize;
+        private final ImmerseAudioFormat audioFormat;
         private final String startMessage;
         private final DatagramSocket socket;
+        // A buffer to store part of a packet that has been received but not yet read.
+        private final byte[] subPacketBuffer;
+        // The amount of bytes present in the sub packet buffer.
+        private int subPacketBufferSize;
         private boolean started;
+        private boolean closed;
 
-        public UdpInputStream(InetAddress host, int port, int packetSize, String startMessage) {
+        public UdpInputStream(InetAddress host, int port, int packetSize, ImmerseAudioFormat audioFormat, String startMessage) {
             this.host = host;
             this.port = port;
             this.packetSize = packetSize;
+            this.audioFormat = audioFormat;
             this.startMessage = startMessage;
-            this.started = false;
+            // Sub packet buffer will never need to be larger than 1 packet.
+            this.subPacketBuffer = new byte[packetSize];
+            // We start with no saved bytes in the sub packet buffer.
+            this.subPacketBufferSize = 0;
             try {
                 this.socket = new DatagramSocket();
+                this.socket.setSoTimeout(UDP_SOCKET_TIMEOUT_MILLIS);
             } catch (SocketException e) {
+                this.closed = true;
                 throw new IllegalStateException("Exception while creating UDP socket", e);
             }
+            this.started = false;
+            this.closed = false;
         }
 
         @Override
@@ -98,9 +117,13 @@ public class UdpAudioResource implements AudioResource {
         }
 
         @Override
-        public int read(byte[] buffer, int offset, int length) throws IOException {
-            if (length % this.packetSize != 0) {
-                throw new IllegalArgumentException("Amount to read [" + length + "] must be a multitude of packet size [" + this.packetSize + "]");
+        public int read(byte[] toBuffer, int offset, int length) throws IOException {
+            if (this.closed) {
+                return -1;
+            }
+            if (length % this.audioFormat.getNumberOfBytesPerFrame() != 0) {
+                throw new IllegalArgumentException("Amount to read [" + length + "] "
+                        + "must be a multitude of frame size [" + this.audioFormat.getNumberOfBytesPerFrame() + "]");
             }
             // If we've not started yet, send the start message to the configured host and port.
             if (!this.started) {
@@ -111,104 +134,52 @@ public class UdpAudioResource implements AudioResource {
             }
             // If we have started, we can receive packets from the sender.
             int bytesRead = 0;
-            try {
-                byte[] audioBuffer = new byte[this.packetSize];
-                for (int i = 0; i < length / this.packetSize; i++) {
-                    DatagramPacket audioPacket = new DatagramPacket(audioBuffer, audioBuffer.length);
-                    this.socket.receive(audioPacket);
-                    if (audioPacket.getLength() != this.packetSize) {
-                        throw new IllegalStateException("Received packet size " + audioPacket.getLength() + " != configured packet size " + this.packetSize);
+            int bytesToRead = length;
+            // First copy any bytes left from the sub packet buffer.
+            int amountToReadFromSubPacketBuffer = Math.min(bytesToRead, this.subPacketBufferSize);
+            System.arraycopy(this.subPacketBuffer, 0, toBuffer, offset, amountToReadFromSubPacketBuffer);
+            bytesRead += amountToReadFromSubPacketBuffer;
+            this.subPacketBufferSize -= amountToReadFromSubPacketBuffer;
+            if (this.subPacketBufferSize > 0) {
+                // Re-align the bytes left in the sub packet buffer to the front.
+                System.arraycopy(this.subPacketBuffer, amountToReadFromSubPacketBuffer, this.subPacketBuffer, 0, this.subPacketBufferSize);
+                // All bytes needed could be read from the sub packet buffer, so no further network reading needed.
+            } else {
+                // Sub packet buffer was not big enough to fill the toBuffer, start reading from network.
+                try {
+                    byte[] packetBuffer = new byte[this.packetSize];
+                    while (bytesRead < bytesToRead && !this.closed) {
+                        DatagramPacket audioPacket = new DatagramPacket(packetBuffer, packetBuffer.length);
+                        this.socket.receive(audioPacket);
+                        if (audioPacket.getLength() != this.packetSize) {
+                            this.closed = true;
+                            throw new IllegalStateException(
+                                    "Received packet size " + audioPacket.getLength() + " != configured packet size " + this.packetSize);
+                        }
+                        int amountToReadFromPacketBuffer = Math.min(bytesToRead - bytesRead, packetBuffer.length);
+                        if (amountToReadFromPacketBuffer < packetBuffer.length) {
+                            // Save the rest of the packet bytes into the sub packet buffer.
+                            if (this.subPacketBufferSize > 0) {
+                                throw new IllegalStateException("Sub packet size should be 0 when filling it up again");
+                            }
+                            int amountLeft = packetBuffer.length - amountToReadFromPacketBuffer;
+                            System.arraycopy(packetBuffer, amountToReadFromPacketBuffer, this.subPacketBuffer, 0, amountLeft);
+                            this.subPacketBufferSize = amountLeft;
+                        }
+                        System.arraycopy(packetBuffer, 0, toBuffer, offset + bytesRead, amountToReadFromPacketBuffer);
+                        bytesRead += amountToReadFromPacketBuffer;
                     }
-                    System.arraycopy(audioBuffer, 0, buffer, offset, audioBuffer.length);
-                    offset += audioBuffer.length;
-                    bytesRead += audioBuffer.length;
+                } catch (IOException e) {
+                    Logger.error(e, "IOException while receiving UDP packet");
+                    this.closed = true;
                 }
-            } catch (IOException e) {
-                Logger.error(e, "IOException while receiving UDP packet");
-                return -1;
             }
             return bytesRead;
         }
-    }
-
-    // FIXME: remove this! And below!
-    public static void main(String[] args) throws IOException {
-        new EchoServer().start();
-
-        String reply = new EchoClient().sendEcho("Echoing");
-        System.out.println("Reply from server: " + reply);
-        new EchoClient().sendEcho("end");
-    }
-
-    // FIXME: remove this!
-    public static class EchoClient {
-        private final DatagramSocket socket;
-        private final InetAddress address;
-
-        private byte[] buf;
-
-        public EchoClient() throws SocketException, UnknownHostException {
-            this.socket = new DatagramSocket();
-            System.out.println("Client uses port " + this.socket.getLocalPort());
-            this.address = InetAddress.getByName("localhost");
-        }
-
-        public String sendEcho(String msg) throws IOException {
-            this.buf = msg.getBytes();
-            DatagramPacket packet = new DatagramPacket(this.buf, this.buf.length, this.address, 4445);
-            this.socket.send(packet);
-            packet = new DatagramPacket(this.buf, this.buf.length);
-            this.socket.receive(packet);
-            System.out.println("Buffer size: " + this.socket.getReceiveBufferSize());
-            this.socket.setReceiveBufferSize(1024);
-            System.out.println("Buffer size: " + this.socket.getReceiveBufferSize());
-            System.out.println("Send buffer size: " + this.socket.getSendBufferSize());
-            String received = new String(
-                    packet.getData(), 0, packet.getLength());
-            return received;
-        }
-
-        public void close() {
-            this.socket.close();
-        }
-    }
-
-    // FIXME: remove this!
-    public static class EchoServer extends Thread {
-
-        private final DatagramSocket socket;
-        private boolean running;
-        private final byte[] buf = new byte[1024];
-
-        public EchoServer() throws SocketException {
-            this.socket = new DatagramSocket(4445);
-        }
 
         @Override
-        public void run() {
-            try {
-                this.running = true;
-
-                while (this.running) {
-                    DatagramPacket packet = new DatagramPacket(this.buf, this.buf.length);
-                    this.socket.receive(packet);
-
-                    InetAddress address = packet.getAddress();
-                    int port = packet.getPort();
-                    System.out.println("Packet received from " + address + " on port " + port);
-                    packet = new DatagramPacket(this.buf, this.buf.length, address, port);
-                    String received = new String(packet.getData(), 0, packet.getLength());
-
-                    if (received.equals("end")) {
-                        this.running = false;
-                        continue;
-                    }
-                    this.socket.send(packet);
-                }
-                this.socket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        public void close() throws IOException {
+            this.closed = true;
         }
     }
 

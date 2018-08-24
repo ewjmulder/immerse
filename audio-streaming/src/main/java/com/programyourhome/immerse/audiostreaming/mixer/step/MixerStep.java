@@ -179,10 +179,12 @@ public class MixerStep {
      */
     private Optional<short[]> readSamples(ActiveScenario activeScenario) {
         try {
-            // Create a samples array of the right size (samples needed = frames needed, because the input must be mono).
-            short[] samples = new short[this.amountOfFramesNeeded];
-            // Read the actual samples into the array and record if there was an end of stream reached while doing so.
-            boolean endOfStream = SampleReader.readSamples(activeScenario.getInputBuffer(), samples);
+            // Create a byte array of the right size (samples needed = frames needed, because the input must be mono).
+            byte[] byteBuffer = new byte[this.amountOfFramesNeeded * activeScenario.getFormat().getNumberOfBytesPerSample()];
+            // Fill the byte buffer with the next chunk of audio data to be processed and record if there was an end of stream reached while doing so.
+            boolean endOfStream = this.readBytes(activeScenario, byteBuffer);
+            // Now read the samples from the byte buffer.
+            short[] samples = SampleReader.readSamples(byteBuffer, activeScenario.getFormat());
             if (endOfStream) {
                 // End of stream reached, check playback for next action.
                 if (activeScenario.getPlayback().endOfStream()) {
@@ -202,6 +204,29 @@ public class MixerStep {
             // Return an empty optional to signal failure.
             return Optional.empty();
         }
+    }
+
+    private boolean readBytes(ActiveScenario activeScenario, byte[] byteBuffer) {
+        boolean endOfStream = false;
+        AudioInputBuffer inputBuffer = activeScenario.getInputBuffer();
+        if (inputBuffer.canRead(byteBuffer.length)) {
+            inputBuffer.read(byteBuffer);
+            if (!activeScenario.getStreamConfig().isLive()) {
+                // Update the buffer after a read, so it will be refilled (asynchronously).
+                // Only, for non-live, cause for live there will be a continuous read loop already.
+                getSettings().submitAsyncTask(() -> inputBuffer.fill());
+            }
+        } else if (inputBuffer.isStreamClosed()) {
+            int amountRead = inputBuffer.readRemaining(byteBuffer);
+            if (amountRead < byteBuffer.length) {
+                endOfStream = true;
+                // The rest should be silence, so a value of 0. But since that is already the default value for a byte in an array, no action is needed.
+            }
+        } else {
+            Logger.warn("AudioInputBuffer doesn't have " + byteBuffer.length + " available, skipping scenario for this step.");
+            // The array will be initialized with 0's, which means silence, so no further action needed.
+        }
+        return endOfStream;
     }
 
     /**
