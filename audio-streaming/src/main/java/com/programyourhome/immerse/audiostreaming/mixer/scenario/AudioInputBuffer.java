@@ -55,7 +55,9 @@ public class AudioInputBuffer {
     }
 
     /**
-     * Best practice formula for a small but reliable buffer size.
+     * Best practice formula for buffer size:
+     * small: not too much in buffer upon read hickup
+     * reliable: enough in buffer to keep reading going upon fill hickup.
      */
     private int calculateBufferSize() {
         return this.streamConfig.getChunkSize() + 2 * this.streamConfig.getPacketSize() +

@@ -1,8 +1,13 @@
 package com.programyourhome.immerse.audiostreaming.soundcard;
 
+import static com.programyourhome.immerse.audiostreaming.mixer.ActiveImmerseSettings.getTechnicalSettings;
+
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 
+import org.pmw.tinylog.Logger;
+
+import com.programyourhome.immerse.audiostreaming.util.AudioUtil;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
 import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
 import com.programyourhome.immerse.domain.format.RecordingMode;
@@ -29,9 +34,7 @@ public class SoundCardStream {
         if (this.outputFormat.getRecordingMode() != RecordingMode.STEREO) {
             throw new IllegalArgumentException("Only recording mode stereo is supported");
         }
-        if (!this.outputFormat.isSigned()) {
-            throw new IllegalArgumentException("Only signed samples are supported");
-        }
+        AudioUtil.assertSigned(this.outputFormat);
         this.framesPerMilli = this.outputFormat.getNumberOfFramesPerSecond() / 1000.0;
         this.framesWritten = 0;
         this.mutedLeft = false;
@@ -43,10 +46,28 @@ public class SoundCardStream {
     }
 
     public void open() {
-        try {
-            this.outputLine.open();
-        } catch (LineUnavailableException e) {
-            throw new IllegalStateException("Line unavailable", e);
+        // The buffer should be big enough for the sound card buffer millis + some small percentage
+        // to account for different sound card streams being out of sync.
+        // The underlying implementation will take care of rounding the buffer size to a number of frames.
+        int bufferSize = (int) (getTechnicalSettings().getSoundCardBufferMillis() * this.outputFormat.getNumberOfBytesPerMilli() * 1.1);
+        boolean openSuccess = false;
+        // Max number of retries, should be plenty based on test findings.
+        int maxRetries = 10;
+        int tries = 0;
+        // We have seen LineUnavailableException's happen at certain buffer sizes, so perform retries
+        // for slightly larger buffer sizes until either it was a success or the max retries has been reached.
+        while (!openSuccess && tries < maxRetries) {
+            try {
+                this.outputLine.open(this.outputFormat.toJavaAudioFormat(), bufferSize);
+                openSuccess = true;
+            } catch (LineUnavailableException e) {
+                Logger.info("Line unavailable for requested buffer size, will try buffer size with one extra frame");
+                bufferSize += this.outputFormat.getNumberOfBytesPerFrame();
+                tries++;
+            }
+        }
+        if (!openSuccess) {
+            throw new IllegalStateException("Line unavailable after max retries");
         }
     }
 

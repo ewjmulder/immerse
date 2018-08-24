@@ -1,8 +1,9 @@
 package com.programyourhome.immerse.network.client;
 
 import static com.programyourhome.immerse.toolbox.location.dynamic.FixedDynamicLocation.fixed;
+import static com.programyourhome.immerse.toolbox.location.dynamic.KeyFramesDynamicLocation.keyFrames;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.normalize.FractionalNormalizeAlgorithm.fractional;
-import static com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios.FixedVolumeRatiosAlgorithm.fixed;
+import static com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios.FieldOfHearingVolumeRatiosAlgorithm.fieldOfHearing;
 import static com.programyourhome.immerse.toolbox.util.TestData.room;
 import static com.programyourhome.immerse.toolbox.util.TestData.scenario;
 import static com.programyourhome.immerse.toolbox.util.TestData.settings;
@@ -15,6 +16,8 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -31,47 +34,75 @@ import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
 import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
 import com.programyourhome.immerse.domain.format.SampleRate;
 import com.programyourhome.immerse.domain.format.SampleSize;
+import com.programyourhome.immerse.domain.location.Vector3D;
 import com.programyourhome.immerse.domain.speakers.Speaker;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
 import com.programyourhome.immerse.toolbox.audio.playback.LoopPlayback;
 import com.programyourhome.immerse.toolbox.audio.resource.UdpAudioResource;
 
-public class TestNetworkClientLocalLaptopUDP {
+public class TestNetworkClientSparrenburchtUDP {
 
     private static final int UDP_PORT = 43512;
-    private static final int INTERNAL_MIC_CHUNK_SIZE = 3 * 45 * 2;
-    private static final int EXTERNAL_MIC_CHUNK_SIZE = 3 * 45 * 2;
-    private static final int PACKET_SIZE = 50;
+    private static final int INTERNAL_MIC_CHUNK_SIZE = 180 * 45 * 2;
+    private static final int EXTERNAL_MIC_CHUNK_SIZE = 20 * 45 * 2;
+    private static final int PACKET_SIZE = 100;
     private static final String START_MESSAGE = "start";
 
     public static void main(String[] args) throws Exception {
-        // testMic();
+        new Thread(() -> openMicUdp()).start();
 
-        ImmerseAudioFormat micFormat = ImmerseAudioFormat.fromJavaAudioFormat(new AudioFormat(16000, 8, 1, true, false));
-        new Thread(() -> openMicUdp(micFormat.toJavaAudioFormat())).start();
+        Speaker speaker1 = speaker(1, 0, 366, 250);
+        Speaker speaker2 = speaker(2, 122, 366, 250);
+        Speaker speaker3 = speaker(3, 244, 366, 250);
+        Speaker speaker4 = speaker(4, 366, 366, 250);
+        Speaker speaker5 = speaker(5, 366, 244, 250);
+        Speaker speaker6 = speaker(6, 366, 122, 250);
+        Speaker speaker7 = speaker(7, 366, 0, 250);
+        Speaker speaker8 = speaker(8, 244, 0, 250);
+        Speaker speaker9 = speaker(9, 122, 0, 250);
+        Speaker speaker10 = speaker(10, 0, 0, 250);
+        Speaker speaker11 = speaker(11, 0, 122, 250);
+        Speaker speaker12 = speaker(12, 0, 244, 250);
+        Room room = room(speaker1, speaker2, speaker3, speaker4, speaker5, speaker6, speaker7, speaker8, speaker9, speaker10, speaker11, speaker12);
 
-        Speaker speaker1 = speaker(1, 0, 10, 10);
-        Speaker speaker2 = speaker(2, 10, 10, 10);
-        Room room = room(speaker1, speaker2);
+        // TODO: convenience class around key frames?
+        // TODO: key frames options loop or once
+        SortedMap<Long, Vector3D> keyFrames = new TreeMap<>();
+        keyFrames.put(0L, new Vector3D(0, 0, 250));
+        keyFrames.put(3_000L, new Vector3D(0, 366, 250));
+        keyFrames.put(6_000L, new Vector3D(366, 366, 250));
+        keyFrames.put(9_000L, new Vector3D(366, 0, 250));
+        keyFrames.put(12_000L, new Vector3D(0, 0, 250));
 
-        SoundCard soundCard1 = soundCard(1, "pci-0000:00:1f.3", speaker1, speaker2);
+        SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
+                room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> speaker.getId() == 4 ? 0.5 : 0.0)));
+        ImmerseAudioFormat format = ImmerseAudioFormat.fromJavaAudioFormat(new AudioFormat(44100, 16, 1, true, false));
+        Scenario scenario = scenario(room,
+                settings(UdpAudioResource.udp("192.168.0.101", UDP_PORT, EXTERNAL_MIC_CHUNK_SIZE, PACKET_SIZE, format, START_MESSAGE),
+                        keyFrames(keyFrames, true), fixed(5, 5, 5), fieldOfHearing(45), fractional(), LoopPlayback.once()));
+
+        // Scenario scenario2 = scenario(room, settings(file(VOICE_PINE), keyFrames(keyFrames), fixed(180, 180, 150),
+        // fieldOfHearing(45), maxSum(1), forever()));
+        // fixed(fixedSpeakerVolumeRatios), fractional(), forever()));
+
+        SoundCard soundCard1 = soundCard(1, "platform-1c1b000.ehci1-controller-usb-0:1.2:1.0", speaker9, speaker6);
+        SoundCard soundCard2 = soundCard(2, "platform-1c1b000.ehci1-controller-usb-0:1.3:1.0", speaker10, speaker11);
+        SoundCard soundCard3 = soundCard(3, "platform-1c1b000.ehci1-controller-usb-0:1.4:1.0", speaker7, speaker4);
+        SoundCard soundCard4 = soundCard(4, "platform-1c1b000.ehci1-controller-usb-0:1.1.2:1.0", speaker1, speaker12);
+        SoundCard soundCard5 = soundCard(5, "platform-1c1b000.ehci1-controller-usb-0:1.1.3:1.0", speaker8, speaker5);
+        // Note: this sound card has left and right switched compared to all other sound cards in use
+        SoundCard soundCard6 = soundCard(6, "platform-1c1b000.ehci1-controller-usb-0:1.1.4:1.0", speaker3, speaker2);
 
         ImmerseAudioFormat outputFormat = ImmerseAudioFormat.builder()
                 .sampleRate(SampleRate.RATE_44K)
                 .sampleSize(SampleSize.TWO_BYTES)
                 .buildForOutput();
 
-        SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
-                room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0)));
-        Scenario scenario = scenario(room,
-                settings(UdpAudioResource.udp("localhost", UDP_PORT, EXTERNAL_MIC_CHUNK_SIZE, PACKET_SIZE, micFormat, START_MESSAGE),
-                        fixed(5, 10, 10), fixed(5, 5, 5), fixed(fixedSpeakerVolumeRatios), fractional(), LoopPlayback.once()));
-
-        ImmerseClient client = new ImmerseClient("localhost", 51515);
+        ImmerseClient client = new ImmerseClient("192.168.0.106", 51515);
 
         ImmerseSettings settings = ImmerseSettings.builder()
                 .room(room)
-                .soundCards(new HashSet<>(Arrays.asList(soundCard1)))
+                .soundCards(new HashSet<>(Arrays.asList(soundCard1, soundCard2, soundCard3, soundCard4, soundCard5, soundCard6)))
                 .outputFormat(outputFormat)
                 .build();
 
@@ -82,15 +113,9 @@ public class TestNetworkClientLocalLaptopUDP {
         UUID playbackId = client.playScenario(scenario).getResult();
 
         System.out.println(playbackId);
-
-        // try {
-        // Thread.sleep(4000);
-        // } catch (InterruptedException e) {}
-        //
-        // System.out.println(client.stopPlayback(playbackId));
     }
 
-    private static void openMicUdp(AudioFormat format) {
+    private static void openMicUdp() {
         try {
             DatagramSocket socket = new DatagramSocket(UDP_PORT);
             byte[] buffer = new byte[PACKET_SIZE];
@@ -108,10 +133,9 @@ public class TestNetworkClientLocalLaptopUDP {
             InetAddress address = packet.getAddress();
             int port = packet.getPort();
 
-            final TargetDataLine line = AudioSystem.getTargetDataLine(format);// , AudioSystem.getMixerInfo()[7]);
-            // Set the buffer size to a way too low value on purpose, which means the underlying system will
-            // choose the minimum buffer size available, which will drastically drop the chunk size!
-            line.open(format, 1);
+            final AudioFormat format = new AudioFormat(44100, 16, 1, true, false);
+            final TargetDataLine line = AudioSystem.getTargetDataLine(format, AudioSystem.getMixerInfo()[7]);
+            line.open(format);
             line.start();
             final AudioInputStream micInputStream = new AudioInputStream(line);
             System.out.println("Mic started, sending UDP packages");
@@ -141,8 +165,7 @@ public class TestNetworkClientLocalLaptopUDP {
     private static void testMic() throws IOException, LineUnavailableException {
         final AudioFormat format = new AudioFormat(44100, 16, 1, true, false);
         final TargetDataLine line = AudioSystem.getTargetDataLine(format, AudioSystem.getMixerInfo()[7]);
-        line.open(format, 1);
-        System.out.println(line.getBufferSize());
+        line.open(format);
         line.start();
         final AudioInputStream testMicInputStream = new AudioInputStream(line);
 
@@ -158,8 +181,8 @@ public class TestNetworkClientLocalLaptopUDP {
                 testMicInputStream.read(frame);
                 long end = System.nanoTime();
                 framesReadInChunk++;
-                // If reading a frame takes more than 0.05 milli, we've hit a chunk limit (cause it did not come out of a buffer)
-                if ((end - start) / 50_000 > 1) {
+                // If reading a frame takes more than 1 milli, we've hit a chunk limit (cause it did not come out of a buffer)
+                if ((end - start) / 1_000_000 > 1) {
                     endOfChunk = true;
                 }
             }
