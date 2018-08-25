@@ -15,13 +15,12 @@ class OnlyClosestVolumeRatiosAlgorithmSpec extends Specification {
     //TODO: this is not the right test, since the algo uses the underlying calculateAngleInDegrees, that should be tested separately!
     def "Closest angle speaker should be selected"() {
         given:
-        def snapshot = snapshot(
-                room(speaker(1, x1, y1, z1), speaker(2, x2, y2, z2)),
-                source(10, 10, 10), listener(0, 0, 0), settings())
+        def room = room(speaker(1, x1, y1, z1), speaker(2, x2, y2, z2))
+        def snapshot = snapshot(source(10, 10, 10), listener(0, 0, 0), settings())
 
         expect:
-        onlyClosest().create().calculateVolumeRatios(snapshot).getVolumeRatio(1) == v1
-        onlyClosest().create().calculateVolumeRatios(snapshot).getVolumeRatio(2) == v2
+        onlyClosest().create().calculateVolumeRatios(room, snapshot).getVolumeRatio(1) == v1
+        onlyClosest().create().calculateVolumeRatios(room, snapshot).getVolumeRatio(2) == v2
 
         where:
         x1 | y1 | z1 | x2 | y2 | z2 || v1 | v2
