@@ -41,13 +41,13 @@ public class TestNetworkClientLocalLaptopUDP {
     private static final int UDP_PORT = 43512;
     private static final int INTERNAL_MIC_CHUNK_SIZE = 3 * 45 * 2;
     private static final int EXTERNAL_MIC_CHUNK_SIZE = 3 * 45 * 2;
-    private static final int PACKET_SIZE = 50;
+    private static final int PACKET_SIZE = 48;
     private static final String START_MESSAGE = "start";
 
     public static void main(String[] args) throws Exception {
         // testMic();
 
-        ImmerseAudioFormat micFormat = ImmerseAudioFormat.fromJavaAudioFormat(new AudioFormat(16000, 8, 1, true, false));
+        ImmerseAudioFormat micFormat = ImmerseAudioFormat.fromJavaAudioFormat(new AudioFormat(44100, 16, 1, true, false));
         new Thread(() -> openMicUdp(micFormat.toJavaAudioFormat())).start();
 
         Speaker speaker1 = speaker(1, 0, 10, 10);

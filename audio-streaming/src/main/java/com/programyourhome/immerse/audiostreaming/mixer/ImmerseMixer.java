@@ -3,6 +3,7 @@ package com.programyourhome.immerse.audiostreaming.mixer;
 import static com.programyourhome.immerse.audiostreaming.mixer.ActiveImmerseSettings.getTechnicalSettings;
 import static com.programyourhome.immerse.audiostreaming.util.AudioUtil.toSigned;
 import static com.programyourhome.immerse.audiostreaming.util.LogUtil.logExceptions;
+import static com.programyourhome.immerse.domain.format.ImmerseAudioFormat.fromJavaAudioFormat;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -37,9 +38,8 @@ import com.programyourhome.immerse.audiostreaming.util.AudioUtil;
 import com.programyourhome.immerse.audiostreaming.util.MemoryUtil;
 import com.programyourhome.immerse.domain.Scenario;
 import com.programyourhome.immerse.domain.audio.resource.AudioResource;
+import com.programyourhome.immerse.domain.audio.resource.StreamConfig;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
-import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
-import com.programyourhome.immerse.domain.format.RecordingMode;
 import com.programyourhome.immerse.toolbox.util.StreamUtil;
 
 import one.util.streamex.EntryStream;
@@ -451,18 +451,9 @@ public class ImmerseMixer {
                     + "while the provided scenario is for room: " + scenario.getRoom().getId());
         }
         AudioResource audioResource = scenario.getSettings().getAudioResourceFactory().create();
-        if (audioResource.getConfig().isLive()) {
-            // Validate that the audio format of the live audio resource is equal to the mixer output format (except from the recording mode).
-            // This makes sure the internal buffers used are of the right size.
-            ImmerseAudioFormat resourceFormat = ImmerseAudioFormat.fromJavaAudioFormat(audioResource.getAudioInputStream().getFormat());
-            ImmerseAudioFormat outputFormat = this.settings.getOutputFormat();
-            if (resourceFormat.getSampleRate() != outputFormat.getSampleRate() || resourceFormat.getSampleSize() != outputFormat.getSampleSize()
-                    || resourceFormat.isSigned() != outputFormat.isSigned() || resourceFormat.getByteOrder() != outputFormat.getByteOrder()
-                    || resourceFormat.getRecordingMode() != RecordingMode.MONO) {
-                throw new IllegalArgumentException("The audio format of live streams must be mono and must match the mixer output audio format.");
-            }
-        }
-        ActiveScenario activeScenario = new ActiveScenario(scenario, this.convertAudioStream(audioResource.getAudioInputStream()), audioResource.getConfig());
+        AudioInputStream originalStream = audioResource.getAudioInputStream();
+        ActiveScenario activeScenario = new ActiveScenario(scenario,
+                this.convertAudioStream(originalStream), this.convertStreamConfig(originalStream, audioResource.getConfig()));
         this.scenariosInPlayback.add(activeScenario);
         this.scenariosToActivate.add(activeScenario);
         return activeScenario.getId();
@@ -486,6 +477,35 @@ public class ImmerseMixer {
         AudioInputStream signedStream = AudioUtil.convert(originalStream, toSigned(originalStream.getFormat()));
         AudioInputStream converted = AudioUtil.convert(signedStream, this.settings.getInputFormatJava());
         return converted;
+    }
+
+    /**
+     * Convert the stream config: update the sizes according to the stream conversion.
+     * After conversion the config will represent 'virtual' chunk and packet sizes, because that is not
+     * how the data is coming in, but as far as the rest of the processing is concerned, this config makes
+     * sense for the converted audio input stream they are using.
+     *
+     * NB: Unfortunately the AudioSystem conversion buffers make it necessary to increase the buffer size a lot.
+     * This may be fixed by implementing our own converters, see #85.
+     */
+    private StreamConfig convertStreamConfig(AudioInputStream originalStream, StreamConfig originalConfig) {
+        double originalBytesPerMilli = fromJavaAudioFormat(originalStream.getFormat()).getNumberOfBytesPerMilli();
+        double convertedBytesPerMilli = this.settings.getInputFormat().getNumberOfBytesPerMilli();
+        double conversionMultiplier = convertedBytesPerMilli / originalBytesPerMilli;
+        if (conversionMultiplier != 1) {
+            Logger.warn("Scenario audio format not equal to Immerse audio format, conversion needed. "
+                    + "This will increase internal buffering significantly. Consider supplying a matching audio format.");
+        }
+        // Best practice values from test results. Eventually we might implement our own converters with minimal buffering, see #85.
+        double conversionMultiplierMultiplier = 3;
+        if (conversionMultiplier < 1) {
+            conversionMultiplierMultiplier = 6;
+        }
+        return StreamConfig.builder(this.settings.getInputFormat())
+                .chunkSize((int) (originalConfig.getChunkSize() * conversionMultiplier * conversionMultiplierMultiplier))
+                .packetSize((int) (originalConfig.getPacketSize() * conversionMultiplier * conversionMultiplierMultiplier))
+                .setLive(originalConfig.isLive())
+                .build();
     }
 
     /**

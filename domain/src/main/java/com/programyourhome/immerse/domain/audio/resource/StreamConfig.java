@@ -89,6 +89,11 @@ public class StreamConfig implements Serializable {
             return this;
         }
 
+        public Builder setLive(boolean live) {
+            this.config.live = live;
+            return this;
+        }
+
         public Builder chunkSize(int chunkSize) {
             this.config.chunkSize = chunkSize;
             return this;

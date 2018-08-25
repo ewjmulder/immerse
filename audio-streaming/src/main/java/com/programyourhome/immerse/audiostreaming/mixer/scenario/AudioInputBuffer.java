@@ -60,8 +60,8 @@ public class AudioInputBuffer {
      * reliable: enough in buffer to keep reading going upon fill hickup.
      */
     private int calculateBufferSize() {
-        return this.streamConfig.getChunkSize() + 2 * this.streamConfig.getPacketSize() +
-                2 * (int) (getTechnicalSettings().getStepPaceMillis() * this.getAudioFormat().getNumberOfBytesPerMilli());
+        return this.streamConfig.getChunkSize() + 2 * this.streamConfig.getPacketSize()
+                + 2 * (int) (getTechnicalSettings().getStepPaceMillis() * this.getAudioFormat().getNumberOfBytesPerMilli());
     }
 
     public int getBufferSize() {
