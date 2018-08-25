@@ -446,10 +446,6 @@ public class ImmerseMixer {
         if (!this.state.isRunning()) {
             throw new IllegalStateException("Mixer is not in a running state (" + this.state + ")");
         }
-        if (!this.settings.getRoom().getId().equals(scenario.getRoom().getId())) {
-            throw new IllegalArgumentException("The room id should be identical. This mixer is configured for room: " + this.settings.getRoom().getId() + ", "
-                    + "while the provided scenario is for room: " + scenario.getRoom().getId());
-        }
         AudioResource audioResource = scenario.getSettings().getAudioResourceFactory().create();
         AudioInputStream originalStream = audioResource.getAudioInputStream();
         ActiveScenario activeScenario = new ActiveScenario(scenario,

@@ -3,7 +3,8 @@ package com.programyourhome.immerse.domain;
 import java.io.Serializable;
 
 /**
- * A scenario represents an audio resource in a room with speakers, with a dynamic source and listener locations.
+ * A scenario represents an audio resource with dynamic source and listener locations.
+ * The room the scenario will play in is defined by the room configured in the mixer.
  * A scenario should be played according to these properties and the algorithm settings.
  * The scenario object and fields themselves will not contain state, so they can be re-used for repeated playback.
  */
@@ -13,7 +14,6 @@ public class Scenario implements Serializable {
 
     private String name;
     private String description;
-    private Room room;
     private ScenarioSettings settings;
 
     private Scenario() {
@@ -25,10 +25,6 @@ public class Scenario implements Serializable {
 
     public String getDescription() {
         return this.description;
-    }
-
-    public Room getRoom() {
-        return this.room;
     }
 
     public ScenarioSettings getSettings() {
@@ -53,11 +49,6 @@ public class Scenario implements Serializable {
 
         public Builder description(String description) {
             this.scenario.description = description;
-            return this;
-        }
-
-        public Builder room(Room room) {
-            this.scenario.room = room;
             return this;
         }
 
