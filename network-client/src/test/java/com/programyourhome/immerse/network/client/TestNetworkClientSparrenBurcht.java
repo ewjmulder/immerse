@@ -60,7 +60,7 @@ public class TestNetworkClientSparrenBurcht {
 
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
                 room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 0.7))); // speaker.getId() == 2 ? 1.0 : 0.0)));
-        Scenario scenario1 = scenario(room, settings(file(SPIRAL), keyFrames(keyFrames), fixed(180, 180, 150),
+        Scenario scenario1 = scenario(settings(file(SPIRAL), keyFrames(keyFrames), fixed(180, 180, 150),
                 fixed(fixedSpeakerVolumeRatios), FractionalNormalizeAlgorithm.fractional(), forever()));
 
         // Scenario scenario2 = scenario(room, settings(file(VOICE_PINE), keyFrames(keyFrames), fixed(180, 180, 150),

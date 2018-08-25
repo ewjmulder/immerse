@@ -69,10 +69,10 @@ public class TesterSparrenBurcht {
 
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
                 room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0))); // speaker.getId() == 2 ? 1.0 : 0.0)));
-        Scenario scenario1 = scenario(room, settings(file(SPIRAL), keyFrames(keyFrames), fixed(180, 180, 150),
+        Scenario scenario1 = scenario(settings(file(SPIRAL), keyFrames(keyFrames), fixed(180, 180, 150),
                 fixed(fixedSpeakerVolumeRatios), maxSum(1), forever()));
 
-        // Scenario scenario2 = scenario(room, settings(file(VOICE_PINE), keyFrames(keyFrames), fixed(180, 180, 150),
+        // Scenario scenario2 = scenario(settings(file(VOICE_PINE), keyFrames(keyFrames), fixed(180, 180, 150),
         // fieldOfHearing(45), maxSum(1), forever()));
         // fixed(fixedSpeakerVolumeRatios), fractional(), forever()));
 

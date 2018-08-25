@@ -24,7 +24,7 @@ public class FixedVolumeRatiosAlgorithm implements VolumeRatiosAlgorithm {
     }
 
     @Override
-    public SpeakerVolumeRatios calculateVolumeRatios(Snapshot scene) {
+    public SpeakerVolumeRatios calculateVolumeRatios(Room room, Snapshot scene) {
         return this.speakerVolumeRatios;
     }
 

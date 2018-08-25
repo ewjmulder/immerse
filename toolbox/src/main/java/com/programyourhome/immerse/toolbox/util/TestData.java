@@ -63,11 +63,10 @@ public class TestData {
                 .build();
     }
 
-    public static Scenario scenario(Room room, ScenarioSettings settings) {
+    public static Scenario scenario(ScenarioSettings settings) {
         return Scenario.builder()
                 .name("Scenario")
                 .description("Description of scenario")
-                .room(room)
                 .settings(settings)
                 .build();
     }
@@ -75,9 +74,9 @@ public class TestData {
     /**
      * Just create a snapshot, without any interest in the dynamic part of the scenario.
      */
-    public static Snapshot snapshot(Room room, Vector3D source, Vector3D listener, ScenarioSettings settings) {
+    public static Snapshot snapshot(Vector3D source, Vector3D listener, ScenarioSettings settings) {
         return Snapshot.builder()
-                .scenario(scenario(room, settings))
+                .scenario(scenario(settings))
                 .source(source)
                 .listener(listener)
                 .build();

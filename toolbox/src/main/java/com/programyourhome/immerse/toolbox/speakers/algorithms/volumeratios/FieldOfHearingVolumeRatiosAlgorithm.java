@@ -1,6 +1,7 @@
 package com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios;
 
 import com.programyourhome.immerse.domain.Factory;
+import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.Snapshot;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
@@ -37,8 +38,8 @@ public class FieldOfHearingVolumeRatiosAlgorithm implements VolumeRatiosAlgorith
     }
 
     @Override
-    public SpeakerVolumeRatios calculateVolumeRatios(Snapshot snapshot) {
-        return new SpeakerVolumeRatios(EntryStream.of(snapshot.getScenario().getRoom().getSpeakers())
+    public SpeakerVolumeRatios calculateVolumeRatios(Room room, Snapshot snapshot) {
+        return new SpeakerVolumeRatios(EntryStream.of(room.getSpeakers())
                 .mapValues(speaker -> MathUtil.calculateAngleInDegrees(snapshot, speaker))
                 // For speakers inside the 'field of hearing', a low angle should be a high volume ratio and vice versa.
                 // For speakers not inside the 'field of hearing', it's just 0.

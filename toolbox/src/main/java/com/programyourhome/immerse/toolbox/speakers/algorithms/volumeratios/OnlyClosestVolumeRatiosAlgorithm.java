@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.programyourhome.immerse.domain.Factory;
+import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.Snapshot;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
@@ -23,13 +24,13 @@ public class OnlyClosestVolumeRatiosAlgorithm implements VolumeRatiosAlgorithm {
     private static final long serialVersionUID = Serialization.VERSION;
 
     @Override
-    public SpeakerVolumeRatios calculateVolumeRatios(Snapshot snapshot) {
-        Map<Integer, Double> speakerAngles = EntryStream.of(snapshot.getScenario().getRoom().getSpeakers())
+    public SpeakerVolumeRatios calculateVolumeRatios(Room room, Snapshot snapshot) {
+        Map<Integer, Double> speakerAngles = EntryStream.of(room.getSpeakers())
                 .mapValues(speaker -> MathUtil.calculateAngleInDegrees(snapshot, speaker))
                 .toMap();
         int speakerIdOfMinAngle = EntryStream.of(speakerAngles).minBy(Entry::getValue).get().getKey();
         return new SpeakerVolumeRatios(
-                StreamEx.of(snapshot.getScenario().getRoom().getSpeakers().keySet()).toMap(speakerId -> speakerId == speakerIdOfMinAngle ? 1.0 : 0.0));
+                StreamEx.of(room.getSpeakers().keySet()).toMap(speakerId -> speakerId == speakerIdOfMinAngle ? 1.0 : 0.0));
     }
 
     public static Factory<VolumeRatiosAlgorithm> onlyClosest() {

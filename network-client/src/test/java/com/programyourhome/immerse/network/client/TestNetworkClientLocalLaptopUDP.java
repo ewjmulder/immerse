@@ -63,7 +63,7 @@ public class TestNetworkClientLocalLaptopUDP {
 
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
                 room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0)));
-        Scenario scenario = scenario(room,
+        Scenario scenario = scenario(
                 settings(UdpAudioResource.udp("localhost", UDP_PORT, EXTERNAL_MIC_CHUNK_SIZE, PACKET_SIZE, micFormat, START_MESSAGE),
                         fixed(5, 10, 10), fixed(5, 5, 5), fixed(fixedSpeakerVolumeRatios), fractional(), LoopPlayback.once()));
 

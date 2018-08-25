@@ -77,7 +77,7 @@ public class TestNetworkClientSparrenburchtUDP {
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
                 room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> speaker.getId() == 4 ? 0.5 : 0.0)));
         ImmerseAudioFormat format = ImmerseAudioFormat.fromJavaAudioFormat(new AudioFormat(44100, 16, 1, true, false));
-        Scenario scenario = scenario(room,
+        Scenario scenario = scenario(
                 settings(UdpAudioResource.udp("192.168.0.101", UDP_PORT, EXTERNAL_MIC_CHUNK_SIZE, PACKET_SIZE, format, START_MESSAGE),
                         keyFrames(keyFrames, true), fixed(5, 5, 5), fieldOfHearing(45), fractional(), LoopPlayback.once()));
 

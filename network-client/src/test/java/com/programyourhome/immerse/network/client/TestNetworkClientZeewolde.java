@@ -71,7 +71,7 @@ public class TestNetworkClientZeewolde {
 
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
                 room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0)));
-        Scenario scenario = scenario(room,
+        Scenario scenario = scenario(
                 settings(urlWithType("http://10.42.0.1:19161/audio/chill", AudioFileType.WAVE), keyFrames(keyFrames), fixed(100, 60, 80),
                         fixed(fixedSpeakerVolumeRatios), maxSum(1), forever()));
         // fieldOfHearing(60), maxSum(1), forever()));

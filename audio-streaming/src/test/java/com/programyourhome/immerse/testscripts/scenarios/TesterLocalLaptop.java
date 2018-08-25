@@ -63,8 +63,8 @@ public class TesterLocalLaptop {
                 .recordingMode(RecordingMode.MONO)
                 .signed()
                 .buildForInput();
-        // Scenario scenario = scenario(room, settings(SuppliedAudioResource.supplied(() -> generate(format, 500, 10_000)), fixed(5, 10, 10), fixed(5, 5, 5),
-        Scenario scenario = scenario(room, settings(FileAudioResource.file(new File(SPIRAL)), fixed(5, 10, 10), fixed(5, 5, 5),
+        // Scenario scenario = scenario(settings(SuppliedAudioResource.supplied(() -> generate(format, 500, 10_000)), fixed(5, 10, 10), fixed(5, 5, 5),
+        Scenario scenario = scenario(settings(FileAudioResource.file(new File(SPIRAL)), fixed(5, 10, 10), fixed(5, 5, 5),
                 fixed(fixedSpeakerVolumeRatios), fractional(), once()));
 
         SoundCard soundCard1 = soundCard(1, "pci-0000:00:1f.3", speaker1, speaker2);

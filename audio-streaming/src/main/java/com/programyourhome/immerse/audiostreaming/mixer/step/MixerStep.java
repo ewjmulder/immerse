@@ -250,7 +250,7 @@ public class MixerStep {
                 .listener(listener)
                 .build();
         // Calculate the volume ratios using the configured algorithm.
-        SpeakerVolumeRatios speakerVolumeRatios = activeScenario.getVolumeRatiosAlgorithm().calculateVolumeRatios(snapshot);
+        SpeakerVolumeRatios speakerVolumeRatios = activeScenario.getVolumeRatiosAlgorithm().calculateVolumeRatios(getSettings().getRoom(), snapshot);
         // Calculate the actual volumes using the configured normalize algorithm.
         return activeScenario.getNormalizeAlgorithm().calculateVolumes(speakerVolumeRatios);
     }

@@ -59,10 +59,10 @@ public class Tester {
 
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
                 room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0)));
-        Scenario scenario1 = scenario(room, settings(file(CHILL), keyFrames(keyFrames), fixed(5, 5, 5),
+        Scenario scenario1 = scenario(settings(file(CHILL), keyFrames(keyFrames), fixed(5, 5, 5),
                 fieldOfHearing(60), maxSum(1), forever()));
 
-        Scenario scenario2 = scenario(room, settings(file(CHILL), fixed(0, 0, 0), fixed(5, 5, 5),
+        Scenario scenario2 = scenario(settings(file(CHILL), fixed(0, 0, 0), fixed(5, 5, 5),
                 fixed(fixedSpeakerVolumeRatios), fractional(), forever()));
 
         SoundCard soundCard1 = soundCard(1, "pci-0000:00:14.0-usb-0:1.2:1.0", speaker1, speaker2);
