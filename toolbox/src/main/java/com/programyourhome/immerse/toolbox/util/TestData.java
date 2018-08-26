@@ -13,7 +13,6 @@ import com.programyourhome.immerse.domain.ScenarioSettings;
 import com.programyourhome.immerse.domain.Snapshot;
 import com.programyourhome.immerse.domain.audio.playback.Playback;
 import com.programyourhome.immerse.domain.audio.resource.AudioResource;
-import com.programyourhome.immerse.domain.audio.soundcard.MixerInfo;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
 import com.programyourhome.immerse.domain.location.Vector3D;
 import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
@@ -93,19 +92,17 @@ public class TestData {
     }
 
     public static SoundCard soundCard(int id, String physicalPort, Speaker leftSpeaker, Speaker rightSpeaker) {
+        return soundCard(id, physicalPort, leftSpeaker.getId(), rightSpeaker.getId());
+    }
+
+    public static SoundCard soundCard(int id, String physicalPort, int leftSpeakerId, int rightSpeakerId) {
         return SoundCard.builder()
                 .id(id)
                 .name("SoundCard " + id)
                 .description("Description of sound card " + id)
                 .physicalPort(physicalPort)
-                .mixerInfo(MixerInfo.builder()
-                        .name("MixerInfo")
-                        .vendor("Vendor")
-                        .description("Description of MixerInfo")
-                        .version("1.0")
-                        .build())
-                .leftSpeaker(leftSpeaker)
-                .rightSpeaker(rightSpeaker)
+                .leftSpeakerId(leftSpeakerId)
+                .rightSpeakerId(rightSpeakerId)
                 .build();
     }
 

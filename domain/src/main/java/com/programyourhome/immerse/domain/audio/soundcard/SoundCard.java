@@ -3,7 +3,6 @@ package com.programyourhome.immerse.domain.audio.soundcard;
 import java.io.Serializable;
 
 import com.programyourhome.immerse.domain.Serialization;
-import com.programyourhome.immerse.domain.speakers.Speaker;
 
 /**
  * Represents a physical sound card on a computer.
@@ -20,9 +19,8 @@ public class SoundCard implements Serializable {
     private String name;
     private String description;
     private String physicalPort;
-    private MixerInfo mixerInfo;
-    private Speaker leftSpeaker;
-    private Speaker rightSpeaker;
+    private int leftSpeakerId;
+    private int rightSpeakerId;
 
     private SoundCard() {
     }
@@ -43,16 +41,12 @@ public class SoundCard implements Serializable {
         return this.physicalPort;
     }
 
-    public MixerInfo getMixerInfo() {
-        return this.mixerInfo;
+    public int getLeftSpeakerId() {
+        return this.leftSpeakerId;
     }
 
-    public Speaker getLeftSpeaker() {
-        return this.leftSpeaker;
-    }
-
-    public Speaker getRightSpeaker() {
-        return this.rightSpeaker;
+    public int getRightSpeakerId() {
+        return this.rightSpeakerId;
     }
 
     @Override
@@ -91,18 +85,13 @@ public class SoundCard implements Serializable {
             return this;
         }
 
-        public Builder mixerInfo(MixerInfo mixerInfo) {
-            this.soundCard.mixerInfo = mixerInfo;
+        public Builder leftSpeakerId(int leftSpeakerId) {
+            this.soundCard.leftSpeakerId = leftSpeakerId;
             return this;
         }
 
-        public Builder leftSpeaker(Speaker leftSpeaker) {
-            this.soundCard.leftSpeaker = leftSpeaker;
-            return this;
-        }
-
-        public Builder rightSpeaker(Speaker rightSpeaker) {
-            this.soundCard.rightSpeaker = rightSpeaker;
+        public Builder rightSpeakerId(int rightSpeakerId) {
+            this.soundCard.rightSpeakerId = rightSpeakerId;
             return this;
         }
 

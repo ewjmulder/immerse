@@ -2,7 +2,8 @@ package com.programyourhome.immerse.audiostreaming.mixer;
 
 import java.util.UUID;
 
-import com.programyourhome.immerse.audiostreaming.mixer.ImmerseSettings.TechnicalSettings;
+import com.programyourhome.immerse.domain.ImmerseSettings;
+import com.programyourhome.immerse.domain.ImmerseSettings.TechnicalSettings;
 
 /**
  * This class holds a reference to the 'active' Immerse settings, meaning the settings that should

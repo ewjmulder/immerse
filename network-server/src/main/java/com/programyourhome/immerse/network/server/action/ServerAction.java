@@ -13,6 +13,8 @@ public enum ServerAction {
     CREATE_MIXER(new CreateMixerAction()),
     /** Start the mixer. */
     START_MIXER(new StartMixerAction()),
+    /** Get the settings. */
+    GET_SETTINGS(new GetSettingsAction()),
     /** Play a scenario. */
     PLAY_SCENARIO(new PlayScenarioAction()),
     /** Wait for a playback to finish. */

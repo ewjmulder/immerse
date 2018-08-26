@@ -101,6 +101,10 @@ public class ImmerseAudioFormat implements Serializable {
                 this.recordingMode.getNumberOfChannels(), this.signed, this.byteOrder.isBigEndian());
     }
 
+    public Builder copyToBuilder() {
+        return new Builder(this);
+    }
+
     public static ImmerseAudioFormat fromJavaAudioFormat(AudioFormat audioFormat) {
         return builder()
                 .recordingMode(audioFormat.getChannels())
@@ -127,6 +131,16 @@ public class ImmerseAudioFormat implements Serializable {
 
         public Builder() {
             this.format = new ImmerseAudioFormat();
+        }
+
+        public Builder(ImmerseAudioFormat copy) {
+            this.format = new ImmerseAudioFormat();
+            this.format.recordingMode = copy.recordingMode;
+            this.format.sampleRate = copy.sampleRate;
+            this.format.sampleSize = copy.sampleSize;
+            this.format.byteOrder = copy.byteOrder;
+            this.format.signed = copy.signed;
+            this.format.output = copy.output;
         }
 
         public Builder recordingMode(int numberOfChannels) {

@@ -1,7 +1,6 @@
 package com.programyourhome.immerse.audiostreaming.mixer;
 
 import static com.programyourhome.immerse.audiostreaming.mixer.ActiveImmerseSettings.getTechnicalSettings;
-import static com.programyourhome.immerse.audiostreaming.util.AudioUtil.toSigned;
 import static com.programyourhome.immerse.audiostreaming.util.LogUtil.logExceptions;
 import static com.programyourhome.immerse.domain.format.ImmerseAudioFormat.fromJavaAudioFormat;
 
@@ -34,8 +33,10 @@ import com.programyourhome.immerse.audiostreaming.mixer.step.MixerStep;
 import com.programyourhome.immerse.audiostreaming.mixer.warmup.CoverAllSettingsWarmupScenarioGenerator;
 import com.programyourhome.immerse.audiostreaming.soundcard.SoundCardDetector;
 import com.programyourhome.immerse.audiostreaming.soundcard.SoundCardStream;
+import com.programyourhome.immerse.audiostreaming.util.AsyncUtil;
 import com.programyourhome.immerse.audiostreaming.util.AudioUtil;
 import com.programyourhome.immerse.audiostreaming.util.MemoryUtil;
+import com.programyourhome.immerse.domain.ImmerseSettings;
 import com.programyourhome.immerse.domain.Scenario;
 import com.programyourhome.immerse.domain.audio.resource.AudioResource;
 import com.programyourhome.immerse.domain.audio.resource.StreamConfig;
@@ -361,7 +362,7 @@ public class ImmerseMixer {
         scenariosToActivateCopy.forEach(scenario -> this.logScenarioEvent(scenario, "started"));
         // Notify of start event asynchronously.
         scenariosToActivateCopy.forEach(scenario -> this.getPlaybackListenersCopy()
-                .forEach(listener -> this.settings.submitAsyncTask(
+                .forEach(listener -> AsyncUtil.submitAsyncTask(
                         () -> listener.scenarioEventNoException(listener::scenarioStarted, scenario.getId()))));
     }
 
@@ -384,7 +385,7 @@ public class ImmerseMixer {
         } else {
             // If already started, write the buffer data to the sound card streams asynchronously.
             EntryStream.of(soundCardBufferData).forKeyValue(
-                    (soundCardStream, bufferData) -> this.settings.submitAsyncTask(() -> soundCardStream.writeToLine(bufferData)));
+                    (soundCardStream, bufferData) -> AsyncUtil.submitAsyncTask(() -> soundCardStream.writeToLine(bufferData)));
         }
 
         // Now handle the scenario life cycle actions that were gathered during the mixer step.
@@ -400,11 +401,11 @@ public class ImmerseMixer {
         for (ActiveScenario activeScenario : mixerStep.getScenariosToRestart()) {
             this.activeScenarios.remove(activeScenario.getId());
             // Restart asynchronously.
-            this.settings.submitAsyncTask(() -> ImmerseMixer.this.restartScenario(activeScenario));
+            AsyncUtil.submitAsyncTask(() -> ImmerseMixer.this.restartScenario(activeScenario));
             this.logScenarioEvent(activeScenario, "restarted");
             // Notify of restart event asynchronously.
             this.getPlaybackListenersCopy().forEach(
-                    listener -> this.settings.submitAsyncTask(() -> listener.scenarioEventNoException(listener::scenarioRestarted, activeScenario.getId())));
+                    listener -> AsyncUtil.submitAsyncTask(() -> listener.scenarioEventNoException(listener::scenarioRestarted, activeScenario.getId())));
         }
         this.stopScenarios(mixerStep.getScenariosToStop());
     }
@@ -422,7 +423,7 @@ public class ImmerseMixer {
         scenariosToStop.forEach(scenario -> this.logScenarioEvent(scenario, "stopped"));
         // Notify of stop event asynchronously.
         scenariosToStop.forEach(scenario -> this.getPlaybackListenersCopy()
-                .forEach(listener -> this.settings.submitAsyncTask(() -> listener.scenarioEventNoException(listener::scenarioStopped, scenario.getId()))));
+                .forEach(listener -> AsyncUtil.submitAsyncTask(() -> listener.scenarioEventNoException(listener::scenarioStopped, scenario.getId()))));
     }
 
     /**
@@ -470,7 +471,7 @@ public class ImmerseMixer {
     private AudioInputStream convertAudioStream(AudioInputStream originalStream) {
         // Workaround for a JDK bug: https://bugs.java.com/bugdatabase/view_bug.do?bug_id=8146338
         // See the documentation of this project for more information.
-        AudioInputStream signedStream = AudioUtil.convert(originalStream, toSigned(originalStream.getFormat()));
+        AudioInputStream signedStream = AudioUtil.convert(originalStream, AudioUtil.toSigned(originalStream.getFormat()));
         AudioInputStream converted = AudioUtil.convert(signedStream, this.settings.getInputFormatJava());
         return converted;
     }
@@ -488,8 +489,8 @@ public class ImmerseMixer {
         double originalBytesPerMilli = fromJavaAudioFormat(originalStream.getFormat()).getNumberOfBytesPerMilli();
         double convertedBytesPerMilli = this.settings.getInputFormat().getNumberOfBytesPerMilli();
         double conversionMultiplier = convertedBytesPerMilli / originalBytesPerMilli;
-        if (conversionMultiplier != 1) {
-            Logger.warn("Scenario audio format not equal to Immerse audio format, conversion needed. "
+        if (conversionMultiplier != 1 && originalConfig.isLive()) {
+            Logger.warn("Live scenario audio format not equal to Immerse audio format, conversion needed. "
                     + "This will increase internal buffering significantly. Consider supplying a matching audio format.");
         }
         // Best practice values from test results. Eventually we might implement our own converters with minimal buffering, see #85.
@@ -530,7 +531,7 @@ public class ImmerseMixer {
         this.state = newState;
         this.logStateEvent(oldState, this.state);
         // Notify of state change event asynchronously.
-        this.getStateListenersCopy().forEach(listener -> this.settings.submitAsyncTask(() -> listener.stateChangedNoException(oldState, this.state)));
+        this.getStateListenersCopy().forEach(listener -> AsyncUtil.submitAsyncTask(() -> listener.stateChangedNoException(oldState, this.state)));
     }
 
     /**

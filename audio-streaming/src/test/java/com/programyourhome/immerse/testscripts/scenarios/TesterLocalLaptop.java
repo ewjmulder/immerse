@@ -24,7 +24,7 @@ import org.pmw.tinylog.writers.ConsoleWriter;
 
 import com.programyourhome.immerse.audiostreaming.generate.SineWaveAudioInputStreamGenerator;
 import com.programyourhome.immerse.audiostreaming.mixer.ImmerseMixer;
-import com.programyourhome.immerse.audiostreaming.mixer.ImmerseSettings;
+import com.programyourhome.immerse.domain.ImmerseSettings;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Scenario;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;

@@ -19,6 +19,7 @@ import org.pmw.tinylog.Logger;
 import com.programyourhome.immerse.audiostreaming.mixer.scenario.ActiveScenario;
 import com.programyourhome.immerse.audiostreaming.mixer.scenario.AudioInputBuffer;
 import com.programyourhome.immerse.audiostreaming.soundcard.SoundCardStream;
+import com.programyourhome.immerse.audiostreaming.util.AsyncUtil;
 import com.programyourhome.immerse.domain.Snapshot;
 import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
 import com.programyourhome.immerse.domain.format.SampleSize;
@@ -214,7 +215,7 @@ public class MixerStep {
             if (!activeScenario.getStreamConfig().isLive()) {
                 // Update the buffer after a read, so it will be refilled (asynchronously).
                 // Only, for non-live, cause for live there will be a continuous read loop already.
-                getSettings().submitAsyncTask(() -> inputBuffer.fill());
+                AsyncUtil.submitAsyncTask(() -> inputBuffer.fill());
             }
         } else if (inputBuffer.isStreamClosed()) {
             int amountRead = inputBuffer.readRemaining(byteBuffer);
@@ -287,8 +288,8 @@ public class MixerStep {
      */
     private short[] calculateOutputSamples(SoundCardStream soundCardStream, SpeakerVolumes speakerVolumes, short[] sampleBuffer) {
         // Get the volume fractions for the left and right speaker of this sound card stream from the speaker volumes.
-        double volumeFractionSpeakerLeft = speakerVolumes.getVolumeFraction(soundCardStream.getSoundCard().getLeftSpeaker().getId());
-        double volumeFractionSpeakerRight = speakerVolumes.getVolumeFraction(soundCardStream.getSoundCard().getRightSpeaker().getId());
+        double volumeFractionSpeakerLeft = speakerVolumes.getVolumeFraction(soundCardStream.getSoundCard().getLeftSpeakerId());
+        double volumeFractionSpeakerRight = speakerVolumes.getVolumeFraction(soundCardStream.getSoundCard().getRightSpeakerId());
         // The output samples size will be twice the size of the input, because the output is in stereo.
         short[] stereoSamples = new short[sampleBuffer.length * 2];
         // For all input samples.

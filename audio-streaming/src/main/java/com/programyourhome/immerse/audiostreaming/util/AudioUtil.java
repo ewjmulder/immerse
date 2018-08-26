@@ -5,7 +5,6 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 
 import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
-import com.programyourhome.immerse.domain.format.RecordingMode;
 
 /**
  * Util methods for audio streams and formats.
@@ -20,19 +19,6 @@ public class AudioUtil {
      */
     public static AudioFormat toSigned(AudioFormat format) {
         return new AudioFormat(format.getSampleRate(), format.getSampleSizeInBits(), format.getChannels(), true, format.isBigEndian());
-    }
-
-    /**
-     * Create a new (input) immerse audio format based on the given format, but set the recording mode to mono.
-     */
-    public static ImmerseAudioFormat toMonoInput(ImmerseAudioFormat format) {
-        return ImmerseAudioFormat.builder()
-                .recordingMode(RecordingMode.MONO)
-                .sampleRate(format.getSampleRate())
-                .sampleSize(format.getSampleSize())
-                .setSigned(format.isSigned())
-                .byteOrder(format.getByteOrder())
-                .buildForInput();
     }
 
     /**

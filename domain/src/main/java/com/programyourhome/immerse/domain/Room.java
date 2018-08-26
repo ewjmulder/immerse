@@ -4,9 +4,12 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import com.programyourhome.immerse.domain.location.Vector3D;
 import com.programyourhome.immerse.domain.speakers.Speaker;
+
+import one.util.streamex.StreamEx;
 
 /**
  * A room object represents an actual room in the real world where Immerse will be running.
@@ -83,6 +86,11 @@ public class Room implements Serializable {
 
         public Builder addSpeakers(Speaker... speakers) {
             Arrays.stream(speakers).forEach(this::addSpeaker);
+            return this;
+        }
+
+        public Builder addSpeakers(Set<Speaker> speakers) {
+            StreamEx.of(speakers).forEach(this::addSpeaker);
             return this;
         }
 

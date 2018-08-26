@@ -1,7 +1,5 @@
 package com.programyourhome.immerse.audiostreaming.mixer.scenario;
 
-import static com.programyourhome.immerse.audiostreaming.mixer.ActiveImmerseSettings.getSettings;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -14,6 +12,7 @@ import javax.sound.sampled.AudioInputStream;
 import org.pmw.tinylog.Logger;
 
 import com.programyourhome.immerse.audiostreaming.mixer.AudioInputStreamWrapper;
+import com.programyourhome.immerse.audiostreaming.util.AsyncUtil;
 import com.programyourhome.immerse.domain.Scenario;
 import com.programyourhome.immerse.domain.audio.playback.Playback;
 import com.programyourhome.immerse.domain.audio.resource.StreamConfig;
@@ -156,7 +155,7 @@ public class ActiveScenario {
         if (this.streamConfig.isLive()) {
             // For live streams: just continuously call fill to stay as close to 'live' as possible.
             // The thread will block at I/O when there is nothing to read from the live stream.
-            getSettings().submitAsyncTask(() -> {
+            AsyncUtil.submitAsyncTask(() -> {
                 while (!audioInputBuffer.isStreamClosed()) {
                     audioInputBuffer.fill();
                 }

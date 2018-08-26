@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 
 import com.programyourhome.immerse.audiostreaming.mixer.ImmerseMixer;
-import com.programyourhome.immerse.audiostreaming.mixer.ImmerseSettings;
+import com.programyourhome.immerse.domain.ImmerseSettings;
 import com.programyourhome.immerse.network.server.ImmerseServer;
 
 /**

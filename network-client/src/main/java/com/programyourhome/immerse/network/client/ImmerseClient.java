@@ -7,7 +7,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.UUID;
 
-import com.programyourhome.immerse.audiostreaming.mixer.ImmerseSettings;
+import com.programyourhome.immerse.domain.ImmerseSettings;
 import com.programyourhome.immerse.domain.Scenario;
 import com.programyourhome.immerse.network.server.action.ActionResult;
 import com.programyourhome.immerse.network.server.action.ServerAction;
@@ -73,6 +73,13 @@ public class ImmerseClient {
      */
     public ActionResult<Void> startMixer() {
         return this.callServer(ServerAction.START_MIXER);
+    }
+
+    /**
+     * Get the settings.
+     */
+    public ActionResult<ImmerseSettings> getSettings() {
+        return this.callServer(ServerAction.GET_SETTINGS);
     }
 
     /**

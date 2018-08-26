@@ -1,18 +1,13 @@
-package com.programyourhome.immerse.audiostreaming.mixer;
+package com.programyourhome.immerse.domain;
 
 import java.io.Serializable;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import javax.sound.sampled.AudioFormat;
 
-import com.programyourhome.immerse.audiostreaming.util.AudioUtil;
-import com.programyourhome.immerse.audiostreaming.util.LogUtil;
-import com.programyourhome.immerse.domain.Room;
-import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
 import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
+import com.programyourhome.immerse.domain.format.RecordingMode;
 
 /**
  * This class holds all Immerse system wide settings.
@@ -28,7 +23,6 @@ public class ImmerseSettings implements Serializable {
     private Set<SoundCard> soundCards;
     private ImmerseAudioFormat outputFormat;
     private ImmerseAudioFormat inputFormat;
-    private ExecutorService executorService;
 
     private ImmerseSettings() {
     }
@@ -81,17 +75,6 @@ public class ImmerseSettings implements Serializable {
      */
     public AudioFormat getInputFormatJava() {
         return this.inputFormat.toJavaAudioFormat();
-    }
-
-    /**
-     * Submit a task to be executed asynchronously on the executor service.
-     * Also log an exception if thrown during task execution.
-     */
-    public void submitAsyncTask(Runnable task) {
-        if (this.executorService == null) {
-            this.executorService = Executors.newCachedThreadPool();
-        }
-        this.executorService.submit(() -> LogUtil.logExceptions(task));
     }
 
     public class TechnicalSettings implements Serializable {
@@ -166,7 +149,7 @@ public class ImmerseSettings implements Serializable {
         public Builder outputFormat(ImmerseAudioFormat outputFormat) {
             this.settings.outputFormat = outputFormat;
             // For input: just switch from stereo to mono, because an input stream should always consist of 1 channel that will be mixed dynamically.
-            this.settings.inputFormat = AudioUtil.toMonoInput(outputFormat);
+            this.settings.inputFormat = outputFormat.copyToBuilder().recordingMode(RecordingMode.MONO).buildForInput();
             return this;
         }
 
