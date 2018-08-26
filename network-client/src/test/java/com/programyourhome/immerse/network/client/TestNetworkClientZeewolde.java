@@ -16,7 +16,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.programyourhome.immerse.audiostreaming.mixer.ImmerseSettings;
@@ -38,7 +37,7 @@ public class TestNetworkClientZeewolde {
         Speaker speaker2 = speaker(2, 0, 100, 80);
         Speaker speaker3 = speaker(3, 200, 120, 80);
         Speaker speaker4 = speaker(4, 200, 50, 80);
-        Room room = room(UUID.fromString("3e8b23c8-f83b-497f-b0ce-fcfcc6a39ced"), speaker1, speaker2, speaker3, speaker4);
+        Room room = room(speaker1, speaker2, speaker3, speaker4);
 
         SoundCard soundCard1 = soundCard(1, "platform-1c1b000.ehci1-controller-usb-0:1.2:1.0", speaker2, speaker1);
         SoundCard soundCard2 = soundCard(2, "platform-1c1b000.ehci1-controller-usb-0:1.4:1.0", speaker3, speaker4);

@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import com.programyourhome.immerse.domain.location.Vector3D;
 import com.programyourhome.immerse.domain.speakers.Speaker;
@@ -18,23 +17,13 @@ public class Room implements Serializable {
 
     private static final long serialVersionUID = Serialization.VERSION;
 
-    private UUID id;
     private String name;
     private String description;
     private Vector3D dimensions;
     private final Map<Integer, Speaker> speakers;
 
     private Room() {
-        this(UUID.randomUUID());
-    }
-
-    private Room(UUID id) {
-        this.id = id;
         this.speakers = new HashMap<>();
-    }
-
-    public UUID getId() {
-        return this.id;
     }
 
     public String getName() {
@@ -66,11 +55,6 @@ public class Room implements Serializable {
 
         public Builder() {
             this.room = new Room();
-        }
-
-        public Builder id(UUID id) {
-            this.room.id = id;
-            return this;
         }
 
         public Builder name(String name) {
