@@ -1,5 +1,6 @@
 package com.programyourhome.immerse.toolbox.location.dynamic;
 
+import com.programyourhome.immerse.domain.Factory;
 import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.location.Vector3D;
 import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
@@ -44,6 +45,18 @@ public class HorizontalCircleDynamicLocation implements DynamicLocation {
         y *= -1;
 
         return new Vector3D(this.centerX + x, this.centerY + y, this.z);
+    }
+
+    public static Factory<DynamicLocation> horizontalCircle(Vector3D center, double startAngleInDegrees,
+            double radius, boolean clockwise, double millisPerDegreeAngle) {
+        return new Factory<DynamicLocation>() {
+            private static final long serialVersionUID = Serialization.VERSION;
+
+            @Override
+            public DynamicLocation create() {
+                return new HorizontalCircleDynamicLocation(center, startAngleInDegrees, radius, clockwise, millisPerDegreeAngle);
+            }
+        };
     }
 
 }
