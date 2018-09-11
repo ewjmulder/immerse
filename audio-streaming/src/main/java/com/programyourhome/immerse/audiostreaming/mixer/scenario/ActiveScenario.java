@@ -20,6 +20,7 @@ import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
 import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
 import com.programyourhome.immerse.domain.speakers.algorithms.normalize.NormalizeAlgorithm;
 import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.VolumeRatiosAlgorithm;
+import com.programyourhome.immerse.domain.volume.DynamicVolume;
 
 /**
  * An active scenario is a scenario that is begin played by the mixer.
@@ -33,6 +34,7 @@ public class ActiveScenario {
 
     private final UUID id;
     private final Scenario scenario;
+    private DynamicVolume volume;
     private DynamicLocation sourceLocation;
     private DynamicLocation listenerLocation;
     private VolumeRatiosAlgorithm volumeRatiosAlgorithm;
@@ -73,6 +75,10 @@ public class ActiveScenario {
 
     public Scenario getScenario() {
         return this.scenario;
+    }
+
+    public DynamicVolume getVolume() {
+        return this.volume;
     }
 
     public DynamicLocation getSourceLocation() {
@@ -173,6 +179,7 @@ public class ActiveScenario {
      */
     private void resetFromSettings() {
         this.startMillis = -1;
+        this.volume = this.scenario.getSettings().getVolumeFactory().create();
         this.sourceLocation = this.scenario.getSettings().getSourceLocationFactory().create();
         this.listenerLocation = this.scenario.getSettings().getListenerLocationFactory().create();
         this.volumeRatiosAlgorithm = this.scenario.getSettings().getVolumeRatiosAlgorithmFactory().create();

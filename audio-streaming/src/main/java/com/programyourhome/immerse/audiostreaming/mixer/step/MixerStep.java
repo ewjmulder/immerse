@@ -120,6 +120,9 @@ public class MixerStep {
         return this.scenariosToRestart;
     }
 
+    /**
+     * Calculate the next step buffer data for each sound card stream.
+     */
     public Map<SoundCardStream, byte[]> calculateBufferData() {
         if (this.amountOfFramesNeeded == 0) {
             // If no frames are needed, provide 0-length buffers for all sound card streams.
@@ -133,6 +136,9 @@ public class MixerStep {
         }
     }
 
+    /**
+     * Create just silence for all sound card streams.
+     */
     private Map<SoundCardStream, byte[]> createSilence() {
         // Create an output array of the right size.
         byte[] silenceBuffer = new byte[this.amountOfFramesNeeded * getSettings().getOutputFormat().getNumberOfBytesPerFrame()];
@@ -142,6 +148,9 @@ public class MixerStep {
         return StreamUtil.toMapFixedValue(this.soundCardStreams, silenceBuffer).toMap();
     }
 
+    /**
+     * Perform the actual Immerse audio mixing algorithm to calculate the next step sound card stream buffers.
+     */
     private Map<SoundCardStream, byte[]> createAudioBuffers() {
         List<ScenarioResult> scenarioResults = this.calculateScenarioResults();
 
@@ -164,6 +173,8 @@ public class MixerStep {
                 .mapToEntry(this::readSamples)
                 // Skip the empty results (in case of I/O error).
                 .flatMapValues(StreamUtil::optionalToStream)
+                // Apply the scenario dynamic volume.
+                .mapToValue(this::applyScenarioVolume)
                 // Calculate the speaker volumes according to the algorithms in the scenario settings.
                 .mapKeys(this::calculateSpeakerVolumes)
                 // Create new ScenarioResult objects to store all results together.
@@ -231,16 +242,36 @@ public class MixerStep {
     }
 
     /**
+     * Apply the dynamic volume of the scenario to the samples.
+     * Return the same samples array, so it can be used in a streamed pipeline.
+     */
+    private short[] applyScenarioVolume(ActiveScenario activeScenario, short[] samples) {
+        // Apply the volume setting of this scenario.
+        for (int i = 0; i < samples.length; i++) {
+            short originalValue = samples[i];
+            // Get the dynamic volume at this time.
+            double scenarioVolume = activeScenario.getVolume().getVolume(this.calculateMillisSinceStart(activeScenario));
+            // Perform boundary checks.
+            if (scenarioVolume < 0) {
+                scenarioVolume = 0;
+                Logger.warn("Scenario " + activeScenario.getScenario().getName() + " returned a volume less than 0.");
+            }
+            if (scenarioVolume > 1) {
+                scenarioVolume = 1;
+                Logger.warn("Scenario " + activeScenario.getScenario().getName() + " returned a volume greater than 1.");
+            }
+            // Apply the volume to the original value (= take a fraction of the amplitude).
+            samples[i] = (short) (originalValue * scenarioVolume);
+        }
+        return samples;
+    }
+
+    /**
      * Calculate the speaker volumes by using the configured dynamic locations
      * and volume algorithms of the given scenario.
      */
     private SpeakerVolumes calculateSpeakerVolumes(ActiveScenario activeScenario) {
-        // Default is 0: not started yet.
-        long millisSinceStart = 0;
-        if (activeScenario.isStarted()) {
-            // If the scenario is started: calculate the millis since start.
-            millisSinceStart = System.currentTimeMillis() - activeScenario.getStartMillis();
-        }
+        long millisSinceStart = this.calculateMillisSinceStart(activeScenario);
         // Get the listener and source location from the configured dynamic location objects.
         Vector3D listener = activeScenario.getListenerLocation().getLocation(millisSinceStart);
         Vector3D source = activeScenario.getSourceLocation().getLocation(millisSinceStart);
@@ -254,6 +285,19 @@ public class MixerStep {
         SpeakerVolumeRatios speakerVolumeRatios = activeScenario.getVolumeRatiosAlgorithm().calculateVolumeRatios(getSettings().getRoom(), snapshot);
         // Calculate the actual volumes using the configured normalize algorithm.
         return activeScenario.getNormalizeAlgorithm().calculateVolumes(speakerVolumeRatios);
+    }
+
+    /**
+     * Calculate the millis since start (0 if not started yet).
+     */
+    private long calculateMillisSinceStart(ActiveScenario activeScenario) {
+        // Default is 0: not started yet.
+        long millisSinceStart = 0;
+        if (activeScenario.isStarted()) {
+            // If the scenario is started: calculate the millis since start.
+            millisSinceStart = System.currentTimeMillis() - activeScenario.getStartMillis();
+        }
+        return millisSinceStart;
     }
 
     /**

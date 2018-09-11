@@ -7,6 +7,7 @@ import com.programyourhome.immerse.domain.audio.resource.AudioResource;
 import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
 import com.programyourhome.immerse.domain.speakers.algorithms.normalize.NormalizeAlgorithm;
 import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.VolumeRatiosAlgorithm;
+import com.programyourhome.immerse.domain.volume.DynamicVolume;
 
 /**
  * Settings class for storing the fields that define how a scenario should be played.
@@ -18,6 +19,7 @@ public class ScenarioSettings implements Serializable {
     private static final long serialVersionUID = Serialization.VERSION;
 
     private Factory<AudioResource> audioResourceFactory;
+    private Factory<DynamicVolume> volumeFactory;
     private Factory<DynamicLocation> sourceLocationFactory;
     private Factory<DynamicLocation> listenerLocationFactory;
     private Factory<VolumeRatiosAlgorithm> volumeRatiosAlgorithmFactory;
@@ -29,6 +31,10 @@ public class ScenarioSettings implements Serializable {
 
     public Factory<AudioResource> getAudioResourceFactory() {
         return this.audioResourceFactory;
+    }
+
+    public Factory<DynamicVolume> getVolumeFactory() {
+        return this.volumeFactory;
     }
 
     public Factory<DynamicLocation> getSourceLocationFactory() {
@@ -64,6 +70,11 @@ public class ScenarioSettings implements Serializable {
 
         public Builder audioResource(Factory<AudioResource> audioResourceFactory) {
             this.settings.audioResourceFactory = audioResourceFactory;
+            return this;
+        }
+
+        public Builder volume(Factory<DynamicVolume> volumeFactory) {
+            this.settings.volumeFactory = volumeFactory;
             return this;
         }
 

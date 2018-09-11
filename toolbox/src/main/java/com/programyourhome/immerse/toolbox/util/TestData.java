@@ -19,6 +19,8 @@ import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
 import com.programyourhome.immerse.domain.speakers.Speaker;
 import com.programyourhome.immerse.domain.speakers.algorithms.normalize.NormalizeAlgorithm;
 import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.VolumeRatiosAlgorithm;
+import com.programyourhome.immerse.domain.volume.DynamicVolume;
+import com.programyourhome.immerse.toolbox.volume.dynamic.FixedDynamicVolume;
 
 /**
  * Supplies a uniform and easy way to create some test data.
@@ -81,8 +83,15 @@ public class TestData {
     public static ScenarioSettings settings(Factory<AudioResource> audioResource, Factory<DynamicLocation> sourceLocation,
             Factory<DynamicLocation> listenerLocation, Factory<VolumeRatiosAlgorithm> volumeRatiosAlgorithm,
             Factory<NormalizeAlgorithm> normalizeAlgorithm, Factory<Playback> playback) {
+        return settings(audioResource, FixedDynamicVolume.full(), sourceLocation, listenerLocation, volumeRatiosAlgorithm, normalizeAlgorithm, playback);
+    }
+
+    public static ScenarioSettings settings(Factory<AudioResource> audioResource, Factory<DynamicVolume> volume,
+            Factory<DynamicLocation> sourceLocation, Factory<DynamicLocation> listenerLocation,
+            Factory<VolumeRatiosAlgorithm> volumeRatiosAlgorithm, Factory<NormalizeAlgorithm> normalizeAlgorithm, Factory<Playback> playback) {
         return ScenarioSettings.builder()
                 .audioResource(audioResource)
+                .volume(volume)
                 .sourceLocation(sourceLocation)
                 .listenerLocation(listenerLocation)
                 .volumeRatiosAlgorithm(volumeRatiosAlgorithm)
