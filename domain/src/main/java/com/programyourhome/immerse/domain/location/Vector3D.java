@@ -1,10 +1,13 @@
 package com.programyourhome.immerse.domain.location;
 
 import java.io.Serializable;
+import java.util.Collection;
 
 import org.la4j.Vector;
 
 import com.programyourhome.immerse.domain.Serialization;
+
+import one.util.streamex.DoubleStreamEx;
 
 /**
  * A vector in 3D space.
@@ -16,6 +19,17 @@ public class Vector3D implements Serializable {
     private final double x;
     private final double y;
     private final double z;
+
+    public Vector3D(Collection<Double> coordinates) {
+        this(DoubleStreamEx.of(coordinates).toArray());
+    }
+
+    public Vector3D(double[] coordinates) {
+        this(coordinates[0], coordinates[1], coordinates[2]);
+        if (coordinates.length != 3) {
+            throw new IllegalArgumentException("Vector3D required exactly 3 coordinates");
+        }
+    }
 
     public Vector3D(double x, double y, double z) {
         this.x = x;
