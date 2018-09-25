@@ -17,7 +17,6 @@ import com.programyourhome.immerse.domain.Scenario;
 import com.programyourhome.immerse.domain.audio.playback.Playback;
 import com.programyourhome.immerse.domain.audio.resource.StreamConfig;
 import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
-import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
 import com.programyourhome.immerse.domain.speakers.algorithms.normalize.NormalizeAlgorithm;
 import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.VolumeRatiosAlgorithm;
 import com.programyourhome.immerse.domain.volume.DynamicVolume;
@@ -35,8 +34,6 @@ public class ActiveScenario {
     private final UUID id;
     private final Scenario scenario;
     private DynamicVolume volume;
-    private DynamicLocation sourceLocation;
-    private DynamicLocation listenerLocation;
     private VolumeRatiosAlgorithm volumeRatiosAlgorithm;
     private NormalizeAlgorithm normalizeAlgorithm;
     private final Playback playback;
@@ -79,14 +76,6 @@ public class ActiveScenario {
 
     public DynamicVolume getVolume() {
         return this.volume;
-    }
-
-    public DynamicLocation getSourceLocation() {
-        return this.sourceLocation;
-    }
-
-    public DynamicLocation getListenerLocation() {
-        return this.listenerLocation;
     }
 
     public VolumeRatiosAlgorithm getVolumeRatiosAlgorithm() {
@@ -180,8 +169,6 @@ public class ActiveScenario {
     private void resetFromSettings() {
         this.startMillis = -1;
         this.volume = this.scenario.getSettings().getVolumeFactory().create();
-        this.sourceLocation = this.scenario.getSettings().getSourceLocationFactory().create();
-        this.listenerLocation = this.scenario.getSettings().getListenerLocationFactory().create();
         this.volumeRatiosAlgorithm = this.scenario.getSettings().getVolumeRatiosAlgorithmFactory().create();
         this.normalizeAlgorithm = this.scenario.getSettings().getNormalizeAlgorithmFactory().create();
     }

@@ -3,7 +3,8 @@ package com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios;
 import com.programyourhome.immerse.domain.Factory;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Serialization;
-import com.programyourhome.immerse.domain.Snapshot;
+import com.programyourhome.immerse.domain.location.Vector3D;
+import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
 import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.VolumeRatiosAlgorithm;
 import com.programyourhome.immerse.toolbox.util.MathUtil;
@@ -20,7 +21,7 @@ import one.util.streamex.EntryStream;
  * NB: The cutoff angle should not be smaller than twice the angle between speakers, otherwise
  * there can be 'silent spots' in the room, even though the scenario produces sound.
  */
-public class FieldOfHearingVolumeRatiosAlgorithm implements VolumeRatiosAlgorithm {
+public class FieldOfHearingVolumeRatiosAlgorithm extends AbstractLocationBasedVolumeRatiosAlgorithm {
 
     private static final long serialVersionUID = Serialization.VERSION;
 
@@ -29,35 +30,37 @@ public class FieldOfHearingVolumeRatiosAlgorithm implements VolumeRatiosAlgorith
 
     private final double cutoffAngle;
 
-    public FieldOfHearingVolumeRatiosAlgorithm() {
-        this(DEFAULT_CUTOFF_ANGLE);
+    public FieldOfHearingVolumeRatiosAlgorithm(DynamicLocation sourceLocation, DynamicLocation listenerLocation) {
+        this(sourceLocation, listenerLocation, DEFAULT_CUTOFF_ANGLE);
     }
 
-    public FieldOfHearingVolumeRatiosAlgorithm(double cutoffAngle) {
+    public FieldOfHearingVolumeRatiosAlgorithm(DynamicLocation sourceLocation, DynamicLocation listenerLocation, double cutoffAngle) {
+        super(sourceLocation, listenerLocation);
         this.cutoffAngle = cutoffAngle;
     }
 
     @Override
-    public SpeakerVolumeRatios calculateVolumeRatios(Room room, Snapshot snapshot) {
+    protected SpeakerVolumeRatios calculateVolumeRatios(Room room, Vector3D sourceLocation, Vector3D listenerLocation) {
         return new SpeakerVolumeRatios(EntryStream.of(room.getSpeakers())
-                .mapValues(speaker -> MathUtil.calculateAngleInDegrees(snapshot, speaker))
+                .mapValues(speaker -> MathUtil.calculateAngleInDegrees(sourceLocation, listenerLocation, speaker))
                 // For speakers inside the 'field of hearing', a low angle should be a high volume ratio and vice versa.
                 // For speakers not inside the 'field of hearing', it's just 0.
                 .mapValues(angle -> angle <= this.cutoffAngle ? this.cutoffAngle - angle : 0.0)
                 .toMap());
     }
 
-    public static Factory<VolumeRatiosAlgorithm> fieldOfHearing() {
-        return fieldOfHearing(DEFAULT_CUTOFF_ANGLE);
+    public static Factory<VolumeRatiosAlgorithm> fieldOfHearing(Factory<DynamicLocation> sourceLocation, Factory<DynamicLocation> listenerLocation) {
+        return fieldOfHearing(sourceLocation, listenerLocation, DEFAULT_CUTOFF_ANGLE);
     }
 
-    public static Factory<VolumeRatiosAlgorithm> fieldOfHearing(double cutoffAngle) {
+    public static Factory<VolumeRatiosAlgorithm> fieldOfHearing(Factory<DynamicLocation> sourceLocation, Factory<DynamicLocation> listenerLocation,
+            double cutoffAngle) {
         return new Factory<VolumeRatiosAlgorithm>() {
             private static final long serialVersionUID = Serialization.VERSION;
 
             @Override
             public VolumeRatiosAlgorithm create() {
-                return new FieldOfHearingVolumeRatiosAlgorithm(cutoffAngle);
+                return new FieldOfHearingVolumeRatiosAlgorithm(sourceLocation.create(), listenerLocation.create(), cutoffAngle);
             }
         };
     }

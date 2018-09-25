@@ -1,7 +1,6 @@
 package com.programyourhome.immerse.testscripts.scenarios;
 
 import static com.programyourhome.immerse.toolbox.audio.playback.LoopPlayback.once;
-import static com.programyourhome.immerse.toolbox.location.dynamic.FixedDynamicLocation.fixed;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.normalize.FractionalNormalizeAlgorithm.fractional;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios.FixedVolumeRatiosAlgorithm.fixed;
 import static com.programyourhome.immerse.toolbox.util.TestData.room;
@@ -64,7 +63,7 @@ public class TesterLocalLaptop {
                 .signed()
                 .buildForInput();
         // Scenario scenario = scenario(settings(SuppliedAudioResource.supplied(() -> generate(format, 500, 10_000)), fixed(5, 10, 10), fixed(5, 5, 5),
-        Scenario scenario = scenario(settings(FileAudioResource.file(new File(SPIRAL)), fixed(5, 10, 10), fixed(5, 5, 5),
+        Scenario scenario = scenario(settings(FileAudioResource.file(new File(SPIRAL)),
                 fixed(fixedSpeakerVolumeRatios), fractional(), once()));
 
         SoundCard soundCard1 = soundCard(1, "pci-0000:00:1f.3", speaker1, speaker2);

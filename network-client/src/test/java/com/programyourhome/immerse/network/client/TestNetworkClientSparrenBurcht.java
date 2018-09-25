@@ -2,8 +2,6 @@ package com.programyourhome.immerse.network.client;
 
 import static com.programyourhome.immerse.toolbox.audio.playback.ForeverPlayback.forever;
 import static com.programyourhome.immerse.toolbox.audio.resource.FileAudioResource.file;
-import static com.programyourhome.immerse.toolbox.location.dynamic.FixedDynamicLocation.fixed;
-import static com.programyourhome.immerse.toolbox.location.dynamic.KeyFramesDynamicLocation.keyFrames;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios.FixedVolumeRatiosAlgorithm.fixed;
 import static com.programyourhome.immerse.toolbox.util.TestData.room;
 import static com.programyourhome.immerse.toolbox.util.TestData.scenario;
@@ -60,7 +58,7 @@ public class TestNetworkClientSparrenBurcht {
 
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
                 room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 0.7))); // speaker.getId() == 2 ? 1.0 : 0.0)));
-        Scenario scenario1 = scenario(settings(file(SPIRAL), keyFrames(keyFrames), fixed(180, 180, 150),
+        Scenario scenario1 = scenario(settings(file(SPIRAL),
                 fixed(fixedSpeakerVolumeRatios), FractionalNormalizeAlgorithm.fractional(), forever()));
 
         // Scenario scenario2 = scenario(room, settings(file(VOICE_PINE), keyFrames(keyFrames), fixed(180, 180, 150),

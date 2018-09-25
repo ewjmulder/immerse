@@ -1,6 +1,5 @@
 package com.programyourhome.immerse.network.client;
 
-import static com.programyourhome.immerse.toolbox.location.dynamic.FixedDynamicLocation.fixed;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.normalize.FractionalNormalizeAlgorithm.fractional;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios.FixedVolumeRatiosAlgorithm.fixed;
 import static com.programyourhome.immerse.toolbox.util.TestData.room;
@@ -49,8 +48,9 @@ public class TestNetworkClientLocalLaptop {
                 room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0)));
         ImmerseAudioFormat format = ImmerseAudioFormat.fromJavaAudioFormat(new AudioFormat(44100, 16, 1, true, false));
         Scenario scenario = scenario(
-                settings(FileAudioResource.file(new File("/home/emulder/Downloads/audio/spiral.wav")), LinearDynamicVolume.linearWithDelay(1, 0, 3000, 3000),
-                        fixed(5, 10, 10), fixed(5, 5, 5),
+                settings(FileAudioResource.file(new File("/home/emulder/Downloads/audio/spiral.wav")),
+                        LinearDynamicVolume.linearWithDelay(0.5, 0, 3000, 3000),
+                        // FixedDynamicVolume.fixed(0.5),
                         fixed(fixedSpeakerVolumeRatios), fractional(), ForeverPlayback.forever()));
         // settings(UrlAudioResource.urlWithFormat("http://localhost:19161/adventures/mic-test", format, true), fixed(5, 10, 10), fixed(5, 5, 5),
         // fixed(fixedSpeakerVolumeRatios), fractional(), LoopPlayback.once()));

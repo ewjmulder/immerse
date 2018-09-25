@@ -20,10 +20,8 @@ import com.programyourhome.immerse.audiostreaming.mixer.scenario.ActiveScenario;
 import com.programyourhome.immerse.audiostreaming.mixer.scenario.AudioInputBuffer;
 import com.programyourhome.immerse.audiostreaming.soundcard.SoundCardStream;
 import com.programyourhome.immerse.audiostreaming.util.AsyncUtil;
-import com.programyourhome.immerse.domain.Snapshot;
 import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
 import com.programyourhome.immerse.domain.format.SampleSize;
-import com.programyourhome.immerse.domain.location.Vector3D;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumes;
 import com.programyourhome.immerse.toolbox.util.StreamUtil;
@@ -272,17 +270,8 @@ public class MixerStep {
      */
     private SpeakerVolumes calculateSpeakerVolumes(ActiveScenario activeScenario) {
         long millisSinceStart = this.calculateMillisSinceStart(activeScenario);
-        // Get the listener and source location from the configured dynamic location objects.
-        Vector3D listener = activeScenario.getListenerLocation().getLocation(millisSinceStart);
-        Vector3D source = activeScenario.getSourceLocation().getLocation(millisSinceStart);
-        // Build a snapshot of the scenario to provide to the volume algorithms.
-        Snapshot snapshot = Snapshot.builder()
-                .scenario(activeScenario.getScenario())
-                .source(source)
-                .listener(listener)
-                .build();
         // Calculate the volume ratios using the configured algorithm.
-        SpeakerVolumeRatios speakerVolumeRatios = activeScenario.getVolumeRatiosAlgorithm().calculateVolumeRatios(getSettings().getRoom(), snapshot);
+        SpeakerVolumeRatios speakerVolumeRatios = activeScenario.getVolumeRatiosAlgorithm().calculateVolumeRatios(getSettings().getRoom(), millisSinceStart);
         // Calculate the actual volumes using the configured normalize algorithm.
         return activeScenario.getNormalizeAlgorithm().calculateVolumes(speakerVolumeRatios);
     }

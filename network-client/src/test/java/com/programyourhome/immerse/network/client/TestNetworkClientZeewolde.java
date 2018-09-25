@@ -2,8 +2,6 @@ package com.programyourhome.immerse.network.client;
 
 import static com.programyourhome.immerse.toolbox.audio.playback.ForeverPlayback.forever;
 import static com.programyourhome.immerse.toolbox.audio.resource.UrlAudioResource.urlWithType;
-import static com.programyourhome.immerse.toolbox.location.dynamic.FixedDynamicLocation.fixed;
-import static com.programyourhome.immerse.toolbox.location.dynamic.KeyFramesDynamicLocation.keyFrames;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.normalize.MaxSumNormalizeAlgorithm.maxSum;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios.FixedVolumeRatiosAlgorithm.fixed;
 import static com.programyourhome.immerse.toolbox.util.TestData.room;
@@ -71,7 +69,7 @@ public class TestNetworkClientZeewolde {
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
                 room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0)));
         Scenario scenario = scenario(
-                settings(urlWithType("http://10.42.0.1:19161/audio/chill", AudioFileType.WAVE), keyFrames(keyFrames), fixed(100, 60, 80),
+                settings(urlWithType("http://10.42.0.1:19161/audio/chill", AudioFileType.WAVE),
                         fixed(fixedSpeakerVolumeRatios), maxSum(1), forever()));
         // fieldOfHearing(60), maxSum(1), forever()));
 

@@ -62,8 +62,8 @@ public class TesterZeewolde {
                     System.out.println(speaker);
                     return speaker.getId() == 4 ? 1.0 : 0.0;
                 })));
-        Scenario scenario1 = scenario(settings(file(CHILL_PINE), keyFrames(keyFrames), fixed(100, 60, 80),
-                fieldOfHearing(60), maxSum(1), forever()));
+        Scenario scenario1 = scenario(settings(file(CHILL_PINE),
+                fieldOfHearing(keyFrames(keyFrames), fixed(100, 60, 80), 60), maxSum(1), forever()));
 
         // Scenario scenario2 = scenario(room, settings(filePath(VOICE_PINE), keyFrames(keyFrames), fixed(180, 180, 150),
         // fieldOfHearing(45), maxSum(1), forever()));

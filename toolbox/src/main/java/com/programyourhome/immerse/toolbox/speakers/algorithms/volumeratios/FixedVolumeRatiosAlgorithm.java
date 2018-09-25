@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 import com.programyourhome.immerse.domain.Factory;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Serialization;
-import com.programyourhome.immerse.domain.Snapshot;
 import com.programyourhome.immerse.domain.speakers.Speaker;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
 import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.VolumeRatiosAlgorithm;
@@ -24,7 +23,7 @@ public class FixedVolumeRatiosAlgorithm implements VolumeRatiosAlgorithm {
     }
 
     @Override
-    public SpeakerVolumeRatios calculateVolumeRatios(Room room, Snapshot scene) {
+    public SpeakerVolumeRatios calculateVolumeRatios(Room room, long millisSinceStart) {
         return this.speakerVolumeRatios;
     }
 

@@ -10,12 +10,10 @@ import com.programyourhome.immerse.domain.Factory;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Scenario;
 import com.programyourhome.immerse.domain.ScenarioSettings;
-import com.programyourhome.immerse.domain.Snapshot;
 import com.programyourhome.immerse.domain.audio.playback.Playback;
 import com.programyourhome.immerse.domain.audio.resource.AudioResource;
 import com.programyourhome.immerse.domain.audio.soundcard.SoundCard;
 import com.programyourhome.immerse.domain.location.Vector3D;
-import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
 import com.programyourhome.immerse.domain.speakers.Speaker;
 import com.programyourhome.immerse.domain.speakers.algorithms.normalize.NormalizeAlgorithm;
 import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.VolumeRatiosAlgorithm;
@@ -65,35 +63,20 @@ public class TestData {
                 .build();
     }
 
-    /**
-     * Just create a snapshot, without any interest in the dynamic part of the scenario.
-     */
-    public static Snapshot snapshot(Vector3D source, Vector3D listener, ScenarioSettings settings) {
-        return Snapshot.builder()
-                .scenario(scenario(settings))
-                .source(source)
-                .listener(listener)
-                .build();
-    }
-
     public static ScenarioSettings settings() {
-        return settings(silence(), fixed(0, 0, 0), fixed(0, 0, 0), fieldOfHearing(), fractional(), forever());
+        return settings(silence(), fieldOfHearing(fixed(0, 0, 0), fixed(0, 0, 0)), fractional(), forever());
     }
 
-    public static ScenarioSettings settings(Factory<AudioResource> audioResource, Factory<DynamicLocation> sourceLocation,
-            Factory<DynamicLocation> listenerLocation, Factory<VolumeRatiosAlgorithm> volumeRatiosAlgorithm,
+    public static ScenarioSettings settings(Factory<AudioResource> audioResource, Factory<VolumeRatiosAlgorithm> volumeRatiosAlgorithm,
             Factory<NormalizeAlgorithm> normalizeAlgorithm, Factory<Playback> playback) {
-        return settings(audioResource, FixedDynamicVolume.full(), sourceLocation, listenerLocation, volumeRatiosAlgorithm, normalizeAlgorithm, playback);
+        return settings(audioResource, FixedDynamicVolume.full(), volumeRatiosAlgorithm, normalizeAlgorithm, playback);
     }
 
     public static ScenarioSettings settings(Factory<AudioResource> audioResource, Factory<DynamicVolume> volume,
-            Factory<DynamicLocation> sourceLocation, Factory<DynamicLocation> listenerLocation,
             Factory<VolumeRatiosAlgorithm> volumeRatiosAlgorithm, Factory<NormalizeAlgorithm> normalizeAlgorithm, Factory<Playback> playback) {
         return ScenarioSettings.builder()
                 .audioResource(audioResource)
                 .volume(volume)
-                .sourceLocation(sourceLocation)
-                .listenerLocation(listenerLocation)
                 .volumeRatiosAlgorithm(volumeRatiosAlgorithm)
                 .normalizeAlgorithm(normalizeAlgorithm)
                 .playback(playback)

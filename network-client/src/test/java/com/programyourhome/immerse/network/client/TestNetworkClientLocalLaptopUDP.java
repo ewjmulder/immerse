@@ -1,6 +1,5 @@
 package com.programyourhome.immerse.network.client;
 
-import static com.programyourhome.immerse.toolbox.location.dynamic.FixedDynamicLocation.fixed;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.normalize.FractionalNormalizeAlgorithm.fractional;
 import static com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios.FixedVolumeRatiosAlgorithm.fixed;
 import static com.programyourhome.immerse.toolbox.util.TestData.room;
@@ -65,7 +64,7 @@ public class TestNetworkClientLocalLaptopUDP {
                 room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0)));
         Scenario scenario = scenario(
                 settings(UdpAudioResource.udp("localhost", UDP_PORT, EXTERNAL_MIC_CHUNK_SIZE, PACKET_SIZE, micFormat, START_MESSAGE),
-                        fixed(5, 10, 10), fixed(5, 5, 5), fixed(fixedSpeakerVolumeRatios), fractional(), LoopPlayback.once()));
+                        fixed(fixedSpeakerVolumeRatios), fractional(), LoopPlayback.once()));
 
         ImmerseClient client = new ImmerseClient("localhost", 51515);
 

@@ -2,7 +2,7 @@ package com.programyourhome.immerse.toolbox.util;
 
 import org.la4j.Vector;
 
-import com.programyourhome.immerse.domain.Snapshot;
+import com.programyourhome.immerse.domain.location.Vector3D;
 import com.programyourhome.immerse.domain.speakers.Speaker;
 
 /**
@@ -16,9 +16,9 @@ public class MathUtil {
     /**
      * Calculate the angle (in degrees) between the line listener->source and listener->speaker.
      */
-    public static double calculateAngleInDegrees(Snapshot snapshot, Speaker speakerPojo) {
-        Vector listener = snapshot.getListener().toLa4j();
-        Vector source = snapshot.getSource().toLa4j();
+    public static double calculateAngleInDegrees(Vector3D sourceLocation, Vector3D listenerLocation, Speaker speakerPojo) {
+        Vector listener = listenerLocation.toLa4j();
+        Vector source = sourceLocation.toLa4j();
         Vector speaker = speakerPojo.getPosition().toLa4j();
         double angle = calculateAngleInDegrees(listener, source, speaker);
         // In case of the listener being at exactly the same position as either the source or the speaker,

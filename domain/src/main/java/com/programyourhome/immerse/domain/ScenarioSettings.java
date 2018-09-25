@@ -4,7 +4,6 @@ import java.io.Serializable;
 
 import com.programyourhome.immerse.domain.audio.playback.Playback;
 import com.programyourhome.immerse.domain.audio.resource.AudioResource;
-import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
 import com.programyourhome.immerse.domain.speakers.algorithms.normalize.NormalizeAlgorithm;
 import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.VolumeRatiosAlgorithm;
 import com.programyourhome.immerse.domain.volume.DynamicVolume;
@@ -20,8 +19,6 @@ public class ScenarioSettings implements Serializable {
 
     private Factory<AudioResource> audioResourceFactory;
     private Factory<DynamicVolume> volumeFactory;
-    private Factory<DynamicLocation> sourceLocationFactory;
-    private Factory<DynamicLocation> listenerLocationFactory;
     private Factory<VolumeRatiosAlgorithm> volumeRatiosAlgorithmFactory;
     private Factory<NormalizeAlgorithm> normalizeAlgorithmFactory;
     private Factory<Playback> playbackFactory;
@@ -35,14 +32,6 @@ public class ScenarioSettings implements Serializable {
 
     public Factory<DynamicVolume> getVolumeFactory() {
         return this.volumeFactory;
-    }
-
-    public Factory<DynamicLocation> getSourceLocationFactory() {
-        return this.sourceLocationFactory;
-    }
-
-    public Factory<DynamicLocation> getListenerLocationFactory() {
-        return this.listenerLocationFactory;
     }
 
     public Factory<VolumeRatiosAlgorithm> getVolumeRatiosAlgorithmFactory() {
@@ -75,16 +64,6 @@ public class ScenarioSettings implements Serializable {
 
         public Builder volume(Factory<DynamicVolume> volumeFactory) {
             this.settings.volumeFactory = volumeFactory;
-            return this;
-        }
-
-        public Builder sourceLocation(Factory<DynamicLocation> sourceLocationFactory) {
-            this.settings.sourceLocationFactory = sourceLocationFactory;
-            return this;
-        }
-
-        public Builder listenerLocation(Factory<DynamicLocation> listenerLocationFactory) {
-            this.settings.listenerLocationFactory = listenerLocationFactory;
             return this;
         }
 
