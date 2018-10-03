@@ -75,7 +75,8 @@ public class ImmerseServer {
             this.serverSocket = serverSocketResource;
             Logger.info("Server started and accepting connections.");
             while (!this.shouldStop) {
-                try (Socket clientSocket = this.serverSocket.accept()) {
+                try {
+                    Socket clientSocket = this.serverSocket.accept();
                     this.handleClient(clientSocket);
                 } catch (Exception e) {
                     Logger.error(e, "Exception occured handling client");
@@ -105,25 +106,49 @@ public class ImmerseServer {
      */
     private void handleClient(Socket clientSocket) throws IOException {
         ObjectInput objectInput = new ObjectInputStream(clientSocket.getInputStream());
-        ActionResult<?> actionResult;
         try {
             // Read action to take.
             ServerAction action = (ServerAction) objectInput.readObject();
             Logger.info("Client connected, requested action: " + action);
+            Thread executeActionThread = new Thread(() -> this.executeAction(clientSocket, action, objectInput));
+            // Execute (a)sync depending on type of action.
+            if (action.isCanRunAsync()) {
+                executeActionThread.start();
+            } else {
+                executeActionThread.run();
+            }
+        } catch (Exception e) {
+            Logger.error(e, "Exception occured during reading server action");
+            this.writeActionResult(clientSocket, ActionResult.error(e));
+        }
+    }
 
-            // Forward processing to the corresponding action implementation
+    /**
+     * Forward processing to the corresponding action implementation and handle the result.
+     */
+    private void executeAction(Socket clientSocket, ServerAction action, ObjectInput objectInput) {
+        try {
             Object result = action.getAction().perform(this, objectInput);
-            actionResult = ActionResult.success(result);
+            this.writeActionResult(clientSocket, ActionResult.success(result));
+            objectInput.close();
         } catch (Exception e) {
             Logger.error(e, "Exception occured during client handling");
-            actionResult = ActionResult.error(e);
+            this.writeActionResult(clientSocket, ActionResult.error(e));
         }
-        // Write the result back to the client.
-        ObjectOutput objectOutput = new ObjectOutputStream(clientSocket.getOutputStream());
-        objectOutput.writeObject(actionResult);
+    }
 
-        objectInput.close();
-        objectOutput.close();
+    /**
+     * Write the result back to the client.
+     */
+    private void writeActionResult(Socket clientSocket, ActionResult<?> actionResult) {
+        try {
+            ObjectOutput objectOutput = new ObjectOutputStream(clientSocket.getOutputStream());
+            objectOutput.writeObject(actionResult);
+            objectOutput.close();
+            clientSocket.close();
+        } catch (Exception e) {
+            Logger.error(e, "Exception occured during writing result to client");
+        }
     }
 
 }
