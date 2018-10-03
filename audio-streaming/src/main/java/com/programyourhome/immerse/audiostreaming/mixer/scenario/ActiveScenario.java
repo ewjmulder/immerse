@@ -49,6 +49,7 @@ public class ActiveScenario {
         this.id = UUID.randomUUID();
         this.scenario = scenario;
         this.playback = this.scenario.getSettings().getPlaybackFactory().create();
+        this.volume = this.scenario.getSettings().getVolumeFactory().create();
         this.streamConfig = streamConfig;
         if (this.streamConfig.isLive()) {
             this.inputStream = audioInputStream;

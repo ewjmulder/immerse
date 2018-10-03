@@ -55,18 +55,18 @@ public class LinearDynamicVolume implements DynamicVolume {
         return linear(fromVolume, toVolume, timespanInMillis, false);
     }
 
-    public static Factory<DynamicVolume> linear(double fromVolume, double toVolume, long timespanInMillis, boolean ignorePlayback) {
-        return linearWithDelay(fromVolume, toVolume, timespanInMillis, ignorePlayback, 0);
+    public static Factory<DynamicVolume> linear(double fromVolume, double toVolume, long timespanInMillis, boolean ignoreRepay) {
+        return linearWithDelay(fromVolume, toVolume, timespanInMillis, ignoreRepay, 0);
     }
 
-    public static Factory<DynamicVolume> linearWithDelay(double fromVolume, double toVolume, long timespanInMillis, boolean ignorePlayback,
+    public static Factory<DynamicVolume> linearWithDelay(double fromVolume, double toVolume, long timespanInMillis, boolean ignoreRepay,
             long delayInMillis) {
         return new Factory<DynamicVolume>() {
             private static final long serialVersionUID = Serialization.VERSION;
 
             @Override
             public DynamicVolume create() {
-                return new LinearDynamicVolume(fromVolume, toVolume, timespanInMillis, ignorePlayback, delayInMillis);
+                return new LinearDynamicVolume(fromVolume, toVolume, timespanInMillis, ignoreRepay, delayInMillis);
             }
         };
     }

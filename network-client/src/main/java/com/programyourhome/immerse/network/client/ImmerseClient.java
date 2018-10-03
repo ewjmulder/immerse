@@ -22,7 +22,7 @@ import com.programyourhome.immerse.network.server.action.ServerAction;
  * The methods should be called in this order:
  * 1. createMixer
  * 2. startMixer
- * 3. Zero or more times: playScenario
+ * 3. Zero or more times: playScenario & playback actions
  * 4. stopMixer
  *
  * After stopMixer, you can start over with createMixer.
@@ -94,6 +94,13 @@ public class ImmerseClient {
      */
     public ActionResult<Void> waitForPlayback(UUID playbackId) {
         return this.callServer(ServerAction.WAIT_FOR_PLAYBACK, playbackId);
+    }
+
+    /**
+     * Fade out playback on the mixer.
+     */
+    public ActionResult<Void> fadeOutPlayback(UUID playbackId, int millis) {
+        return this.callServer(ServerAction.FADE_OUT_PLAYBACK, playbackId, millis);
     }
 
     /**

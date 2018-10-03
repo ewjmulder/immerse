@@ -19,6 +19,8 @@ public enum ServerAction {
     PLAY_SCENARIO(new PlayScenarioAction(), true),
     /** Wait for a playback to finish. */
     WAIT_FOR_PLAYBACK(new WaitForPlaybackAction(), true),
+    /** Fade out playback. */
+    FADE_OUT_PLAYBACK(new FadeOutPlaybackAction(), true),
     /** Stop playback. */
     STOP_PLAYBACK(new StopPlaybackAction(), true),
     /** Stop the mixer. */
