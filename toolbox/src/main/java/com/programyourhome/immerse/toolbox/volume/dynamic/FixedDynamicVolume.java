@@ -18,7 +18,12 @@ public class FixedDynamicVolume implements DynamicVolume {
     }
 
     @Override
-    public double getVolume(long millisSinceStart) {
+    public void audioStarted() {
+        // Ignore, has no effect.
+    }
+
+    @Override
+    public double getVolume() {
         return this.volume;
     }
 

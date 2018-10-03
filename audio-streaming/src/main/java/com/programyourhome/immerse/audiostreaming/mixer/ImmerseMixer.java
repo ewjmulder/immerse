@@ -145,17 +145,16 @@ public class ImmerseMixer {
     /**
      * Get all playback id's of all scenarios in playback.
      */
-    public Set<UUID> getScenariosInPlayback() {
+    public Map<UUID, ActiveScenario> getScenariosInPlayback() {
         return StreamEx.of(this.scenariosInPlayback.toArray(new ActiveScenario[0]))
-                .map(ActiveScenario::getId)
-                .toSet();
+                .toMap(activeScenario -> activeScenario.getId(), as -> as);
     }
 
     /**
      * Whether or not the provided playback id is still in playback.
      */
     public boolean isScenarioInPlayback(UUID playbackId) {
-        return this.getScenariosInPlayback().contains(playbackId);
+        return this.getScenariosInPlayback().containsKey(playbackId);
     }
 
     /**
@@ -458,6 +457,14 @@ public class ImmerseMixer {
 
     public void waitForPlayback(UUID playbackId) {
         this.waitFor(() -> !this.isScenarioInPlayback(playbackId));
+    }
+
+    public void fadeOutPlayback(UUID playbackId, int millis) {
+        ActiveScenario activeScenario = this.getScenariosInPlayback().get(playbackId);
+        if (activeScenario == null) {
+            throw new IllegalStateException("No active scenario found with id " + playbackId);
+        }
+        activeScenario.fadeOut(millis);
     }
 
     public void stopScenarioPlayback(UUID playbackId) {

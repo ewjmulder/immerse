@@ -15,17 +15,29 @@ public class LinearDynamicVolume implements DynamicVolume {
     private final double fromVolume;
     private final double toVolume;
     private final long timespanInMillis;
+    private final boolean ignoreReplay;
     private final long delayInMillis;
+    private long startMillis;
 
-    public LinearDynamicVolume(double fromVolume, double toVolume, long timespanInMillis, long delayInMillis) {
+    public LinearDynamicVolume(double fromVolume, double toVolume, long timespanInMillis, boolean ignoreRepay, long delayInMillis) {
         this.fromVolume = fromVolume;
         this.toVolume = toVolume;
         this.timespanInMillis = timespanInMillis;
+        this.ignoreReplay = ignoreRepay;
         this.delayInMillis = delayInMillis;
+        this.startMillis = -1;
     }
 
     @Override
-    public double getVolume(long millisSinceStart) {
+    public void audioStarted() {
+        if (this.startMillis == -1 || !this.ignoreReplay) {
+            this.startMillis = System.currentTimeMillis();
+        }
+    }
+
+    @Override
+    public double getVolume() {
+        long millisSinceStart = System.currentTimeMillis() - this.startMillis;
         double volume = this.fromVolume;
         if (millisSinceStart > this.delayInMillis) {
             if (millisSinceStart < this.delayInMillis + this.timespanInMillis) {
@@ -40,16 +52,21 @@ public class LinearDynamicVolume implements DynamicVolume {
     }
 
     public static Factory<DynamicVolume> linear(double fromVolume, double toVolume, long timespanInMillis) {
-        return linearWithDelay(fromVolume, toVolume, timespanInMillis, 0);
+        return linear(fromVolume, toVolume, timespanInMillis, false);
     }
 
-    public static Factory<DynamicVolume> linearWithDelay(double fromVolume, double toVolume, long timespanInMillis, long delayInMillis) {
+    public static Factory<DynamicVolume> linear(double fromVolume, double toVolume, long timespanInMillis, boolean ignorePlayback) {
+        return linearWithDelay(fromVolume, toVolume, timespanInMillis, ignorePlayback, 0);
+    }
+
+    public static Factory<DynamicVolume> linearWithDelay(double fromVolume, double toVolume, long timespanInMillis, boolean ignorePlayback,
+            long delayInMillis) {
         return new Factory<DynamicVolume>() {
             private static final long serialVersionUID = Serialization.VERSION;
 
             @Override
             public DynamicVolume create() {
-                return new LinearDynamicVolume(fromVolume, toVolume, timespanInMillis, delayInMillis);
+                return new LinearDynamicVolume(fromVolume, toVolume, timespanInMillis, ignorePlayback, delayInMillis);
             }
         };
     }

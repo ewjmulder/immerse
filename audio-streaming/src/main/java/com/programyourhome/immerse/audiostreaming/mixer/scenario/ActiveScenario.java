@@ -20,6 +20,8 @@ import com.programyourhome.immerse.domain.format.ImmerseAudioFormat;
 import com.programyourhome.immerse.domain.speakers.algorithms.normalize.NormalizeAlgorithm;
 import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.VolumeRatiosAlgorithm;
 import com.programyourhome.immerse.domain.volume.DynamicVolume;
+import com.programyourhome.immerse.toolbox.audio.playback.TimerPlayback;
+import com.programyourhome.immerse.toolbox.volume.dynamic.LinearDynamicVolume;
 
 /**
  * An active scenario is a scenario that is begin played by the mixer.
@@ -36,7 +38,7 @@ public class ActiveScenario {
     private DynamicVolume volume;
     private VolumeRatiosAlgorithm volumeRatiosAlgorithm;
     private NormalizeAlgorithm normalizeAlgorithm;
-    private final Playback playback;
+    private Playback playback;
     private AudioInputStream inputStream;
     private AudioInputBuffer inputBuffer;
     private final File cachedStreamFile;
@@ -115,12 +117,26 @@ public class ActiveScenario {
     }
 
     /**
+     * Calculate the millis since start (0 if not started yet).
+     */
+    public long calculateMillisSinceStart() {
+        // Default is 0: not started yet.
+        long millisSinceStart = 0;
+        if (this.isStarted()) {
+            // If the scenario is started: calculate the millis since start.
+            millisSinceStart = System.currentTimeMillis() - this.getStartMillis();
+        }
+        return millisSinceStart;
+    }
+
+    /**
      * Start this active scenario, by recording the current time as start time.
      * For convenience, this method can be called several times and checks if action is actually required.
      */
     public void startIfNotStarted() {
         if (!this.isStarted()) {
             this.startMillis = System.currentTimeMillis();
+            this.volume.audioStarted();
             this.playback.audioStarted();
         }
     }
@@ -168,9 +184,22 @@ public class ActiveScenario {
      */
     private void resetFromSettings() {
         this.startMillis = -1;
-        this.volume = this.scenario.getSettings().getVolumeFactory().create();
         this.volumeRatiosAlgorithm = this.scenario.getSettings().getVolumeRatiosAlgorithmFactory().create();
         this.normalizeAlgorithm = this.scenario.getSettings().getNormalizeAlgorithmFactory().create();
+        // Do not reset volume and playback, since they are 'replay aware' and can contain cross-playback logic.
+    }
+
+    /**
+     * Fade out the volume and stop in 'millis'.
+     */
+    public void fadeOut(int millis) {
+        double currentVolume = this.volume.getVolume();
+        // Override the dynamic volume with a linear decrease of the volume from 'now' until 0 in 'millis'.
+        this.volume = new LinearDynamicVolume(currentVolume, 0, millis, true, 0);
+        this.volume.audioStarted();
+        // Override the playback with a timer playback of 'millis' to stop at the end of the fade out.
+        this.playback = new TimerPlayback(millis);
+        this.playback.audioStarted();
     }
 
     /**
