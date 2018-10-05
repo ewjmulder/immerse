@@ -60,7 +60,7 @@ public class Tester {
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
                 room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0)));
         Scenario scenario1 = scenario(settings(file(CHILL),
-                fieldOfHearing(keyFrames(keyFrames), fixed(5, 5, 5), 60), maxSum(1), forever()));
+                fieldOfHearing(room, keyFrames(keyFrames), fixed(5, 5, 5), 60), maxSum(1), forever()));
 
         Scenario scenario2 = scenario(settings(file(CHILL),
                 fixed(fixedSpeakerVolumeRatios), fractional(), forever()));

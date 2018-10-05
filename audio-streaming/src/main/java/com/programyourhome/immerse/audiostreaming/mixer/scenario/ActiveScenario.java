@@ -36,20 +36,21 @@ public class ActiveScenario {
     private final UUID id;
     private final Scenario scenario;
     private DynamicVolume volume;
-    private VolumeRatiosAlgorithm volumeRatiosAlgorithm;
-    private NormalizeAlgorithm normalizeAlgorithm;
+    private final VolumeRatiosAlgorithm volumeRatiosAlgorithm;
+    private final NormalizeAlgorithm normalizeAlgorithm;
     private Playback playback;
     private AudioInputStream inputStream;
     private AudioInputBuffer inputBuffer;
     private final File cachedStreamFile;
     private final StreamConfig streamConfig;
-    private long startMillis;
 
     public ActiveScenario(Scenario scenario, AudioInputStream audioInputStream, StreamConfig streamConfig) {
         this.id = UUID.randomUUID();
         this.scenario = scenario;
-        this.playback = this.scenario.getSettings().getPlaybackFactory().create();
         this.volume = this.scenario.getSettings().getVolumeFactory().create();
+        this.volumeRatiosAlgorithm = this.scenario.getSettings().getVolumeRatiosAlgorithmFactory().create();
+        this.normalizeAlgorithm = this.scenario.getSettings().getNormalizeAlgorithmFactory().create();
+        this.playback = this.scenario.getSettings().getPlaybackFactory().create();
         this.streamConfig = streamConfig;
         if (this.streamConfig.isLive()) {
             this.inputStream = audioInputStream;
@@ -63,7 +64,6 @@ public class ActiveScenario {
             }
         }
         this.inputBuffer = this.createAndFillInputBuffer();
-        this.resetFromSettings();
     }
 
     /**
@@ -109,37 +109,15 @@ public class ActiveScenario {
         return this.streamConfig;
     }
 
-    public long getStartMillis() {
-        return this.startMillis;
-    }
-
-    public boolean isStarted() {
-        return this.startMillis > -1;
-    }
-
     /**
-     * Calculate the millis since start (0 if not started yet).
+     * Signals that the 'next' audio playback has started.
+     * This can be the first or any subsequent loop of the same resource.
      */
-    public long calculateMillisSinceStart() {
-        // Default is 0: not started yet.
-        long millisSinceStart = 0;
-        if (this.isStarted()) {
-            // If the scenario is started: calculate the millis since start.
-            millisSinceStart = System.currentTimeMillis() - this.getStartMillis();
-        }
-        return millisSinceStart;
-    }
+    public void nextPlaybackStarted() {
+        this.volume.nextPlaybackStarted();
+        this.volumeRatiosAlgorithm.nextPlaybackStarted();
 
-    /**
-     * Start this active scenario, by recording the current time as start time.
-     * For convenience, this method can be called several times and checks if action is actually required.
-     */
-    public void startIfNotStarted() {
-        if (!this.isStarted()) {
-            this.startMillis = System.currentTimeMillis();
-            this.volume.audioStarted();
-            this.playback.audioStarted();
-        }
+        this.playback.audioStarted();
     }
 
     /**
@@ -158,7 +136,6 @@ public class ActiveScenario {
         } catch (IOException e) {
             throw new IllegalStateException("Exception during stream reset from cache", e);
         }
-        this.resetFromSettings();
     }
 
     private AudioInputBuffer createAndFillInputBuffer() {
@@ -180,24 +157,13 @@ public class ActiveScenario {
     }
 
     /**
-     * Get fresh copies of all settings, except for the Playback object,
-     * since that should persist over several restarts to be able to count loops.
-     */
-    private void resetFromSettings() {
-        this.startMillis = -1;
-        this.volumeRatiosAlgorithm = this.scenario.getSettings().getVolumeRatiosAlgorithmFactory().create();
-        this.normalizeAlgorithm = this.scenario.getSettings().getNormalizeAlgorithmFactory().create();
-        // Do not reset volume and playback, since they are 'replay aware' and can contain cross-playback logic.
-    }
-
-    /**
      * Fade out the volume and stop in 'millis'.
      */
     public void fadeOut(int millis) {
-        double currentVolume = this.volume.getVolume();
+        double currentVolume = this.volume.getCurrentValue();
         // Override the dynamic volume with a linear decrease of the volume from 'now' until 0 in 'millis'.
         this.volume = new LinearDynamicVolume(currentVolume, 0, millis, true, 0);
-        this.volume.audioStarted();
+        this.volume.nextPlaybackStarted();
         // Override the playback with a timer playback of 'millis' to stop at the end of the fade out.
         this.playback = new TimerPlayback(millis);
         this.playback.audioStarted();

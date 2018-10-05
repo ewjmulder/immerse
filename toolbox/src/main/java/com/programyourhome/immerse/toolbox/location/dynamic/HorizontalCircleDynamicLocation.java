@@ -1,5 +1,6 @@
 package com.programyourhome.immerse.toolbox.location.dynamic;
 
+import com.programyourhome.immerse.domain.AbstractDynamicData;
 import com.programyourhome.immerse.domain.Factory;
 import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.location.Vector3D;
@@ -9,7 +10,7 @@ import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
  * Dynamic location that circles 'horizontally' around a certain center with a certain radius
  * at a certain speed, either clockwise or not.
  */
-public class HorizontalCircleDynamicLocation implements DynamicLocation {
+public class HorizontalCircleDynamicLocation extends AbstractDynamicData<Vector3D> implements DynamicLocation {
 
     private static final long serialVersionUID = Serialization.VERSION;
 
@@ -22,6 +23,7 @@ public class HorizontalCircleDynamicLocation implements DynamicLocation {
     private final double millisPerDegreeAngle;
 
     public HorizontalCircleDynamicLocation(Vector3D center, double startAngleInDegrees, double radius, boolean clockwise, double millisPerDegreeAngle) {
+        super(true);
         this.centerX = center.getX();
         this.centerY = center.getY();
         this.z = center.getZ();
@@ -33,8 +35,8 @@ public class HorizontalCircleDynamicLocation implements DynamicLocation {
     }
 
     @Override
-    public Vector3D getLocation(long millisSinceStart) {
-        double angleMoved = millisSinceStart / this.millisPerDegreeAngle;
+    public Vector3D getCurrentValue() {
+        double angleMoved = this.getMillisSinceStart() / this.millisPerDegreeAngle;
         if (!this.clockwise) {
             angleMoved *= -1;
         }

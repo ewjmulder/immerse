@@ -1,5 +1,6 @@
 package com.programyourhome.immerse.toolbox.location.dynamic;
 
+import com.programyourhome.immerse.domain.AbstractDynamicData;
 import com.programyourhome.immerse.domain.Factory;
 import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.location.Vector3D;
@@ -8,7 +9,7 @@ import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
 /**
  * A fixed location, static at all times.
  */
-public class FixedDynamicLocation implements DynamicLocation {
+public class FixedDynamicLocation extends AbstractDynamicData<Vector3D> implements DynamicLocation {
 
     private static final long serialVersionUID = Serialization.VERSION;
 
@@ -19,7 +20,7 @@ public class FixedDynamicLocation implements DynamicLocation {
     }
 
     @Override
-    public Vector3D getLocation(long millisSinceStart) {
+    public Vector3D getCurrentValue() {
         return this.location;
     }
 

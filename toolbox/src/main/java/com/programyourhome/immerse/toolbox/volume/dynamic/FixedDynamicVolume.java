@@ -1,5 +1,6 @@
 package com.programyourhome.immerse.toolbox.volume.dynamic;
 
+import com.programyourhome.immerse.domain.AbstractDynamicData;
 import com.programyourhome.immerse.domain.Factory;
 import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.volume.DynamicVolume;
@@ -7,7 +8,7 @@ import com.programyourhome.immerse.domain.volume.DynamicVolume;
 /**
  * A fixed volume, static at all times.
  */
-public class FixedDynamicVolume implements DynamicVolume {
+public class FixedDynamicVolume extends AbstractDynamicData<Double> implements DynamicVolume {
 
     private static final long serialVersionUID = Serialization.VERSION;
 
@@ -18,12 +19,12 @@ public class FixedDynamicVolume implements DynamicVolume {
     }
 
     @Override
-    public void audioStarted() {
+    public void nextPlaybackStarted() {
         // Ignore, has no effect.
     }
 
     @Override
-    public double getVolume() {
+    public Double getCurrentValue() {
         return this.volume;
     }
 

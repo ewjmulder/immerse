@@ -1,5 +1,6 @@
 package com.programyourhome.immerse.toolbox.volume.dynamic;
 
+import com.programyourhome.immerse.domain.AbstractDynamicData;
 import com.programyourhome.immerse.domain.Factory;
 import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.volume.DynamicVolume;
@@ -8,36 +9,26 @@ import com.programyourhome.immerse.toolbox.util.ValueRangeUtil;
 /**
  * A volume moving linear from a configured volume to a configured volume in a certain amount of time, after an optional delay.
  */
-public class LinearDynamicVolume implements DynamicVolume {
+public class LinearDynamicVolume extends AbstractDynamicData<Double> implements DynamicVolume {
 
     private static final long serialVersionUID = Serialization.VERSION;
 
     private final double fromVolume;
     private final double toVolume;
     private final long timespanInMillis;
-    private final boolean ignoreReplay;
     private final long delayInMillis;
-    private long startMillis;
 
     public LinearDynamicVolume(double fromVolume, double toVolume, long timespanInMillis, boolean ignoreRepay, long delayInMillis) {
+        super(ignoreRepay);
         this.fromVolume = fromVolume;
         this.toVolume = toVolume;
         this.timespanInMillis = timespanInMillis;
-        this.ignoreReplay = ignoreRepay;
         this.delayInMillis = delayInMillis;
-        this.startMillis = -1;
     }
 
     @Override
-    public void audioStarted() {
-        if (this.startMillis == -1 || !this.ignoreReplay) {
-            this.startMillis = System.currentTimeMillis();
-        }
-    }
-
-    @Override
-    public double getVolume() {
-        long millisSinceStart = System.currentTimeMillis() - this.startMillis;
+    public Double getCurrentValue() {
+        long millisSinceStart = this.getMillisSinceStart();
         double volume = this.fromVolume;
         if (millisSinceStart > this.delayInMillis) {
             if (millisSinceStart < this.delayInMillis + this.timespanInMillis) {

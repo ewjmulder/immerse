@@ -30,12 +30,12 @@ public class FieldOfHearingVolumeRatiosAlgorithm extends AbstractLocationBasedVo
 
     private final double cutoffAngle;
 
-    public FieldOfHearingVolumeRatiosAlgorithm(DynamicLocation sourceLocation, DynamicLocation listenerLocation) {
-        this(sourceLocation, listenerLocation, DEFAULT_CUTOFF_ANGLE);
+    public FieldOfHearingVolumeRatiosAlgorithm(Room room, DynamicLocation sourceLocation, DynamicLocation listenerLocation) {
+        this(room, sourceLocation, listenerLocation, DEFAULT_CUTOFF_ANGLE);
     }
 
-    public FieldOfHearingVolumeRatiosAlgorithm(DynamicLocation sourceLocation, DynamicLocation listenerLocation, double cutoffAngle) {
-        super(sourceLocation, listenerLocation);
+    public FieldOfHearingVolumeRatiosAlgorithm(Room room, DynamicLocation sourceLocation, DynamicLocation listenerLocation, double cutoffAngle) {
+        super(room, sourceLocation, listenerLocation);
         this.cutoffAngle = cutoffAngle;
     }
 
@@ -49,18 +49,18 @@ public class FieldOfHearingVolumeRatiosAlgorithm extends AbstractLocationBasedVo
                 .toMap());
     }
 
-    public static Factory<VolumeRatiosAlgorithm> fieldOfHearing(Factory<DynamicLocation> sourceLocation, Factory<DynamicLocation> listenerLocation) {
-        return fieldOfHearing(sourceLocation, listenerLocation, DEFAULT_CUTOFF_ANGLE);
+    public static Factory<VolumeRatiosAlgorithm> fieldOfHearing(Room room, Factory<DynamicLocation> sourceLocation, Factory<DynamicLocation> listenerLocation) {
+        return fieldOfHearing(room, sourceLocation, listenerLocation, DEFAULT_CUTOFF_ANGLE);
     }
 
-    public static Factory<VolumeRatiosAlgorithm> fieldOfHearing(Factory<DynamicLocation> sourceLocation, Factory<DynamicLocation> listenerLocation,
+    public static Factory<VolumeRatiosAlgorithm> fieldOfHearing(Room room, Factory<DynamicLocation> sourceLocation, Factory<DynamicLocation> listenerLocation,
             double cutoffAngle) {
         return new Factory<VolumeRatiosAlgorithm>() {
             private static final long serialVersionUID = Serialization.VERSION;
 
             @Override
             public VolumeRatiosAlgorithm create() {
-                return new FieldOfHearingVolumeRatiosAlgorithm(sourceLocation.create(), listenerLocation.create(), cutoffAngle);
+                return new FieldOfHearingVolumeRatiosAlgorithm(room, sourceLocation.create(), listenerLocation.create(), cutoffAngle);
             }
         };
     }

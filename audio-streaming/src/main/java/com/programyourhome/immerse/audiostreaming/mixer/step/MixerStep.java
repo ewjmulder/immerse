@@ -248,7 +248,7 @@ public class MixerStep {
         for (int i = 0; i < samples.length; i++) {
             short originalValue = samples[i];
             // Get the dynamic volume at this time.
-            double scenarioVolume = activeScenario.getVolume().getVolume();
+            double scenarioVolume = activeScenario.getVolume().getCurrentValue();
             // Perform boundary checks.
             if (scenarioVolume < 0) {
                 scenarioVolume = 0;
@@ -269,11 +269,12 @@ public class MixerStep {
      * and volume algorithms of the given scenario.
      */
     private SpeakerVolumes calculateSpeakerVolumes(ActiveScenario activeScenario) {
-        long millisSinceStart = activeScenario.calculateMillisSinceStart();
         // Calculate the volume ratios using the configured algorithm.
-        SpeakerVolumeRatios speakerVolumeRatios = activeScenario.getVolumeRatiosAlgorithm().calculateVolumeRatios(getSettings().getRoom(), millisSinceStart);
+        SpeakerVolumeRatios speakerVolumeRatios = activeScenario.getVolumeRatiosAlgorithm().getCurrentValue();
         // Calculate the actual volumes using the configured normalize algorithm.
-        return activeScenario.getNormalizeAlgorithm().calculateVolumes(speakerVolumeRatios);
+        SpeakerVolumes sv = activeScenario.getNormalizeAlgorithm().calculateVolumes(speakerVolumeRatios);
+        System.out.println("SPEAKER VOLUMES: " + sv);
+        return sv;
     }
 
     /**

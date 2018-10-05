@@ -363,6 +363,10 @@ public class ImmerseMixer {
         scenariosToActivateCopy.forEach(scenario -> this.getPlaybackListenersCopy()
                 .forEach(listener -> AsyncUtil.submitAsyncTask(
                         () -> listener.scenarioEventNoException(listener::scenarioStarted, scenario.getId()))));
+        // Signal scenario that playback has started. just before starting the fill buffer loop.
+        // This will cause a slight mismatch of max a few milliseconds between the timers in the DynamicData and the actual playback,
+        // but this is the last place where we know the difference between a newly activated scenario and an existing one.
+        scenariosToActivateCopy.forEach(ActiveScenario::nextPlaybackStarted);
     }
 
     /**
@@ -372,9 +376,6 @@ public class ImmerseMixer {
         // Gather all data to write by running the mixer step algorithm.
         MixerStep mixerStep = new MixerStep(this.activeScenarios.values(), this.soundCardStreams);
         Map<SoundCardStream, byte[]> soundCardBufferData = mixerStep.calculateBufferData();
-
-        // Signal scenario start just before adding the audio data to the buffer.
-        this.activeScenarios.values().forEach(ActiveScenario::startIfNotStarted);
 
         if (this.state == MixerState.INITIALIZED) {
             // If not started yet, do start the streams after the initial synchronized buffer fill, to be in sync as much as possible.

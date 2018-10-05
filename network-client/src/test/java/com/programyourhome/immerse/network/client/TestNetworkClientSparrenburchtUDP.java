@@ -79,7 +79,7 @@ public class TestNetworkClientSparrenburchtUDP {
         ImmerseAudioFormat format = ImmerseAudioFormat.fromJavaAudioFormat(new AudioFormat(44100, 16, 1, true, false));
         Scenario scenario = scenario(
                 settings(UdpAudioResource.udp("192.168.0.101", UDP_PORT, EXTERNAL_MIC_CHUNK_SIZE, PACKET_SIZE, format, START_MESSAGE),
-                        fieldOfHearing(keyFrames(keyFrames, true), fixed(5, 5, 5), 45), fractional(), LoopPlayback.once()));
+                        fieldOfHearing(room, keyFrames(keyFrames, true), fixed(5, 5, 5), 45), fractional(), LoopPlayback.once()));
 
         // Scenario scenario2 = scenario(room, settings(file(VOICE_PINE), keyFrames(keyFrames), fixed(180, 180, 150),
         // fieldOfHearing(45), maxSum(1), forever()));

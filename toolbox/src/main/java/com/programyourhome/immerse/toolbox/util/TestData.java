@@ -63,8 +63,8 @@ public class TestData {
                 .build();
     }
 
-    public static ScenarioSettings settings() {
-        return settings(silence(), fieldOfHearing(fixed(0, 0, 0), fixed(0, 0, 0)), fractional(), forever());
+    public static ScenarioSettings settings(Room room) {
+        return settings(silence(), fieldOfHearing(room, fixed(0, 0, 0), fixed(0, 0, 0)), fractional(), forever());
     }
 
     public static ScenarioSettings settings(Factory<AudioResource> audioResource, Factory<VolumeRatiosAlgorithm> volumeRatiosAlgorithm,

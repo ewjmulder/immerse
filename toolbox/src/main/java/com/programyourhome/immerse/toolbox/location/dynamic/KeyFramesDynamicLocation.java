@@ -4,6 +4,7 @@ import static com.programyourhome.immerse.toolbox.util.MathUtil.calculateValueIn
 
 import java.util.SortedMap;
 
+import com.programyourhome.immerse.domain.AbstractDynamicData;
 import com.programyourhome.immerse.domain.Factory;
 import com.programyourhome.immerse.domain.Serialization;
 import com.programyourhome.immerse.domain.location.Vector3D;
@@ -24,7 +25,7 @@ import com.programyourhome.immerse.domain.location.dynamic.DynamicLocation;
  * - For a time before the first key frame, use the location of the first key frame.
  * - For a time after the last key frame, use the location of the last key frame. (so effectively stopping after one loop)
  */
-public class KeyFramesDynamicLocation implements DynamicLocation {
+public class KeyFramesDynamicLocation extends AbstractDynamicData<Vector3D> implements DynamicLocation {
 
     private static final long serialVersionUID = Serialization.VERSION;
 
@@ -36,6 +37,7 @@ public class KeyFramesDynamicLocation implements DynamicLocation {
     }
 
     public KeyFramesDynamicLocation(SortedMap<Long, Vector3D> keyFrames, boolean loop) {
+        super(true);
         if (keyFrames.isEmpty()) {
             throw new IllegalArgumentException("At least 1 key frame is required.");
         }
@@ -50,7 +52,8 @@ public class KeyFramesDynamicLocation implements DynamicLocation {
     }
 
     @Override
-    public Vector3D getLocation(long millisSinceStart) {
+    public Vector3D getCurrentValue() {
+        long millisSinceStart = this.getMillisSinceStart();
         Vector3D location;
         if (this.loop) {
             // Calculate the modulo to get a value within the frame times. (use floorMod instead of % to always get a positive value)

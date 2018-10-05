@@ -18,8 +18,8 @@ class OnlyClosestVolumeRatiosAlgorithmSpec extends Specification {
         def listenerLocation = FixedDynamicLocation.fixed(0, 0, 0)
 
         expect:
-        onlyClosest(sourceLocation, listenerLocation).create().calculateVolumeRatios(room, 0L).getVolumeRatio(1) == v1
-        onlyClosest(sourceLocation, listenerLocation).create().calculateVolumeRatios(room, 0L).getVolumeRatio(2) == v2
+        onlyClosest(room, sourceLocation, listenerLocation).create().getCurrentValue().getVolumeRatio(1) == v1
+        onlyClosest(room, sourceLocation, listenerLocation).create().getCurrentValue().getVolumeRatio(2) == v2
 
         where:
         x1 | y1 | z1 | x2 | y2 | z2 || v1 | v2

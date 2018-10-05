@@ -2,6 +2,7 @@ package com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios;
 
 import java.util.stream.Collectors;
 
+import com.programyourhome.immerse.domain.AbstractDynamicData;
 import com.programyourhome.immerse.domain.Factory;
 import com.programyourhome.immerse.domain.Room;
 import com.programyourhome.immerse.domain.Serialization;
@@ -12,7 +13,7 @@ import com.programyourhome.immerse.domain.speakers.algorithms.volumeratios.Volum
 /**
  * Fixed volume ratios, independent of the scene and locations.
  */
-public class FixedVolumeRatiosAlgorithm implements VolumeRatiosAlgorithm {
+public class FixedVolumeRatiosAlgorithm extends AbstractDynamicData<SpeakerVolumeRatios> implements VolumeRatiosAlgorithm {
 
     private static final long serialVersionUID = Serialization.VERSION;
 
@@ -23,7 +24,7 @@ public class FixedVolumeRatiosAlgorithm implements VolumeRatiosAlgorithm {
     }
 
     @Override
-    public SpeakerVolumeRatios calculateVolumeRatios(Room room, long millisSinceStart) {
+    public SpeakerVolumeRatios getCurrentValue() {
         return this.speakerVolumeRatios;
     }
 

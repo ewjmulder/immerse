@@ -24,8 +24,8 @@ public class OnlyClosestVolumeRatiosAlgorithm extends AbstractLocationBasedVolum
 
     private static final long serialVersionUID = Serialization.VERSION;
 
-    public OnlyClosestVolumeRatiosAlgorithm(DynamicLocation sourceLocation, DynamicLocation listenerLocation) {
-        super(sourceLocation, listenerLocation);
+    public OnlyClosestVolumeRatiosAlgorithm(Room room, DynamicLocation sourceLocation, DynamicLocation listenerLocation) {
+        super(room, sourceLocation, listenerLocation);
     }
 
     @Override
@@ -38,13 +38,13 @@ public class OnlyClosestVolumeRatiosAlgorithm extends AbstractLocationBasedVolum
                 StreamEx.of(room.getSpeakers().keySet()).toMap(speakerId -> speakerId == speakerIdOfMinAngle ? 1.0 : 0.0));
     }
 
-    public static Factory<VolumeRatiosAlgorithm> onlyClosest(Factory<DynamicLocation> sourceLocation, Factory<DynamicLocation> listenerLocation) {
+    public static Factory<VolumeRatiosAlgorithm> onlyClosest(Room room, Factory<DynamicLocation> sourceLocation, Factory<DynamicLocation> listenerLocation) {
         return new Factory<VolumeRatiosAlgorithm>() {
             private static final long serialVersionUID = Serialization.VERSION;
 
             @Override
             public VolumeRatiosAlgorithm create() {
-                return new OnlyClosestVolumeRatiosAlgorithm(sourceLocation.create(), listenerLocation.create());
+                return new OnlyClosestVolumeRatiosAlgorithm(room, sourceLocation.create(), listenerLocation.create());
             }
         };
     }
