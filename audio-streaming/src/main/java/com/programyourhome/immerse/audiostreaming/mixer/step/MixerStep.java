@@ -273,7 +273,6 @@ public class MixerStep {
         SpeakerVolumeRatios speakerVolumeRatios = activeScenario.getVolumeRatiosAlgorithm().getCurrentValue();
         // Calculate the actual volumes using the configured normalize algorithm.
         SpeakerVolumes sv = activeScenario.getNormalizeAlgorithm().calculateVolumes(speakerVolumeRatios);
-        System.out.println("SPEAKER VOLUMES: " + sv);
         return sv;
     }
 
