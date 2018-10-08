@@ -81,7 +81,7 @@ public class ImmerseSettings implements Serializable {
 
         private static final long serialVersionUID = Serialization.VERSION;
 
-        public static final int DEFAULT_SOUND_CARD_BUFFER_MILLIS = 20;
+        public static final int DEFAULT_SOUND_CARD_BUFFER_MILLIS = 30;
         public static final int DEFAULT_STEP_PACE_MILLIS = 5;
         public static final int DEFAULT_WAIT_FOR_CONDITION_MILLIS = 5;
         public static final int DEFAULT_TRIGGER_MINOR_GC_THRESHOLD_KB = 1000;
