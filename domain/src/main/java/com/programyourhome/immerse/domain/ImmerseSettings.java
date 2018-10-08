@@ -83,12 +83,12 @@ public class ImmerseSettings implements Serializable {
 
         public static final int DEFAULT_SOUND_CARD_BUFFER_MILLIS = 20;
         public static final int DEFAULT_STEP_PACE_MILLIS = 5;
-        public static final int DEFAULT_WAIT_FOR_PREDICATE_MILLIS = 5;
+        public static final int DEFAULT_WAIT_FOR_CONDITION_MILLIS = 5;
         public static final int DEFAULT_TRIGGER_MINOR_GC_THRESHOLD_KB = 1000;
 
         private int soundCardBufferMillis;
         private int stepPaceMillis;
-        private int waitForPredicateMillis;
+        private int waitForConditionMillis;
         private int triggerMinorGcThresholdKb;
 
         /**
@@ -108,10 +108,10 @@ public class ImmerseSettings implements Serializable {
         }
 
         /**
-         * Amount of millis to sleep between each check for predicate waiting.
+         * Amount of millis to sleep between each check for conditional waiting.
          */
-        public int getWaitForPredicateMillis() {
-            return this.waitForPredicateMillis;
+        public int getWaitForConditionMillis() {
+            return this.waitForConditionMillis;
         }
 
         /**
@@ -169,7 +169,7 @@ public class ImmerseSettings implements Serializable {
                 this.technicalSettings = Builder.this.settings.new TechnicalSettings();
                 this.technicalSettings.soundCardBufferMillis = TechnicalSettings.DEFAULT_SOUND_CARD_BUFFER_MILLIS;
                 this.technicalSettings.stepPaceMillis = TechnicalSettings.DEFAULT_STEP_PACE_MILLIS;
-                this.technicalSettings.waitForPredicateMillis = TechnicalSettings.DEFAULT_WAIT_FOR_PREDICATE_MILLIS;
+                this.technicalSettings.waitForConditionMillis = TechnicalSettings.DEFAULT_WAIT_FOR_CONDITION_MILLIS;
                 this.technicalSettings.triggerMinorGcThresholdKb = TechnicalSettings.DEFAULT_TRIGGER_MINOR_GC_THRESHOLD_KB;
                 Builder.this.settings.technicalSettings = this.technicalSettings;
             }

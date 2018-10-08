@@ -557,11 +557,11 @@ public class ImmerseMixer {
     }
 
     /**
-     * Utility method that can wait for a certain predicate to become true.
+     * Utility method that can wait for a certain condition to become true.
      */
-    private void waitFor(Supplier<Boolean> predicate) {
-        while (!predicate.get()) {
-            this.sleep(getTechnicalSettings().getWaitForPredicateMillis());
+    private void waitFor(Supplier<Boolean> condition) {
+        while (!condition.get()) {
+            this.sleep(getTechnicalSettings().getWaitForConditionMillis());
         }
     }
 
