@@ -23,6 +23,13 @@ public abstract class AbstractLocationBasedVolumeRatiosAlgorithm extends Abstrac
     }
 
     @Override
+    public void nextStep() {
+        super.nextStep();
+        this.sourceLocation.nextStep();
+        this.listenerLocation.nextStep();
+    }
+
+    @Override
     public void nextPlaybackStarted() {
         super.nextPlaybackStarted();
         this.sourceLocation.nextPlaybackStarted();

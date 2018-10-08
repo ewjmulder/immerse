@@ -14,6 +14,12 @@ public interface DynamicData<T> extends Serializable {
     public void nextPlaybackStarted();
 
     /**
+     * Signals that processing will start the next 'step' of the loop.
+     * Any init logic that is needed once per step can be performed here.
+     */
+    public void nextStep();
+
+    /**
      * Get the current value.
      */
     public T getCurrentValue();

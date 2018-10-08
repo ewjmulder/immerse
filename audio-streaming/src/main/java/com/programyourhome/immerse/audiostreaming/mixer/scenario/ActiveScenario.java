@@ -110,6 +110,14 @@ public class ActiveScenario {
     }
 
     /**
+     * Next step in the processing will start, so forward that to all applicable settings.
+     */
+    public void nextStep() {
+        this.volume.nextStep();
+        this.volumeRatiosAlgorithm.nextStep();
+    }
+
+    /**
      * Signals that the 'next' audio playback has started.
      * This can be the first or any subsequent loop of the same resource.
      */

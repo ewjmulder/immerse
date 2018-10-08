@@ -150,6 +150,9 @@ public class MixerStep {
      * Perform the actual Immerse audio mixing algorithm to calculate the next step sound card stream buffers.
      */
     private Map<SoundCardStream, byte[]> createAudioBuffers() {
+        // Signal that the next step in processing will take place.
+        this.stepActiveScenarios.forEach(ActiveScenario::nextStep);
+
         List<ScenarioResult> scenarioResults = this.calculateScenarioResults();
 
         if (scenarioResults.isEmpty()) {
@@ -244,22 +247,21 @@ public class MixerStep {
      * Return the same samples array, so it can be used in a streamed pipeline.
      */
     private short[] applyScenarioVolume(ActiveScenario activeScenario, short[] samples) {
+        // Get the dynamic volume at this time.
+        double scenarioVolume = activeScenario.getVolume().getCurrentValue();
+        // Perform boundary checks.
+        if (scenarioVolume < 0) {
+            scenarioVolume = 0;
+            Logger.warn("Scenario " + activeScenario.getScenario().getName() + " returned a volume less than 0.");
+        }
+        if (scenarioVolume > 1) {
+            scenarioVolume = 1;
+            Logger.warn("Scenario " + activeScenario.getScenario().getName() + " returned a volume greater than 1.");
+        }
         // Apply the volume setting of this scenario.
         for (int i = 0; i < samples.length; i++) {
-            short originalValue = samples[i];
-            // Get the dynamic volume at this time.
-            double scenarioVolume = activeScenario.getVolume().getCurrentValue();
-            // Perform boundary checks.
-            if (scenarioVolume < 0) {
-                scenarioVolume = 0;
-                Logger.warn("Scenario " + activeScenario.getScenario().getName() + " returned a volume less than 0.");
-            }
-            if (scenarioVolume > 1) {
-                scenarioVolume = 1;
-                Logger.warn("Scenario " + activeScenario.getScenario().getName() + " returned a volume greater than 1.");
-            }
             // Apply the volume to the original value (= take a fraction of the amplitude).
-            samples[i] = (short) (originalValue * scenarioVolume);
+            samples[i] = (short) (samples[i] * scenarioVolume);
         }
         return samples;
     }
