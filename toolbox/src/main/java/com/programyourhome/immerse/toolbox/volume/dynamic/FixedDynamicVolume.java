@@ -19,11 +19,6 @@ public class FixedDynamicVolume extends AbstractDynamicData<Double> implements D
     }
 
     @Override
-    public void nextPlaybackStarted() {
-        // Ignore, has no effect.
-    }
-
-    @Override
     public Double getCurrentValue() {
         return this.volume;
     }

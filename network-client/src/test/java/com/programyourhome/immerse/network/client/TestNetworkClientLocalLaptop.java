@@ -50,7 +50,7 @@ public class TestNetworkClientLocalLaptop {
         Scenario scenario = scenario(
                 settings(FileAudioResource.file(new File("/home/emulder/Downloads/audio/spiral.wav")),
                         LinearDynamicVolume.linearWithDelay(0.5, 0, 3000, false, 3000),
-                        // FixedDynamicVolume.fixed(0.5),
+                        // FixedDynamicVolume.fixed(0.1),
                         fixed(fixedSpeakerVolumeRatios), fractional(), ForeverPlayback.forever()));
         // settings(UrlAudioResource.urlWithFormat("http://localhost:19161/adventures/mic-test", format, true), fixed(5, 10, 10), fixed(5, 5, 5),
         // fixed(fixedSpeakerVolumeRatios), fractional(), LoopPlayback.once()));

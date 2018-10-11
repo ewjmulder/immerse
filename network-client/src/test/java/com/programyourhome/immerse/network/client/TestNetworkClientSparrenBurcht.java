@@ -2,7 +2,6 @@ package com.programyourhome.immerse.network.client;
 
 import static com.programyourhome.immerse.toolbox.audio.playback.ForeverPlayback.forever;
 import static com.programyourhome.immerse.toolbox.audio.resource.FileAudioResource.file;
-import static com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios.FixedVolumeRatiosAlgorithm.fixed;
 import static com.programyourhome.immerse.toolbox.util.TestData.room;
 import static com.programyourhome.immerse.toolbox.util.TestData.scenario;
 import static com.programyourhome.immerse.toolbox.util.TestData.settings;
@@ -26,11 +25,18 @@ import com.programyourhome.immerse.domain.format.SampleSize;
 import com.programyourhome.immerse.domain.location.Vector3D;
 import com.programyourhome.immerse.domain.speakers.Speaker;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
-import com.programyourhome.immerse.toolbox.speakers.algorithms.normalize.FractionalNormalizeAlgorithm;
+import com.programyourhome.immerse.toolbox.location.dynamic.FixedDynamicLocation;
+import com.programyourhome.immerse.toolbox.location.dynamic.HorizontalCircleDynamicLocation;
+import com.programyourhome.immerse.toolbox.location.dynamic.KeyFramesDynamicLocation;
+import com.programyourhome.immerse.toolbox.speakers.algorithms.normalize.MaxSumNormalizeAlgorithm;
+import com.programyourhome.immerse.toolbox.speakers.algorithms.volumeratios.FieldOfHearingVolumeRatiosAlgorithm;
+import com.programyourhome.immerse.toolbox.volume.dynamic.FixedDynamicVolume;
 
 public class TestNetworkClientSparrenBurcht {
 
     private static final String SPIRAL = "/home/ubuntu/audio/spiral.wav";
+    private static final String DRAGON_WINGS = "/home/ubuntu/audio/dragon.wings.wav";
+    private static final String DRAGON_ATTACK = "/home/ubuntu/audio/dragon.attack.wav";
 
     public static void main(String[] args) throws Exception {
         Speaker speaker1 = speaker(1, 0, 366, 250);
@@ -57,9 +63,19 @@ public class TestNetworkClientSparrenBurcht {
         keyFrames.put(12_000L, new Vector3D(0, 0, 250));
 
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
-                room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 0.7))); // speaker.getId() == 2 ? 1.0 : 0.0)));
-        Scenario scenario1 = scenario(settings(file(SPIRAL),
-                fixed(fixedSpeakerVolumeRatios), FractionalNormalizeAlgorithm.fractional(), forever()));
+                room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0))); // speaker.getId() == 2 ? 1.0 : 0.0)));
+        Scenario scenario1 = scenario(settings(file(DRAGON_ATTACK), FixedDynamicVolume.fixed(0.1),
+                FieldOfHearingVolumeRatiosAlgorithm.fieldOfHearing(room,
+                        HorizontalCircleDynamicLocation.horizontalCircle(new Vector3D(183, 183, 250), 0, 183, true, 22),
+                        FixedDynamicLocation.fixed(183, 183, 250)),
+                MaxSumNormalizeAlgorithm.maxSum(1),
+                forever()));
+        Scenario scenario2 = scenario(settings(file(DRAGON_WINGS), FixedDynamicVolume.fixed(0.1),
+                FieldOfHearingVolumeRatiosAlgorithm.fieldOfHearing(room,
+                        KeyFramesDynamicLocation.keyFrames(keyFrames, true),
+                        FixedDynamicLocation.fixed(183, 183, 250)),
+                MaxSumNormalizeAlgorithm.maxSum(1),
+                forever()));
 
         // Scenario scenario2 = scenario(room, settings(file(VOICE_PINE), keyFrames(keyFrames), fixed(180, 180, 150),
         // fieldOfHearing(45), maxSum(1), forever()));
@@ -91,8 +107,10 @@ public class TestNetworkClientSparrenBurcht {
         System.out.println(client.startMixer());
 
         UUID playbackId = client.playScenario(scenario1).getResult();
+        UUID playbackId2 = client.playScenario(scenario2).getResult();
 
         System.out.println(playbackId);
+        System.out.println(playbackId2);
     }
 
 }
