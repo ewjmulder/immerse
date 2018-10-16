@@ -1,6 +1,5 @@
 package com.programyourhome.immerse.network.client;
 
-import static com.programyourhome.immerse.toolbox.audio.playback.ForeverPlayback.forever;
 import static com.programyourhome.immerse.toolbox.audio.resource.FileAudioResource.file;
 import static com.programyourhome.immerse.toolbox.util.TestData.room;
 import static com.programyourhome.immerse.toolbox.util.TestData.scenario;
@@ -25,6 +24,7 @@ import com.programyourhome.immerse.domain.format.SampleSize;
 import com.programyourhome.immerse.domain.location.Vector3D;
 import com.programyourhome.immerse.domain.speakers.Speaker;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
+import com.programyourhome.immerse.toolbox.audio.playback.LoopPlayback;
 import com.programyourhome.immerse.toolbox.location.dynamic.FixedDynamicLocation;
 import com.programyourhome.immerse.toolbox.location.dynamic.HorizontalCircleDynamicLocation;
 import com.programyourhome.immerse.toolbox.location.dynamic.KeyFramesDynamicLocation;
@@ -69,13 +69,13 @@ public class TestNetworkClientSparrenBurcht {
                         HorizontalCircleDynamicLocation.horizontalCircle(new Vector3D(183, 183, 250), 0, 183, true, 22),
                         FixedDynamicLocation.fixed(183, 183, 250)),
                 MaxSumNormalizeAlgorithm.maxSum(1),
-                forever()));
+                LoopPlayback.times(2)));
         Scenario scenario2 = scenario(settings(file(DRAGON_WINGS), FixedDynamicVolume.fixed(0.1),
                 FieldOfHearingVolumeRatiosAlgorithm.fieldOfHearing(room,
                         KeyFramesDynamicLocation.keyFrames(keyFrames, true),
                         FixedDynamicLocation.fixed(183, 183, 250)),
                 MaxSumNormalizeAlgorithm.maxSum(1),
-                forever()));
+                LoopPlayback.times(2)));
 
         // Scenario scenario2 = scenario(room, settings(file(VOICE_PINE), keyFrames(keyFrames), fixed(180, 180, 150),
         // fieldOfHearing(45), maxSum(1), forever()));
