@@ -415,6 +415,11 @@ public class ImmerseMixer {
         scenariosToStop.forEach(ActiveScenario::stop);
         // Remove them from the active sceario's collection (if present).
         scenariosToStop.forEach(scenarioToRemove -> this.activeScenarios.remove(scenarioToRemove.getId()));
+        scenariosToStop.forEach(ac -> {
+            synchronized (ac) {
+                ac.notifyAll();
+            }
+        });
         // Remove them from the scenario's to activate collection (if just in the process of (re)starting).
         this.scenariosToActivate.removeAll(scenariosToStop);
         // Remove them from the scenario's in playback collection.
@@ -457,7 +462,17 @@ public class ImmerseMixer {
     }
 
     public void waitForPlayback(UUID playbackId) {
-        this.waitFor(() -> !this.isScenarioInPlayback(playbackId));
+        ActiveScenario ac = this.getScenariosInPlayback().get(playbackId);
+        if (ac != null) {
+            synchronized (ac) {
+                while (this.isScenarioInPlayback(playbackId)) {
+                    try {
+                        ac.wait();
+                    } catch (InterruptedException e) {}
+                }
+            }
+        }
+        // this.waitFor(() -> !this.isScenarioInPlayback(playbackId));
     }
 
     public void fadeOutPlayback(UUID playbackId, int millis) {
