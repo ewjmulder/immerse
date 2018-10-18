@@ -463,15 +463,24 @@ public class ImmerseMixer {
 
     public void waitForPlayback(UUID playbackId) {
         ActiveScenario ac = this.getScenariosInPlayback().get(playbackId);
+        System.out.println("Wait for playback 1");
         if (ac != null) {
+            System.out.println("Wait for playback 2");
             synchronized (ac) {
+                System.out.println("Wait for playback 3");
                 while (this.isScenarioInPlayback(playbackId)) {
+                    System.out.println("Wait for playback 4");
                     try {
+                        System.out.println("Wait for playback 5");
                         ac.wait();
                     } catch (InterruptedException e) {}
+                    System.out.println("Wait for playback 6");
                 }
+                System.out.println("Wait for playback 7");
             }
+            System.out.println("Wait for playback 8");
         }
+        System.out.println("Wait for playback 9");
         // this.waitFor(() -> !this.isScenarioInPlayback(playbackId));
     }
 
