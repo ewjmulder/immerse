@@ -457,7 +457,7 @@ public class ImmerseMixer {
     }
 
     public void waitForPlayback(UUID playbackId) {
-        this.waitFor(() -> !this.isScenarioInPlayback(playbackId));
+        new Thread(() -> this.waitFor(() -> !this.isScenarioInPlayback(playbackId))).start();
     }
 
     public void fadeOutPlayback(UUID playbackId, int millis) {
