@@ -10,7 +10,7 @@ import com.programyourhome.immerse.domain.format.SampleSize;
 import com.programyourhome.immerse.toolbox.util.MathUtil;
 
 /**
- * Audio input stream generator that cna produce sine waves of a certain frquency.
+ * Audio input stream generator that can produce sine waves of a certain frequency.
  */
 public class SineWaveAudioInputStreamGenerator implements AudioInputStreamGenerator {
 
