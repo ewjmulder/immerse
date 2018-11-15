@@ -4,6 +4,8 @@
 
 Immerse yourself in the waves of dynamic surround sound!
 
+Immerse is used by the [Adventure Room project](https://github.com/adventure-room)
+
 ## Use Cases
 
 Immerse is a perfect fit for:
