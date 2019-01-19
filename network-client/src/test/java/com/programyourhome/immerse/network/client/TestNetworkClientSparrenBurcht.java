@@ -34,9 +34,10 @@ import com.programyourhome.immerse.toolbox.volume.dynamic.FixedDynamicVolume;
 
 public class TestNetworkClientSparrenBurcht {
 
-    private static final String SPIRAL = "/home/ubuntu/audio/spiral.wav";
-    private static final String DRAGON_WINGS = "/home/ubuntu/audio/dragon.wings.wav";
-    private static final String DRAGON_ATTACK = "/home/ubuntu/audio/dragon.attack.wav";
+    private static final String SPIRAL = "/root/audio/spiral.wav";
+    private static final String DRAGON_WINGS = "/root/audio/dragon.wings.wav";
+    private static final String DRAGON_ATTACK = "/root/audio/dragon.attack.wav";
+    private static final String MEDIEVAL = "/root/audio/medieval.wav";
 
     public static void main(String[] args) throws Exception {
         Speaker speaker1 = speaker(1, 0, 366, 250);
@@ -64,37 +65,39 @@ public class TestNetworkClientSparrenBurcht {
 
         SpeakerVolumeRatios fixedSpeakerVolumeRatios = new SpeakerVolumeRatios(
                 room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0))); // speaker.getId() == 2 ? 1.0 : 0.0)));
-        Scenario scenario1 = scenario(settings(file(DRAGON_ATTACK), FixedDynamicVolume.fixed(0.1),
+        Scenario scenario1 = scenario(settings(file(MEDIEVAL), FixedDynamicVolume.fixed(0.1),
                 FieldOfHearingVolumeRatiosAlgorithm.fieldOfHearing(room,
                         HorizontalCircleDynamicLocation.horizontalCircle(new Vector3D(183, 183, 250), 0, 183, true, 22),
                         FixedDynamicLocation.fixed(183, 183, 250)),
                 MaxSumNormalizeAlgorithm.maxSum(1),
-                LoopPlayback.times(2)));
-        Scenario scenario2 = scenario(settings(file(DRAGON_WINGS), FixedDynamicVolume.fixed(0.1),
+                LoopPlayback.times(1)));
+        Scenario scenario2 = scenario(settings(file(MEDIEVAL), FixedDynamicVolume.fixed(0.1),
                 FieldOfHearingVolumeRatiosAlgorithm.fieldOfHearing(room,
                         KeyFramesDynamicLocation.keyFrames(keyFrames, true),
                         FixedDynamicLocation.fixed(183, 183, 250)),
                 MaxSumNormalizeAlgorithm.maxSum(1),
-                LoopPlayback.times(2)));
+                LoopPlayback.times(1)));
 
         // Scenario scenario2 = scenario(room, settings(file(VOICE_PINE), keyFrames(keyFrames), fixed(180, 180, 150),
         // fieldOfHearing(45), maxSum(1), forever()));
         // fixed(fixedSpeakerVolumeRatios), fractional(), forever()));
 
-        SoundCard soundCard1 = soundCard(1, "platform-1c1b000.ehci1-controller-usb-0:1.2:1.0", speaker9, speaker6);
-        SoundCard soundCard2 = soundCard(2, "platform-1c1b000.ehci1-controller-usb-0:1.3:1.0", speaker10, speaker11);
-        SoundCard soundCard3 = soundCard(3, "platform-1c1b000.ehci1-controller-usb-0:1.4:1.0", speaker7, speaker4);
-        SoundCard soundCard4 = soundCard(4, "platform-1c1b000.ehci1-controller-usb-0:1.1.2:1.0", speaker1, speaker12);
-        SoundCard soundCard5 = soundCard(5, "platform-1c1b000.ehci1-controller-usb-0:1.1.3:1.0", speaker8, speaker5);
+        String usbPrefix = "platform-xhci-hcd.3.auto-"; // odroid
+        // String usbPrefix = "platform-1c1b000.ehci1-controller-"; // pine64
+        SoundCard soundCard1 = soundCard(1, usbPrefix + "usb-0:1.1.2:1.0", speaker9, speaker6);
+        SoundCard soundCard2 = soundCard(2, usbPrefix + "usb-0:1.1.3:1.0", speaker10, speaker11);
+        SoundCard soundCard3 = soundCard(3, usbPrefix + "usb-0:1.1.4:1.0", speaker7, speaker4);
+        SoundCard soundCard4 = soundCard(4, usbPrefix + "usb-0:1.1.1.2:1.0", speaker1, speaker12);
+        SoundCard soundCard5 = soundCard(5, usbPrefix + "usb-0:1.1.1.3:1.0", speaker8, speaker5);
         // Note: this sound card has left and right switched compared to all other sound cards in use
-        SoundCard soundCard6 = soundCard(6, "platform-1c1b000.ehci1-controller-usb-0:1.1.4:1.0", speaker3, speaker2);
+        SoundCard soundCard6 = soundCard(6, usbPrefix + "usb-0:1.1.1.4:1.0", speaker3, speaker2);
 
         ImmerseAudioFormat outputFormat = ImmerseAudioFormat.builder()
                 .sampleRate(SampleRate.RATE_44K)
                 .sampleSize(SampleSize.TWO_BYTES)
                 .buildForOutput();
 
-        ImmerseClient client = new ImmerseClient("192.168.0.106", 51515);
+        ImmerseClient client = new ImmerseClient("192.168.0.108", 51515);
 
         ImmerseSettings settings = ImmerseSettings.builder()
                 .room(room)
@@ -102,15 +105,21 @@ public class TestNetworkClientSparrenBurcht {
                 .outputFormat(outputFormat)
                 .build();
 
+        System.out.println(client.stopMixer());
+
         System.out.println(client.createMixer(settings));
 
         System.out.println(client.startMixer());
 
         UUID playbackId = client.playScenario(scenario1).getResult();
         UUID playbackId2 = client.playScenario(scenario2).getResult();
-
-        System.out.println(playbackId);
-        System.out.println(playbackId2);
+        UUID playbackId3 = client.playScenario(scenario1).getResult();
+        // UUID playbackId4 = client.playScenario(scenario2).getResult();
+        // UUID playbackId5 = client.playScenario(scenario1).getResult();
+        // UUID playbackId6 = client.playScenario(scenario2).getResult();
+        //
+        // System.out.println(playbackId);
+        // System.out.println(playbackId2);
     }
 
 }

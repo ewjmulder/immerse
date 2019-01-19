@@ -27,7 +27,7 @@ import com.programyourhome.immerse.domain.speakers.Speaker;
 import com.programyourhome.immerse.domain.speakers.SpeakerVolumeRatios;
 import com.programyourhome.immerse.toolbox.audio.playback.ForeverPlayback;
 import com.programyourhome.immerse.toolbox.audio.resource.FileAudioResource;
-import com.programyourhome.immerse.toolbox.volume.dynamic.LinearDynamicVolume;
+import com.programyourhome.immerse.toolbox.volume.dynamic.FixedDynamicVolume;
 
 public class TestNetworkClientLocalLaptop {
 
@@ -49,8 +49,8 @@ public class TestNetworkClientLocalLaptop {
         ImmerseAudioFormat format = ImmerseAudioFormat.fromJavaAudioFormat(new AudioFormat(44100, 16, 1, true, false));
         Scenario scenario = scenario(
                 settings(FileAudioResource.file(new File("/home/emulder/Downloads/audio/spiral.wav")),
-                        LinearDynamicVolume.linearWithDelay(0.5, 0, 3000, false, 3000),
-                        // FixedDynamicVolume.fixed(0.1),
+                        // LinearDynamicVolume.linearWithDelay(0.5, 0, 3000, false, 3000),
+                        FixedDynamicVolume.fixed(0.1),
                         fixed(fixedSpeakerVolumeRatios), fractional(), ForeverPlayback.forever()));
         // settings(UrlAudioResource.urlWithFormat("http://localhost:19161/adventures/mic-test", format, true), fixed(5, 10, 10), fixed(5, 5, 5),
         // fixed(fixedSpeakerVolumeRatios), fractional(), LoopPlayback.once()));
@@ -67,9 +67,24 @@ public class TestNetworkClientLocalLaptop {
 
         System.out.println(client.startMixer());
 
-        UUID playbackId = client.playScenario(scenario).getResult();
+        UUID playbackId1 = client.playScenario(scenario).getResult();
+        UUID playbackId2 = client.playScenario(scenario).getResult();
+        UUID playbackId3 = client.playScenario(scenario).getResult();
+        UUID playbackId4 = client.playScenario(scenario).getResult();
+        UUID playbackId5 = client.playScenario(scenario).getResult();
+        UUID playbackId6 = client.playScenario(scenario).getResult();
+        UUID playbackId7 = client.playScenario(scenario).getResult();
+        UUID playbackId8 = client.playScenario(scenario).getResult();
+        new Thread(() -> client.waitForPlayback(playbackId1)).start();
+        new Thread(() -> client.waitForPlayback(playbackId2)).start();
+        new Thread(() -> client.waitForPlayback(playbackId3)).start();
+        new Thread(() -> client.waitForPlayback(playbackId4)).start();
+        new Thread(() -> client.waitForPlayback(playbackId5)).start();
+        new Thread(() -> client.waitForPlayback(playbackId6)).start();
+        new Thread(() -> client.waitForPlayback(playbackId7)).start();
+        new Thread(() -> client.waitForPlayback(playbackId8)).start();
 
-        System.out.println(playbackId);
+        // System.out.println(playbackId);
 
         // try {
         // Thread.sleep(10000);
