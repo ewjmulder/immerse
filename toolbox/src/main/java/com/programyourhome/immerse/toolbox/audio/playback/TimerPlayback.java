@@ -16,6 +16,9 @@ public class TimerPlayback implements Playback {
     private final long durationInMillis;
 
     public TimerPlayback(long durationInMillis) {
+        if (durationInMillis < 0) {
+            throw new IllegalArgumentException("Duration cannot be negative");
+        }
         this.startMillis = -1;
         this.durationInMillis = durationInMillis;
     }
