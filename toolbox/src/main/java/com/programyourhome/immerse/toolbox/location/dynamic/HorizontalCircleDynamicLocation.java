@@ -22,7 +22,7 @@ public class HorizontalCircleDynamicLocation extends AbstractDynamicData<Vector3
     private final boolean clockwise;
     private final double millisPerDegreeAngle;
 
-    public HorizontalCircleDynamicLocation(Vector3D center, double startAngleInDegrees, double radius, boolean clockwise, double millisPerDegreeAngle) {
+    public HorizontalCircleDynamicLocation(Vector3D center, double startAngleInDegrees, double radius, boolean clockwise, double millisPerFullCircle) {
         super(true);
         this.centerX = center.getX();
         this.centerY = center.getY();
@@ -31,7 +31,7 @@ public class HorizontalCircleDynamicLocation extends AbstractDynamicData<Vector3
         this.startAngleInDegrees = startAngleInDegrees - 90;
         this.radius = radius;
         this.clockwise = clockwise;
-        this.millisPerDegreeAngle = millisPerDegreeAngle;
+        this.millisPerDegreeAngle = millisPerFullCircle / 360;
     }
 
     @Override
@@ -50,13 +50,13 @@ public class HorizontalCircleDynamicLocation extends AbstractDynamicData<Vector3
     }
 
     public static Factory<DynamicLocation> horizontalCircle(Vector3D center, double startAngleInDegrees,
-            double radius, boolean clockwise, double millisPerDegreeAngle) {
+            double radius, boolean clockwise, double millisPerFullCircle) {
         return new Factory<DynamicLocation>() {
             private static final long serialVersionUID = Serialization.VERSION;
 
             @Override
             public DynamicLocation create() {
-                return new HorizontalCircleDynamicLocation(center, startAngleInDegrees, radius, clockwise, millisPerDegreeAngle);
+                return new HorizontalCircleDynamicLocation(center, startAngleInDegrees, radius, clockwise, millisPerFullCircle);
             }
         };
     }

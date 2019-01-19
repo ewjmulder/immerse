@@ -67,7 +67,7 @@ public class TestNetworkClientSparrenBurcht {
                 room.getSpeakers().values().stream().collect(Collectors.toMap(Speaker::getId, speaker -> 1.0))); // speaker.getId() == 2 ? 1.0 : 0.0)));
         Scenario scenario1 = scenario(settings(file(MEDIEVAL), FixedDynamicVolume.fixed(0.1),
                 FieldOfHearingVolumeRatiosAlgorithm.fieldOfHearing(room,
-                        HorizontalCircleDynamicLocation.horizontalCircle(new Vector3D(183, 183, 250), 0, 183, true, 22),
+                        HorizontalCircleDynamicLocation.horizontalCircle(new Vector3D(183, 183, 250), 0, 183, true, 8000),
                         FixedDynamicLocation.fixed(183, 183, 250)),
                 MaxSumNormalizeAlgorithm.maxSum(1),
                 LoopPlayback.times(1)));
